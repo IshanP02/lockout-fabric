@@ -11,6 +11,7 @@ import me.marin.lockout.lockout.goals.opponent.OpponentDies3TimesGoal;
 import me.marin.lockout.lockout.goals.opponent.OpponentDiesGoal;
 import me.marin.lockout.lockout.interfaces.*;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
@@ -20,6 +21,8 @@ import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.TntMinecartEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 
@@ -174,6 +177,18 @@ public class AfterDeathEventHandler implements ServerLivingEntityEvents.AfterDea
                     PlayerEntity killer = (PlayerEntity) entity.getPrimeAdversary();
 
                     if (!Objects.equals(player, killer) && !Objects.equals(lockout.getPlayerTeam(killer.getUuid()), lockout.getPlayerTeam(player.getUuid()))) {
+                        lockout.completeGoal(goal, killer);
+                    }
+                }
+
+                if (goal instanceof KillOtherTeamPlayerWithNamedItem && killedByPlayer) {
+                    PlayerEntity killer = (PlayerEntity) entity.getPrimeAdversary();
+                    ItemStack heldItem = killer.getMainHandStack();
+                    Item item = heldItem.getItem();
+
+                    if (!Objects.equals(player, killer) &&
+                            !Objects.equals(lockout.getPlayerTeam(killer.getUuid()), lockout.getPlayerTeam(player.getUuid())) &&
+                            item != null && heldItem.contains(DataComponentTypes.CUSTOM_NAME)) {
                         lockout.completeGoal(goal, killer);
                     }
                 }
