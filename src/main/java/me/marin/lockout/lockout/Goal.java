@@ -11,7 +11,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public abstract class Goal {
 
