@@ -334,6 +334,8 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.WEAR_UNIQUE_COLORED_LEATHER_ARMOR, WearUniqueColoredLeatherArmorGoal.class);
         INSTANCE.register(GoalType.KILL_OTHER_PLAYER, KillOtherTeamPlayer.class,
                 GoalRequirements.TEAMS_GOAL);
+        INSTANCE.register(GoalType.KILL_OTHER_PLAYER_WITH_NAMED_ITEM, KillOtherTeamPlayerWithNamedItem.class,
+                GoalRequirements.TEAMS_GOAL);
         INSTANCE.register(GoalType.OPPONENT_OBTAINS_CRAFTING_TABLE, OpponentObtainsCraftingTableGoal.class,
                 GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
         INSTANCE.register(GoalType.OPPONENT_OBTAINS_OBSIDIAN, OpponentObtainsObsidianGoal.class,
