@@ -1,6 +1,7 @@
 package me.marin.lockout.lockout;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.client.LockoutClient;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
@@ -10,6 +11,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public abstract class Goal {
 
@@ -20,10 +22,13 @@ public abstract class Goal {
     private boolean isCompleted = false;
     @Getter
     private LockoutTeam completedTeam;
+    @Getter @Setter
+    private String CompletedMessage;
 
     public Goal(String id, String data) {
         this.id = id;
         this.data = data;
+        this.CompletedMessage = "";
     }
 
     public abstract String getGoalName();
@@ -38,6 +43,12 @@ public abstract class Goal {
         this.isCompleted = isCompleted;
         this.completedTeam = team;
     }
+
+    public void setCompleted(boolean isCompleted, LockoutTeam team, String playerName) {
+        setCompleted(isCompleted, team);
+        setCompletedMessage(playerName);
+    }
+
     public boolean isCompleted() {
         return isCompleted;
     }

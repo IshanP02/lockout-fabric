@@ -109,12 +109,15 @@ public class Lockout {
 
         LockoutTeamServer team = (LockoutTeamServer) getPlayerTeam(playerId);
 
-        completeGoal(goal, team, team.getPlayerName(playerId) + " completed " + goal.getGoalName() + ".");
+        goal.setCompletedMessage(team.getPlayerName(playerId));
+        completeGoal(goal, team,
+                team.getPlayerName(playerId) + " completed " + goal.getGoalName() + ".", team.getPlayerName(playerId));
     }
     public void completeGoal(Goal goal, LockoutTeam team) {
-        completeGoal(goal, team, team.getDisplayName() + " completed " + goal.getGoalName() + ".");
+        completeGoal(goal, team,
+                team.getDisplayName() + " completed " + goal.getGoalName() + ".", "");
     }
-    public void completeGoal(Goal goal, LockoutTeam team, String message) {
+    public void completeGoal(Goal goal, LockoutTeam team, String message, String goalMessage) {
         if (goal.isCompleted()) return;
         if (!hasStarted()) return;
 
@@ -133,7 +136,7 @@ public class Lockout {
             spectator.sendMessage(Text.literal(message));
         }
 
-        sendGoalCompletedPacket(goal, team);
+        sendGoalCompletedPacket(goal, team, goalMessage);
         evaluateWinnerAndEndGame(team);
     }
 
@@ -167,7 +170,7 @@ public class Lockout {
             spectator.sendMessage(Text.literal(message));
         }
 
-        sendGoalCompletedPacket(goal, winnerTeam);
+        sendGoalCompletedPacket(goal, winnerTeam, "");
         evaluateWinnerAndEndGame(winnerTeam);
     }
 
@@ -182,18 +185,18 @@ public class Lockout {
         if (!goal.isCompleted()) return;
 
         goal.getCompletedTeam().takePoint();
-        goal.setCompleted(false, null);
+        goal.setCompleted(false, null, "");
 
         if (sendPacket) {
-            var payload = new CompleteTaskPayload(goal.getId(), -1);
+            var payload = new CompleteTaskPayload(goal.getId(), -1, "");
             for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(serverPlayer, payload);
             }
         }
     }
 
-    private void sendGoalCompletedPacket(Goal goal, LockoutTeam team) {
-        var payload = new CompleteTaskPayload(goal.getId(), teams.indexOf(team));
+    private void sendGoalCompletedPacket(Goal goal, LockoutTeam team, String completionMessage) {
+        var payload = new CompleteTaskPayload(goal.getId(), teams.indexOf(team), completionMessage);
         for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
             ServerPlayNetworking.send(serverPlayer, payload);
         }
@@ -357,5 +360,4 @@ public class Lockout {
             updateGoalCompletion(goal, largestLevelPlayers.get(0));
         }
     }
-
 }

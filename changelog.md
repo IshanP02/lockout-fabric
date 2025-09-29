@@ -1,3 +1,6 @@
+## Lockout v0.9.4
+- Completed goals in the goal menu display the player name of the player who completed the goal
+  - Goals with team progression (eat unique foods or breed unique animals) will show player name.
 ## Lockout v0.9.3
 - Fixed spectators getting advancements causing a crash
 

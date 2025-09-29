@@ -179,9 +179,17 @@ public class Utility {
         return hoveredIdx.map(integer -> LockoutClient.lockout.getBoard().getGoals().get(integer)).orElse(null);
     }
 
+    // Draws the tooltip text when the player hover over the item slot of a goal in the Board UI
     public static void drawGoalInformation(DrawContext context, TextRenderer textRenderer, Goal goal, int mouseX, int mouseY) {
         List<OrderedText> tooltip = new ArrayList<>();
-        tooltip.add(Text.of(((goal instanceof HasTooltipInfo) ? Formatting.UNDERLINE : "") + goal.getGoalName()).asOrderedText());
+        tooltip.add(Text.of(((goal instanceof HasTooltipInfo) ? Formatting.UNDERLINE : "") + (goal.getGoalName())).asOrderedText());
+
+        // When a goal is completed, display goal completion tooltip
+        if (goal.isCompleted() && !goal.getCompletedMessage().isEmpty())
+        {
+            tooltip.add(Text.of( (Formatting.DARK_GRAY)+ goal.getCompletedMessage()).asOrderedText());
+        }
+
         if (goal instanceof HasTooltipInfo) {
             String s = LockoutClient.goalTooltipMap.get(goal.getId());
             if (s != null) {
