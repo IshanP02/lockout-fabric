@@ -23,6 +23,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.TntMinecartEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 
@@ -188,7 +189,8 @@ public class AfterDeathEventHandler implements ServerLivingEntityEvents.AfterDea
 
                     if (!Objects.equals(player, killer) &&
                             !Objects.equals(lockout.getPlayerTeam(killer.getUuid()), lockout.getPlayerTeam(player.getUuid())) &&
-                            item != null && heldItem.contains(DataComponentTypes.CUSTOM_NAME)) {
+                            item != null && heldItem.contains(DataComponentTypes.CUSTOM_NAME) &&
+                            !heldItem.isOf(Items.COMPASS)) {
                         lockout.completeGoal(goal, killer);
                     }
                 }
