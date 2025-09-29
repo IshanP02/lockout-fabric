@@ -1,3 +1,6 @@
+## Lockout v0.9.4
+- Added Obtain 64 Stained Glass Goals
+
 ## Lockout v0.9.3
 - Fixed spectators getting advancements causing a crash
 
