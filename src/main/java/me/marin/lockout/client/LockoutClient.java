@@ -116,6 +116,7 @@ public class LockoutClient implements ClientModInitializer {
                         }
                     }
                 }
+                goal.setCompletedMessage(payload.completionMessage());
 
 
             });
