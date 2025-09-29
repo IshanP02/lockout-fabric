@@ -93,6 +93,7 @@ public class GoalType {
     public static final String OBTAIN_6_UNIQUE_FLOWERS = "OBTAIN_6_UNIQUE_FLOWERS";
     public static final String OBTAIN_COLORED_GLAZED_TERRACOTTA = "OBTAIN_COLORED_GLAZED_TERRACOTTA";
     public static final String OBTAIN_64_COLORED_WOOL = "OBTAIN_64_COLORED_WOOL";
+    public static final String OBTAIN_64_COLORED_GLASS = "obtain_64_colored_glass";
     public static final String OBTAIN_64_COLORED_CONCRETE = "OBTAIN_64_COLORED_CONCRETE";
     public static final String OBTAIN_WRITTEN_BOOK = "OBTAIN_WRITTEN_BOOK";
     public static final String FILL_INVENTORY_UNIQUE_ITEMS = "FILL_INVENTORY_UNIQUE_ITEMS";
