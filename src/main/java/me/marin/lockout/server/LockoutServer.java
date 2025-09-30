@@ -574,4 +574,9 @@ public class LockoutServer {
         return 1;
     }
 
+    public static int randomTeams(CommandContext<ServerCommandSource> context) {
+        int numTeams = context.getArgument("number of teams", Integer.class);
+
+        return 1;
+    }
 }

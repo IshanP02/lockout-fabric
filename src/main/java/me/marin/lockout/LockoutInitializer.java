@@ -137,6 +137,16 @@ public class LockoutInitializer implements ModInitializer {
                 setBoardTimeRoot.addChild(size);
             }
 
+            {
+                // RandomTeams command
+
+                var randomTeamsRoot = CommandManager.literal("RandomTeams").requires(PERMISSIONS).build();
+                var numTeams = CommandManager.argument("number of teams", IntegerArgumentType.integer(1, 100)).executes(LockoutServer::randomTeams).build();
+
+                dispatcher.getRoot().addChild(randomTeamsRoot);
+                randomTeamsRoot.addChild(numTeams);
+            }
+
         });
 
         LootTableEvents.REPLACE.register(((key, original, source, registries) -> {
