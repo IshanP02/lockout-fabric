@@ -1,3 +1,6 @@
+## Lockout v0.9.4
+- Add "Kill another team's player with a named item" goal
+  - Compasses cannot be used to complete this goal to prevent kills with the player tracker compass
 ## Lockout v0.9.3
 - Fixed spectators getting advancements causing a crash
 
