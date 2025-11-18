@@ -80,6 +80,7 @@ public class GoalType {
     public static final String OBTAIN_MUD_BRICK_WALL = "OBTAIN_MUD_BRICK_WALL";
     public static final String OBTAIN_DAYLIGHT_DETECTOR = "OBTAIN_DAYLIGHT_DETECTOR";
     public static final String OBTAIN_REDSTONE_REPEATER = "OBTAIN_REDSTONE_REPEATER";
+    public static final String OBTAIN_DIAMOND_BLOCK = "OBTAIN_DIAMOND_BLOCK";
     public static final String OBTAIN_REDSTONE_COMPARATOR = "OBTAIN_REDSTONE_COMPARATOR";
     public static final String OBTAIN_OBSERVER = "OBTAIN_OBSERVER";
     public static final String OBTAIN_ACTIVATOR_RAIL = "OBTAIN_ACTIVATOR_RAIL";
