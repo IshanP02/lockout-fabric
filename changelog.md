@@ -1,3 +1,5 @@
+## Lockout v0.9.5
+- Added Obtain 64 Stained Glass Goals
 ## Lockout v0.9.4
 - Completed goals in the goal menu display the player name of the player who completed the goal
   - Goals with team progression (eat unique foods or breed unique animals) will show player name.
