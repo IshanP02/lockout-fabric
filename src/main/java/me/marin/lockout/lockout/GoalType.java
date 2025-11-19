@@ -82,6 +82,7 @@ public class GoalType {
     public static final String OBTAIN_REDSTONE_REPEATER = "OBTAIN_REDSTONE_REPEATER";
     public static final String OBTAIN_DIAMOND_BLOCK = "OBTAIN_DIAMOND_BLOCK";
     public static final String OBTAIN_EMERALD_BLOCK = "OBTAIN_EMERALD_BLOCK";
+    public static final String OBTAIN_AMETHYST_BLOCK = "OBTAIN_AMETHYST_BLOCK";
     public static final String OBTAIN_REDSTONE_COMPARATOR = "OBTAIN_REDSTONE_COMPARATOR";
     public static final String OBTAIN_OBSERVER = "OBTAIN_OBSERVER";
     public static final String OBTAIN_ACTIVATOR_RAIL = "OBTAIN_ACTIVATOR_RAIL";
