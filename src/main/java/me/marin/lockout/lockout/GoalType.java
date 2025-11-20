@@ -234,5 +234,12 @@ public class GoalType {
     public static final String KILL_BREEZE_USING_WIND_CHARGE = "KILL_BREEZE_USING_WIND_CHARGE";
     public static final String FILL_BUNDLE_WITH_BUNDLES = "FILL_BUNDLE_WITH_BUNDLES";
     public static final String OBTAIN_64_ARROWS = "OBTAIN_64_ARROWS";
+    public static final String CROUCH_100_M = "CROUCH_100_M";
+    public static final String SWIM_500_M = "SWIM_500_M";
+    public static final String DIE_BY_DROWNING = "DIE_BY_DROWNING";
+    public static final String OBTAIN_DEAD_BUSH = "OBTAIN_DEAD_BUSH";
+    public static final String VISIT_10_UNIQUE_BIOMES = "VISIT_10_UNIQUE_BIOMES";
+    public static final String VISIT_15_UNIQUE_BIOMES = "VISIT_15_UNIQUE_BIOMES";
+    public static final String VISIT_20_UNIQUE_BIOMES = "VISIT_20_UNIQUE_BIOMES";
 
 }

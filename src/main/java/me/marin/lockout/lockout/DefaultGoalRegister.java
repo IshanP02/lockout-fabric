@@ -46,6 +46,10 @@ import me.marin.lockout.lockout.goals.wear_armor.*;
 import me.marin.lockout.lockout.goals.workstation.*;
 import net.minecraft.util.DyeColor;
 
+import me.marin.lockout.lockout.goals.biome.unique.Visit10UniqueBiomesGoal;
+import me.marin.lockout.lockout.goals.biome.unique.Visit15UniqueBiomesGoal;
+import me.marin.lockout.lockout.goals.biome.unique.Visit20UniqueBiomesGoal;
+
 import java.util.List;
 
 import static me.marin.lockout.lockout.GoalRegistry.INSTANCE;
@@ -400,6 +404,16 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.FILL_BUNDLE_WITH_BUNDLES, FillBundleWithBundlesGoal.class, GoalRequirements.NOT_IN_RANDOM_POOL);
 
         INSTANCE.register(GoalType.OBTAIN_64_ARROWS, Obtain64ArrowsGoal.class);
+
+        INSTANCE.register(GoalType.CROUCH_100_M, Crouch100mGoal.class);
+        INSTANCE.register(GoalType.SWIM_500_M, Swim500mGoal.class);
+        INSTANCE.register(GoalType.DIE_BY_DROWNING, DieByDrowningGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_DEAD_BUSH, ObtainDeadBushGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(DESERT, BADLANDS, WOODED_BADLANDS, ERODED_BADLANDS))
+                .build());
+        INSTANCE.register(GoalType.VISIT_10_UNIQUE_BIOMES, Visit10UniqueBiomesGoal.class);
+        INSTANCE.register(GoalType.VISIT_15_UNIQUE_BIOMES, Visit15UniqueBiomesGoal.class);
+        INSTANCE.register(GoalType.VISIT_20_UNIQUE_BIOMES, Visit20UniqueBiomesGoal.class);
 
     }
 

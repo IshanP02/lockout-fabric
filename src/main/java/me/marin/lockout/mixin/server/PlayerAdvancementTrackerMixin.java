@@ -24,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 
+import me.marin.lockout.lockout.interfaces.VisitUniqueBiomesGoal;
+
 @Mixin(PlayerAdvancementTracker.class)
 public abstract class PlayerAdvancementTrackerMixin {
 
@@ -81,6 +83,7 @@ public abstract class PlayerAdvancementTrackerMixin {
 
         if (!advancement.id().equals(ADVENTURING_TIME)) return;
         Identifier biomeId = Identifier.of(criterionName);
+        LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(owner.getUuid());
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
@@ -91,6 +94,25 @@ public abstract class PlayerAdvancementTrackerMixin {
                     lockout.completeGoal(goal, owner);
                 }
             }
+
+            if (goal instanceof VisitUniqueBiomesGoal visitUniqueBiomesGoal) {
+                Optional<AdvancementDisplay> advancementDisplay = advancement.value().display();
+                if (advancementDisplay.isPresent()) {
+                    visitUniqueBiomesGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
+                    var set = visitUniqueBiomesGoal.getTrackerMap().get(team);
+                    boolean added = set.add(biomeId);
+
+                    int size = set.size();
+
+                    if (added) {
+                        team.sendTooltipUpdate(visitUniqueBiomesGoal);
+                    }
+                    if (size >= visitUniqueBiomesGoal.getAmount()) {
+                        lockout.completeGoal(goal, team);
+                    }
+                }
+            }
+
         }
 
     }

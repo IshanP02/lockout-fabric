@@ -27,6 +27,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import me.marin.lockout.lockout.goals.misc.Crouch100mGoal;
+import me.marin.lockout.lockout.goals.misc.Swim500mGoal;
+
+
 import java.util.Objects;
 
 @Mixin(PlayerEntity.class)
@@ -144,7 +148,38 @@ public abstract class PlayerMixin {
                 lockout.distanceSprinted.putIfAbsent(player.getUuid(), 0);
                 lockout.distanceSprinted.merge(player.getUuid(), amount, Integer::sum);
 
+                if (lockout.isLockoutPlayer(player.getUuid())) {
+                    LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
+                    team.sendTooltipUpdate((Sprint1KmGoal) goal);
+                }
+
                 if (lockout.distanceSprinted.get(player.getUuid()) >= (100 * 1000)) {
+                    lockout.completeGoal(goal, player);
+                }
+            }
+            if (goal instanceof Crouch100mGoal && stat.equals(Stats.CROUCH_ONE_CM)) {
+                lockout.distanceCrouched.putIfAbsent(player.getUuid(), 0);
+                lockout.distanceCrouched.merge(player.getUuid(), amount, Integer::sum);
+
+                if (lockout.isLockoutPlayer(player.getUuid())) {
+                    LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
+                    team.sendTooltipUpdate((Crouch100mGoal) goal);
+                }
+
+                if (lockout.distanceCrouched.get(player.getUuid()) >= (100 * 100)) {
+                    lockout.completeGoal(goal, player);
+                }
+            }
+            if (goal instanceof Swim500mGoal && stat.equals(Stats.SWIM_ONE_CM)) {
+                lockout.distanceSwam.putIfAbsent(player.getUuid(), 0);
+                lockout.distanceSwam.merge(player.getUuid(), amount, Integer::sum);
+
+                if (lockout.isLockoutPlayer(player.getUuid())) {
+                    LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
+                    team.sendTooltipUpdate((Swim500mGoal) goal);
+                }
+
+                if (lockout.distanceSwam.get(player.getUuid()) >= (100 * 500)) {
                     lockout.completeGoal(goal, player);
                 }
             }

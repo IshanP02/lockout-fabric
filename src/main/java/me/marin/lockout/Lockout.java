@@ -47,6 +47,10 @@ public class Lockout {
     public final Map<UUID, Integer> distanceSprinted = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
 
+    public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
+    public final Map<UUID, Integer> distanceSwam = new HashMap<>();
+    public final Map<LockoutTeam, java.util.Set<Identifier>> biomesVisited = new HashMap<>();
+
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
 
