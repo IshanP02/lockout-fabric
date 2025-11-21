@@ -414,6 +414,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.VISIT_10_UNIQUE_BIOMES, Visit10UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_15_UNIQUE_BIOMES, Visit15UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_20_UNIQUE_BIOMES, Visit20UniqueBiomesGoal.class);
+        INSTANCE.register(GoalType.GET_UNDER_LOCK_AND_KEY_ADVANCEMENT, GetUnderLockAndKeyAdvancementGoal.class, new GoalRequirements.Builder()
+                .structures(List.of(TRIAL_CHAMBERS))
+                .build()
+        );
 
     }
 
