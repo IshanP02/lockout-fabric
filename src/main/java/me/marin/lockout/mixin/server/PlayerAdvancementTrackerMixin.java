@@ -76,12 +76,13 @@ public abstract class PlayerAdvancementTrackerMixin {
     }
 
     private static final Identifier ADVENTURING_TIME = Identifier.of("minecraft", "adventure/adventuring_time");
+    private static final Identifier HOT_TOURIST_DESTINATIONS = Identifier.of("minecraft", "nether/explore_nether");
     @Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/AdvancementProgress;isDone()Z", ordinal = 1, shift = At.Shift.BEFORE) )
     public void onAdvancementProgress(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        if (!advancement.id().equals(ADVENTURING_TIME)) return;
+        if (!advancement.id().equals(ADVENTURING_TIME) && !advancement.id().equals(HOT_TOURIST_DESTINATIONS)) return;
         Identifier biomeId = Identifier.of(criterionName);
         LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(owner.getUuid());
 
@@ -105,8 +106,18 @@ public abstract class PlayerAdvancementTrackerMixin {
                     int size = set.size();
 
                     if (added) {
-                        team.sendTooltipUpdate(visitUniqueBiomesGoal);
+                        // send updates for every VisitUniqueBiomesGoal on the board
+                        for (Goal g : lockout.getBoard().getGoals()) {
+                            if (g instanceof VisitUniqueBiomesGoal uniqueBiome) {
+                                VisitUniqueBiomesGoal visitGoal = (VisitUniqueBiomesGoal)g;
+                                int amount = visitGoal.getAmount();
+                                if(size <= amount) {
+                                    team.sendTooltipUpdate(uniqueBiome);
+                                }
+                            }
+                        }
                     }
+
                     if (size >= visitUniqueBiomesGoal.getAmount()) {
                         lockout.completeGoal(goal, team);
                     }
