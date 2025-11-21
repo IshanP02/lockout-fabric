@@ -57,32 +57,8 @@ public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
 
     tooltip.add(" ");
     tooltip.add("Biomes: " + biomes.size() + "/" + getAmount());
-
-    // Map identifiers -> "namespace:path (Localized Name)" (fallback to readable name)
-    List<String> names = biomes.stream()
-        .map(id -> {
-            String readable;
-            try {
-                String key = "biome." + id.getNamespace() + "." + id.getPath();
-                readable = Text.translatable(key).getString();
-            } catch (Exception e) {
-                // fallback readable name from id path: "snowy_taiga" -> "Snowy Taiga"
-                String path = id.getPath();
-                String[] parts = path.split("_");
-                for (int i = 0; i < parts.length; i++) {
-                    if (parts[i].isEmpty()) continue;
-                    parts[i] = parts[i].substring(0,1).toUpperCase() + parts[i].substring(1).toLowerCase();
-                }
-                readable = String.join(" ", parts);
-            }
-            return readable;
-        })
-        .collect(Collectors.toList());
-
-        // Add all biome entries to the tooltip (format: namespace:path (Localized Name))
-        tooltip.addAll(HasTooltipInfo.commaSeparatedList(names));
-        tooltip.add(" ");
-        return tooltip;
+    tooltip.addAll(HasTooltipInfo.commaSeparatedList(biomes.stream().map(id -> Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString()).collect(Collectors.toList())));
+    return tooltip;
 }
 
 @Override
