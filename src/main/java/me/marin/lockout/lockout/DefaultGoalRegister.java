@@ -418,6 +418,11 @@ public class DefaultGoalRegister {
                 .structures(List.of(TRIAL_CHAMBERS))
                 .build()
         );
+        INSTANCE.register(GoalType.GET_MINECRAFT_TRIALS_EDITION_ADVANCEMENT, GetMinecraftTrialsEditionAdvancementGoal.class, new GoalRequirements.Builder()
+                .structures(List.of(TRIAL_CHAMBERS))
+                .build()
+        );
+         INSTANCE.register(GoalType.OBTAIN_TINTED_GLASS, ObtainTintedGlassGoal.class);
 
     }
 
