@@ -17,7 +17,6 @@ import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.thrown.EggEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
 import net.minecraft.util.Identifier;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import me.marin.lockout.lockout.goals.misc.Crouch100mGoal;
 import me.marin.lockout.lockout.goals.misc.Swim500mGoal;
-
+import me.marin.lockout.lockout.goals.misc.DamagedBy7UniqueSourcesGoal;
 
 import java.util.Objects;
 
@@ -100,6 +99,11 @@ public abstract class PlayerMixin {
                     lockout.completeGoal(goal, team);
                 }
             }
+            if (goal instanceof OpponentHitByArrowGoal) {
+                if (source.isOf(DamageTypes.ARROW)) {
+                    lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " got hit by Arrow.");
+                }
+            }
             if (goal instanceof OpponentTakesFallDamageGoal) {
                 if (source.isOf(DamageTypes.FALL)) {
                     lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " took fall damage.");
@@ -110,6 +114,39 @@ public abstract class PlayerMixin {
                     lockout.complete1v1Goal(goal, team, false, team.getDisplayName() + " took 100 damage.");
                 }
             }
+
+            if (goal instanceof DamagedBy7UniqueSourcesGoal damagedGoal) {
+                // Get the registry entry for the damage type that produced this DamageSource
+                var entry = source.getTypeRegistryEntry();
+                net.minecraft.registry.RegistryKey<net.minecraft.entity.damage.DamageType> damageTypeKey = null;
+                if (entry != null) {
+                    // Use getKey() on RegistryEntry (returns Optional<RegistryKey<...>>)
+                    damageTypeKey = entry.getKey().orElse(null);
+                }
+
+                if (damageTypeKey != null) {
+                    // Ensure the per-team set exists
+                    lockout.damageTypesTaken.computeIfAbsent(team, t -> new java.util.LinkedHashSet<>());
+
+                    // Add the registry key; only proceed if it was newly added
+                    boolean added = lockout.damageTypesTaken.get(team).add(damageTypeKey);
+                    if (added) {
+                        // Keep the existing integer counter used by the tooltip/goal
+                        lockout.damageByUniqueSources.putIfAbsent(team, 0);
+                        lockout.damageByUniqueSources.merge(team, 1, Integer::sum);
+
+                        // Update tooltip for the team
+                        if (team instanceof me.marin.lockout.LockoutTeamServer) {
+                            team.sendTooltipUpdate(damagedGoal);
+                        }
+                    }
+                }
+                // Check for completion (7 unique damage types)
+                if (lockout.damageByUniqueSources.get(team) >= 7) {
+                    lockout.complete1v1Goal(damagedGoal, team, true, player.getName().getString() + " took damage from 7 Unique Sources.");
+                }
+            }
+
         }
     }
 

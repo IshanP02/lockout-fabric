@@ -244,5 +244,12 @@ public class GoalType {
     public static final String GET_UNDER_LOCK_AND_KEY_ADVANCEMENT = "GET_UNDER_LOCK_AND_KEY_ADVANCEMENT";
     public static final String GET_MINECRAFT_TRIALS_EDITION_ADVANCEMENT = "GET_MINECRAFT_TRIALS_EDITION_ADVANCEMENT";
     public static final String OBTAIN_TINTED_GLASS = "OBTAIN_TINTED_GLASS";
+    public static final String OBTAIN_POTTERY_SHERD = "OBTAIN_POTTERY_SHERD";
+    public static final String OPPONENT_HIT_BY_ARROW = "OPPONENT_HIT_BY_ARROW";
+    public static final String DAMAGED_BY_7_UNIQUE_SOURCES = "DAMAGED_BY_7_UNIQUE_SOURCES";
+    public static final String BREW_FIRE_RESISTANCE_POTION = "BREW_FIRE_RESISTANCE_POTION";
+    public static final String OBTAIN_3_UNIQUE_BANNER_PATTERNS = "OBTAIN_3_UNIQUE_BANNER_PATTERNS";
+    public static final String OBTAIN_ALL_TORCHES = "OBTAIN_ALL_TORCHES";
+    public static final String TUNE_NOTE_BLOCK = "TUNE_NOTE_BLOCK";
 
 }

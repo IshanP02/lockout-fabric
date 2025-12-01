@@ -423,6 +423,13 @@ public class DefaultGoalRegister {
                 .build()
         );
          INSTANCE.register(GoalType.OBTAIN_TINTED_GLASS, ObtainTintedGlassGoal.class);
+         INSTANCE.register(GoalType.OBTAIN_POTTERY_SHERD, ObtainPotterySherdGoal.class);
+         INSTANCE.register(GoalType.OPPONENT_HIT_BY_ARROW, OpponentHitByArrowGoal.class);
+         INSTANCE.register(GoalType.DAMAGED_BY_7_UNIQUE_SOURCES, DamagedBy7UniqueSourcesGoal.class);
+         INSTANCE.register(GoalType.BREW_FIRE_RESISTANCE_POTION, BrewFireResistancePotionGoal.class);
+         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
+         INSTANCE.register(GoalType.OBTAIN_ALL_TORCHES, ObtainAllTorchesGoal.class);
+         INSTANCE.register(GoalType.TUNE_NOTE_BLOCK, TuneNoteBlockGoal.class);
 
     }
 
