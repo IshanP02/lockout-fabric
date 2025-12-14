@@ -86,7 +86,7 @@ public class GoalType {
     public static final String OBTAIN_REDSTONE_COMPARATOR = "OBTAIN_REDSTONE_COMPARATOR";
     public static final String OBTAIN_OBSERVER = "OBTAIN_OBSERVER";
     public static final String OBTAIN_ACTIVATOR_RAIL = "OBTAIN_ACTIVATOR_RAIL";
-    public static final String OBTAIN_ALLFURNACETYPES = "OBTAIN_ACTIVATOR_RAIL";
+    public static final String OBTAIN_ALLFURNACETYPES = "OBTAIN_ALLFURNACETYPES";
     public static final String OBTAIN_DETECTOR_RAIL = "OBTAIN_DETECTOR_RAIL";
     public static final String OBTAIN_POWERED_RAIL = "OBTAIN_POWERED_RAIL";
     public static final String OBTAIN_DISPENSER = "OBTAIN_DISPENSER";
