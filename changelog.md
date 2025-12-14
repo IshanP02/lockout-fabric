@@ -1,3 +1,42 @@
+## Lockout v0.9.8
+- Added Goals:
+	- Crouch 100m
+	- Swim 500m
+	- Die by Drowning
+	- Obtain Dead Bush
+	- Visit 10, 15, 20 Unique Biomes
+	- Unlock a Vault with Trial Key
+	- Find a Trial Chamber
+	- Obtain Tinted Glass
+	- Obtain Pottery Sherd
+	- Opponent hit by Arrow
+	- Take Damage from 8 Unique Sources
+	- Brew a Potion of Fire Resistance
+	- Obtain 3 Unique Banner Patterns
+	- Obtain Every Type of Torch
+	- Tune a Note Block
+	- Obtain Lodestone
+	- Place a Dried Ghast in Water
+	- Breed Armadillos
+	- Obtain 64 Coarse Dirt
+	- Place a Painting
+	- Obtain Calibrated Sculk Sensor
+	- Obtain Smooth Quartz Stairs
+	- Obtain 64 Firefly Bushes
+	- Obtain Block of Resin
+	- Right Click Banner with a Map
+	- Obtain Sea Lantern
+	- Boat 2km
+	- Equip Horse with Unique Colored Leather Horse Armor
+	- Eat Beetroot Soup
+	- Kill Slime
+	- Break any Tool
+	- Break any Armor
+	- Obtain Colored Harness
+	- Kill Bogged
+	- Obtain 64 Glow Lichen
+	- Get Infested
+	- Obtain 5 Unique Pressure Plates
 ## Lockout v0.9.7
 - Added Die to Warden Goal
 ## Lockout v0.9.6
