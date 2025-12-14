@@ -1,3 +1,7 @@
+## Lockout v0.9.6
+- Added Obtain Block of Diamond Goal
+- Added Obtain Block of Emerald Goal
+- Added Obtain Block of Amethyst Goal
 ## Lockout v0.9.5
 - Added Obtain 64 Stained Glass Goals
 ## Lockout v0.9.4
