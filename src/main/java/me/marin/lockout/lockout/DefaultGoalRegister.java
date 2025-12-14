@@ -160,6 +160,9 @@ public class DefaultGoalRegister {
                 .build()
         );
         INSTANCE.register(GoalType.OBTAIN_BOOKSHELF, ObtainBookshelfGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_DIAMOND_BLOCK, ObtainDiamondBlockGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_EMERALD_BLOCK, ObtainEmeraldBlockGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_AMETHYST_BLOCK, ObtainAmethystBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_MOSSY_STONE_BRICK_WALL, ObtainMossyStoneBrickWallGoal.class);
         INSTANCE.register(GoalType.OBTAIN_FLOWERING_AZALEA, ObtainFloweringAzaleaGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SCAFFOLDING, ObtainScaffoldingGoal.class);
@@ -201,6 +204,10 @@ public class DefaultGoalRegister {
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
         );
         INSTANCE.register(GoalType.OBTAIN_64_COLORED_WOOL, Obtain64ColoredWoolGoal.class,
+                null,
+                GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
+        );
+        INSTANCE.register(GoalType.OBTAIN_64_COLORED_GLASS, Obtain64ColoredGlassGoal.class,
                 null,
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
         );
@@ -482,6 +489,8 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
         INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
+
+        INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
 
     }
 

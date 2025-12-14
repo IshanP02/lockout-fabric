@@ -80,6 +80,9 @@ public class GoalType {
     public static final String OBTAIN_MUD_BRICK_WALL = "OBTAIN_MUD_BRICK_WALL";
     public static final String OBTAIN_DAYLIGHT_DETECTOR = "OBTAIN_DAYLIGHT_DETECTOR";
     public static final String OBTAIN_REDSTONE_REPEATER = "OBTAIN_REDSTONE_REPEATER";
+    public static final String OBTAIN_DIAMOND_BLOCK = "OBTAIN_DIAMOND_BLOCK";
+    public static final String OBTAIN_EMERALD_BLOCK = "OBTAIN_EMERALD_BLOCK";
+    public static final String OBTAIN_AMETHYST_BLOCK = "OBTAIN_AMETHYST_BLOCK";
     public static final String OBTAIN_REDSTONE_COMPARATOR = "OBTAIN_REDSTONE_COMPARATOR";
     public static final String OBTAIN_OBSERVER = "OBTAIN_OBSERVER";
     public static final String OBTAIN_ACTIVATOR_RAIL = "OBTAIN_ACTIVATOR_RAIL";
@@ -93,6 +96,7 @@ public class GoalType {
     public static final String OBTAIN_6_UNIQUE_FLOWERS = "OBTAIN_6_UNIQUE_FLOWERS";
     public static final String OBTAIN_COLORED_GLAZED_TERRACOTTA = "OBTAIN_COLORED_GLAZED_TERRACOTTA";
     public static final String OBTAIN_64_COLORED_WOOL = "OBTAIN_64_COLORED_WOOL";
+    public static final String OBTAIN_64_COLORED_GLASS = "obtain_64_colored_glass";
     public static final String OBTAIN_64_COLORED_CONCRETE = "OBTAIN_64_COLORED_CONCRETE";
     public static final String OBTAIN_WRITTEN_BOOK = "OBTAIN_WRITTEN_BOOK";
     public static final String FILL_INVENTORY_UNIQUE_ITEMS = "FILL_INVENTORY_UNIQUE_ITEMS";
@@ -273,5 +277,6 @@ public class GoalType {
     public static final String OBTAIN_64_GLOW_LICHEN = "OBTAIN_64_GLOW_LICHEN";
     public static final String GET_INFESTED_STATUS_EFFECT = "GET_INFESTED_STATUS_EFFECT";
     public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
+    public static final String DIE_TO_WARDEN = "DIE_TO_WARDEN";
 
 }

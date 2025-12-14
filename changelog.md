@@ -1,3 +1,11 @@
+## Lockout v0.9.7
+- Added Die to Warden Goal
+## Lockout v0.9.6
+- Added Obtain Block of Diamond Goal
+- Added Obtain Block of Emerald Goal
+- Added Obtain Block of Amethyst Goal
+## Lockout v0.9.5
+- Added Obtain 64 Stained Glass Goals
 ## Lockout v0.9.4
 - Completed goals in the goal menu display the player name of the player who completed the goal
   - Goals with team progression (eat unique foods or breed unique animals) will show player name.
