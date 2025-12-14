@@ -191,6 +191,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_REDSTONE_COMPARATOR, ObtainRedstoneComparatorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_OBSERVER, ObtainObserverGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ACTIVATOR_RAIL, ObtainActivatorRailGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_ALLFURNACETYPES, ObtainAllFurnaceTypesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DETECTOR_RAIL, ObtainDetectorRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_POWERED_RAIL, ObtainPoweredRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DISPENSER, ObtainDispenserGoal.class);
