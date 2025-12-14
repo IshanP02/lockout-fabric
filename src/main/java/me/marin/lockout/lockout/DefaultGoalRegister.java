@@ -494,6 +494,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
         INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_STONE_TYPES, Obtain5UniqueStoneGoal.class);
 
         INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
 

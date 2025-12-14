@@ -279,6 +279,7 @@ public class GoalType {
     public static final String OBTAIN_64_GLOW_LICHEN = "OBTAIN_64_GLOW_LICHEN";
     public static final String GET_INFESTED_STATUS_EFFECT = "GET_INFESTED_STATUS_EFFECT";
     public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
+    public static final String OBTAIN_5_UNIQUE_STONE_TYPES = "OBTAIN_5_UNIQUE_STONE_TYPES";
     public static final String DIE_TO_WARDEN = "DIE_TO_WARDEN";
 
 }
