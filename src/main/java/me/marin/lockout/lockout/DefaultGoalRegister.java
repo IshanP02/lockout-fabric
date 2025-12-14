@@ -211,6 +211,10 @@ public class DefaultGoalRegister {
                 null,
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
         );
+        INSTANCE.register(GoalType.OBTAIN_64_COLORED_TERRACOTTA, Obtain64ColoredTerracottaGoal.class,
+                null,
+                GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
+        );
         INSTANCE.register(GoalType.OBTAIN_64_COLORED_CONCRETE, Obtain64ColoredConcreteGoal.class,
                 null,
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
