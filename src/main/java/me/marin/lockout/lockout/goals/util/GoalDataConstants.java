@@ -17,7 +17,9 @@ public class GoalDataConstants {
     public static final String DATA_LEATHER_HELMET = "leather_helmet";
     public static final String DATA_LEATHER_LEGGINGS = "leather_leggings";
     public static final String DATA_LEATHER_BOOTS = "leather_boots";
+    public static final String DATA_LEATHER_HORSE_ARMOR = "leather_horse_armor";
     public static final List<String> DATA_LEATHER_ARMOR = List.of(DATA_LEATHER_HELMET, DATA_LEATHER_CHESTPLATE, DATA_LEATHER_LEGGINGS, DATA_LEATHER_BOOTS);
+    public static final List<String> DATA_LEATHER_HORSE_ARMOR_LIST = List.of(DATA_LEATHER_HORSE_ARMOR);
 
     public static final String DATA_COLOR_BLACK = "black";
     public static final String DATA_COLOR_WHITE = "white";
@@ -110,12 +112,23 @@ public class GoalDataConstants {
         };
     }
 
+    public static Item getLeatherHorseArmor(String leatherHorseArmorString) {
+        return switch (leatherHorseArmorString) {
+            default -> null;
+            case DATA_LEATHER_HORSE_ARMOR -> Items.LEATHER_HORSE_ARMOR;
+        };
+    }
+
     public static String getDyeColorFormatted(DyeColor dyeColor) {
         return WordUtils.capitalize(dyeColor.toString().replaceAll("_", " "), ' ');
     }
 
     public static String getArmorPieceFormatted(String leatherArmorString) {
         return WordUtils.capitalize(leatherArmorString.replaceAll("_", " "), ' ');
+    }
+
+    public static String getHorseArmorPieceFormatted(String leatherHorseArmorString) {
+        return WordUtils.capitalize(leatherHorseArmorString.replaceAll("_", " "), ' ');
     }
 
 }

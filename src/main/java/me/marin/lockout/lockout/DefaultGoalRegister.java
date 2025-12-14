@@ -425,11 +425,63 @@ public class DefaultGoalRegister {
          INSTANCE.register(GoalType.OBTAIN_TINTED_GLASS, ObtainTintedGlassGoal.class);
          INSTANCE.register(GoalType.OBTAIN_POTTERY_SHERD, ObtainPotterySherdGoal.class);
          INSTANCE.register(GoalType.OPPONENT_HIT_BY_ARROW, OpponentHitByArrowGoal.class);
-         INSTANCE.register(GoalType.DAMAGED_BY_7_UNIQUE_SOURCES, DamagedBy7UniqueSourcesGoal.class);
+         INSTANCE.register(GoalType.DAMAGED_BY_8_UNIQUE_SOURCES, DamagedBy8UniqueSourcesGoal.class);
          INSTANCE.register(GoalType.BREW_FIRE_RESISTANCE_POTION, BrewFireResistancePotionGoal.class);
          INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
          INSTANCE.register(GoalType.OBTAIN_ALL_TORCHES, ObtainAllTorchesGoal.class);
          INSTANCE.register(GoalType.TUNE_NOTE_BLOCK, TuneNoteBlockGoal.class);
+         INSTANCE.register(GoalType.OBTAIN_LODESTONE, ObtainLodestoneGoal.class);
+         INSTANCE.register(GoalType.GET_STAY_HYDRATED_ADVANCEMENT, GetStayHydratedAdvancementGoal.class);
+         INSTANCE.register(GoalType.BREED_ARMADILLO, BreedArmadilloGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(SAVANNA, SAVANNA_PLATEAU, BADLANDS, WOODED_BADLANDS))
+                .build());
+        INSTANCE.register(GoalType.OBTAIN_64_COARSE_DIRT, Obtain64CoarseDirtGoal.class);
+        INSTANCE.register(GoalType.PLACE_PAINTING, PlacePaintingGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_CALIBRATED_SCULK_SENSOR, ObtainCalibratedSculkSensorGoal.class, new GoalRequirements.Builder()
+                .structures(List.of(ANCIENT_CITY))
+                .build()
+        );
+        INSTANCE.register(GoalType.OBTAIN_SMOOTH_QUARTZ_STAIRS, ObtainSmoothQuartzStairsGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_64_FIREFLY_BUSHES, Obtain64FireflyBushesGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_BLOCK_OF_RESIN, ObtainBlockOfResinGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(PALE_GARDEN))
+                .build()
+        );
+        INSTANCE.register(GoalType.RIGHT_CLICK_BANNER_WITH_MAP, RightClickBannerWithMapGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_SEA_LANTERN, ObtainSeaLanternGoal.class);
+        INSTANCE.register(GoalType.BOAT_2KM, Boat2KmGoal.class);
+        INSTANCE.register(GoalType.EQUIP_HORSE_WITH_COLORED_LEATHER_ARMOR, EquipHorseWithUniqueColoredLeatherArmorGoal.class, null,
+                GoalDataGenerator.builder().withLeatherHorseArmorPiece((leatherHorseArmor) -> leatherHorseArmor.get(Lockout.random.nextInt(0, leatherHorseArmor.size())))
+                        .withDye(attainableDyes -> {
+                            attainableDyes.remove(DyeColor.WHITE);
+                            attainableDyes.remove(DyeColor.GRAY);
+                            attainableDyes.remove(DyeColor.BLACK);
+                            attainableDyes.remove(DyeColor.PINK);
+                            attainableDyes.remove(DyeColor.LIGHT_GRAY);
+                            return GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size())));
+                        })
+        );
+        INSTANCE.register(GoalType.EAT_BEETROOT_SOUP, EatBeetrootSoupGoal.class, new GoalRequirements.Builder()
+                .structures(List.of(VILLAGE_PLAINS, VILLAGE_SNOWY))
+                .build()
+        );
+        INSTANCE.register(GoalType.KILL_SLIME, KillSlimeGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(SWAMP))
+                .build()
+        );
+        INSTANCE.register(GoalType.BREAK_ANY_TOOL, BreakAnyToolGoal.class);
+        INSTANCE.register(GoalType.BREAK_ANY_ARMOR, BreakAnyPieceOfArmorGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_COLORED_HARNESS, ObtainColoredHarnessGoal.class,
+                null,
+                GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
+        );
+        INSTANCE.register(GoalType.KILL_BOGGED, KillBoggedGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(SWAMP))
+                .build()
+        );
+        INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
+        INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
 
     }
 

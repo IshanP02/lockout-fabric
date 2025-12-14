@@ -37,11 +37,6 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
     public abstract int getAmount();
 
     @Override
-    public String getGoalName() {
-        return "Take Damage from 7 Unique Sources";
-    }
-
-    @Override
     public ItemStack getTextureItemStack() {
         return DISPLAY_ITEM_STACK;
     }
@@ -50,13 +45,6 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
-    }
-
-    @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, DISPLAY_ITEM_STACK, x, y, "7");
-        return true;
     }
 
     @Override

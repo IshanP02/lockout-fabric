@@ -246,10 +246,32 @@ public class GoalType {
     public static final String OBTAIN_TINTED_GLASS = "OBTAIN_TINTED_GLASS";
     public static final String OBTAIN_POTTERY_SHERD = "OBTAIN_POTTERY_SHERD";
     public static final String OPPONENT_HIT_BY_ARROW = "OPPONENT_HIT_BY_ARROW";
-    public static final String DAMAGED_BY_7_UNIQUE_SOURCES = "DAMAGED_BY_7_UNIQUE_SOURCES";
+    public static final String DAMAGED_BY_8_UNIQUE_SOURCES = "DAMAGED_BY_8_UNIQUE_SOURCES";
     public static final String BREW_FIRE_RESISTANCE_POTION = "BREW_FIRE_RESISTANCE_POTION";
     public static final String OBTAIN_3_UNIQUE_BANNER_PATTERNS = "OBTAIN_3_UNIQUE_BANNER_PATTERNS";
     public static final String OBTAIN_ALL_TORCHES = "OBTAIN_ALL_TORCHES";
     public static final String TUNE_NOTE_BLOCK = "TUNE_NOTE_BLOCK";
+    public static final String OBTAIN_LODESTONE = "OBTAIN_LODESTONE";
+    public static final String GET_STAY_HYDRATED_ADVANCEMENT = "GET_STAY_HYDRATED_ADVANCEMENT";
+    public static final String BREED_ARMADILLO = "BREED_ARMADILLO";
+    public static final String OBTAIN_64_COARSE_DIRT = "OBTAIN_64_COARSE_DIRT";
+    public static final String PLACE_PAINTING = "PLACE_PAINTING";
+    public static final String OBTAIN_CALIBRATED_SCULK_SENSOR = "OBTAIN_CALIBRATED_SCULK_SENSOR";
+    public static final String OBTAIN_SMOOTH_QUARTZ_STAIRS = "OBTAIN_SMOOTH_QUARTZ_STAIRS";
+    public static final String OBTAIN_64_FIREFLY_BUSHES = "OBTAIN_64_FIREFLY_BUSHES";
+    public static final String OBTAIN_BLOCK_OF_RESIN = "OBTAIN_BLOCK_OF_RESIN";
+    public static final String RIGHT_CLICK_BANNER_WITH_MAP = "RIGHT_CLICK_BANNER_WITH_MAP";
+    public static final String OBTAIN_SEA_LANTERN = "OBTAIN_SEA_LANTERN";
+    public static final String BOAT_2KM = "BOAT_2KM";
+    public static final String EQUIP_HORSE_WITH_COLORED_LEATHER_ARMOR = "EQUIP_HORSE_WITH_COLORED_LEATHER_ARMOR";
+    public static final String EAT_BEETROOT_SOUP = "EAT_BEETROOT_SOUP";
+    public static final String KILL_SLIME = "KILL_SLIME";
+    public static final String BREAK_ANY_TOOL = "BREAK_ANY_TOOL";
+    public static final String BREAK_ANY_ARMOR = "BREAK_ANY_ARMOR";
+    public static final String OBTAIN_COLORED_HARNESS = "OBTAIN_COLORED_HARNESS";
+    public static final String KILL_BOGGED = "KILL_BOGGED";
+    public static final String OBTAIN_64_GLOW_LICHEN = "OBTAIN_64_GLOW_LICHEN";
+    public static final String GET_INFESTED_STATUS_EFFECT = "GET_INFESTED_STATUS_EFFECT";
+    public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
 
 }
