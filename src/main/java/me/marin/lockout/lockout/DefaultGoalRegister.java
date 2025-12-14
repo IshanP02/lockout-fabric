@@ -156,6 +156,9 @@ public class DefaultGoalRegister {
                 .build()
         );
         INSTANCE.register(GoalType.OBTAIN_BOOKSHELF, ObtainBookshelfGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_DIAMOND_BLOCK, ObtainDiamondBlockGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_EMERALD_BLOCK, ObtainEmeraldBlockGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_AMETHYST_BLOCK, ObtainAmethystBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_MOSSY_STONE_BRICK_WALL, ObtainMossyStoneBrickWallGoal.class);
         INSTANCE.register(GoalType.OBTAIN_FLOWERING_AZALEA, ObtainFloweringAzaleaGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SCAFFOLDING, ObtainScaffoldingGoal.class);
