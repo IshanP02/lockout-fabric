@@ -408,6 +408,8 @@ public class DefaultGoalRegister {
 
         INSTANCE.register(GoalType.OBTAIN_64_ARROWS, Obtain64ArrowsGoal.class);
 
+        INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
+
     }
 
 }

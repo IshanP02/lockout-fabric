@@ -1,3 +1,5 @@
+## Lockout v0.9.7
+- Added Die to Warden Goal
 ## Lockout v0.9.6
 - Added Obtain Block of Diamond Goal
 - Added Obtain Block of Emerald Goal
