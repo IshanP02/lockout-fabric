@@ -53,5 +53,4 @@ public class ServerPlayerEntityMixin {
             LockoutServer.compassHandler.compassSlots.put(player.getUuid(), 40);
         }
     }
-
 }

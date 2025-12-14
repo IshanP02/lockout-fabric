@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -22,6 +23,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import oshi.util.tuples.Pair;
+
+import net.minecraft.entity.damage.DamageType;
 
 import java.util.*;
 
@@ -46,6 +49,13 @@ public class Lockout {
     public final Map<UUID, Long> pumpkinWearTime = new HashMap<>();
     public final Map<UUID, Integer> distanceSprinted = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
+
+    public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
+    public final Map<UUID, Integer> distanceSwam = new HashMap<>();
+    public final Map<LockoutTeam, Set<Identifier>> biomesVisited = new HashMap<>();
+    public final Map<LockoutTeam, Integer> damageByUniqueSources = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> damageTypesTaken = new HashMap<>();
+    public final Map<UUID, Integer> distanceByBoat = new HashMap<>();
 
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
@@ -298,8 +308,6 @@ public class Lockout {
     public void setRunning(boolean running) {
         isRunning = running;
     }
-
-
 
     private static String getWinnerTeamsString(List<? extends LockoutTeam> teams) {
         StringBuilder sb = new StringBuilder();

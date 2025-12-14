@@ -35,6 +35,12 @@ public class GoalDataGenerator {
         return this;
     }
 
+    public GoalDataGenerator withLeatherHorseArmorPiece(LeatherHorseArmorPieceGenerator leatherHorseArmorPieceGenerator) {
+        generators.add(leatherHorseArmorPieceGenerator);
+        return this;
+    }
+
+
     public String generateData(List<DyeColor> attainableDyes) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < generators.size(); i++) {
@@ -45,6 +51,8 @@ public class GoalDataGenerator {
                 sb.append(dyeGenerator.generateData(new ArrayList<>(attainableDyes)));
             } else if (generator instanceof LeatherArmorPieceGenerator leatherArmorPieceGenerator) {
                 sb.append(leatherArmorPieceGenerator.generateData(new ArrayList<>(GoalDataConstants.DATA_LEATHER_ARMOR)));
+            } else if (generator instanceof LeatherHorseArmorPieceGenerator leatherHorseArmorPieceGenerator) {
+                sb.append(leatherHorseArmorPieceGenerator.generateData(new ArrayList<>(GoalDataConstants.DATA_LEATHER_HORSE_ARMOR_LIST)));
             }
         }
         return sb.toString();
@@ -79,6 +87,16 @@ public class GoalDataGenerator {
         }
         default boolean verify(String s) {
             return GoalDataConstants.DATA_LEATHER_ARMOR.contains(s);
+        }
+    }
+
+    @FunctionalInterface
+    public interface LeatherHorseArmorPieceGenerator extends Generator<List<String>> {
+        default String getGeneratorName() {
+            return "Leather Horse Armor";
+        }
+        default boolean verify(String s) {
+            return GoalDataConstants.DATA_LEATHER_HORSE_ARMOR.contains(s);
         }
     }
 
