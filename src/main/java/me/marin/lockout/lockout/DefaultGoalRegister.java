@@ -343,6 +343,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_20_ADVANCEMENTS, Get20UniqueAdvancementsGoal.class);
         INSTANCE.register(GoalType.GET_30_ADVANCEMENTS, Get30UniqueAdvancementsGoal.class);
         INSTANCE.register(GoalType.WEAR_UNIQUE_COLORED_LEATHER_ARMOR, WearUniqueColoredLeatherArmorGoal.class);
+        INSTANCE.register(GoalType.WEAR_4_UNIQUE_ARMOR_PIECES, Wear4UniqueArmorPiecesGoal.class);
         INSTANCE.register(GoalType.KILL_OTHER_PLAYER, KillOtherTeamPlayer.class,
                 GoalRequirements.TEAMS_GOAL);
         INSTANCE.register(GoalType.OPPONENT_OBTAINS_CRAFTING_TABLE, OpponentObtainsCraftingTableGoal.class,
