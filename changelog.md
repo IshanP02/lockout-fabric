@@ -1,3 +1,6 @@
+## Lockout v0.9.10
+- Added Goals:
+	- Added Wear 4 Different Armor Pieces Goal
 ## Lockout v0.9.9
 - Added Goals:
 	- Obtain 64 Coloured Terracotta
