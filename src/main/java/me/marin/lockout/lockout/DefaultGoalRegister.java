@@ -490,7 +490,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
 
-        INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
+        INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class,  new GoalRequirements.Builder()
+                .structures(List.of(ANCIENT_CITY))
+                .build()
+        );
 
     }
 
