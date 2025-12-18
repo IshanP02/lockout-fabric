@@ -1,3 +1,8 @@
+## Lockout v0.9.9
+- Added Goals:
+	- Obtain 64 Coloured Terracotta
+	- Obtain Every Furnace Type
+	- Obtain 5 Stone Types
 ## Lockout v0.9.8
 - Added Goals:
 	- Crouch 100m

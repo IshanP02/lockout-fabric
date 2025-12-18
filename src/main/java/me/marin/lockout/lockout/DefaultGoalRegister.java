@@ -191,6 +191,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_REDSTONE_COMPARATOR, ObtainRedstoneComparatorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_OBSERVER, ObtainObserverGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ACTIVATOR_RAIL, ObtainActivatorRailGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_ALL_FURNACE_TYPES, ObtainAllFurnaceTypesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DETECTOR_RAIL, ObtainDetectorRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_POWERED_RAIL, ObtainPoweredRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DISPENSER, ObtainDispenserGoal.class);
@@ -208,6 +209,10 @@ public class DefaultGoalRegister {
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
         );
         INSTANCE.register(GoalType.OBTAIN_64_COLORED_GLASS, Obtain64ColoredGlassGoal.class,
+                null,
+                GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
+        );
+        INSTANCE.register(GoalType.OBTAIN_64_COLORED_TERRACOTTA, Obtain64ColoredTerracottaGoal.class,
                 null,
                 GoalDataGenerator.builder().withDye(attainableDyes -> GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size()))))
         );
@@ -490,6 +495,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
         INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_STONE_TYPES, Obtain5UniqueStoneGoal.class);
 
         INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
 
