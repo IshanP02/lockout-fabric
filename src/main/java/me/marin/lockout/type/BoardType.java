@@ -5,8 +5,8 @@ import java.util.List;
 import me.marin.lockout.generator.GoalGroup;
 
 public enum BoardType {
-    EASY(List.of(GoalGroup.KILL_MOB, GoalGroup.EFFECT)), // Exclude these groups
-    TOURNAMENT(List.of(GoalGroup.BREED, GoalGroup.EAT_FOOD)); // Exclude these groups
+    EASY(List.of(GoalGroup.BANNEDGOALS, GoalGroup.HONEY, GoalGroup.STRIDER, GoalGroup.END, GoalGroup.KILL_UNIQUE_HOSTILES)), // Exclude these groups
+    TOURNAMENT(List.of(GoalGroup.BANNEDGOALS)); // Exclude these groups
 
     private final List<GoalGroup> excludedGroups;
 
