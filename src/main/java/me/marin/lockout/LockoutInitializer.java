@@ -137,6 +137,15 @@ public class LockoutInitializer implements ModInitializer {
                 setBoardTimeRoot.addChild(size);
             }
 
+            {
+                // BoardType command
+                var boardTypeRoot = CommandManager.literal("BoardType").requires(PERMISSIONS).build();
+                var boardTypeArgument = CommandManager.argument("board type", StringArgumentType.word()).executes(LockoutServer::setBoardType).build();
+
+                dispatcher.getRoot().addChild(boardTypeRoot);
+                boardTypeRoot.addChild(boardTypeArgument);
+            }
+
         });
 
         LootTableEvents.REPLACE.register(((key, original, source, registries) -> {

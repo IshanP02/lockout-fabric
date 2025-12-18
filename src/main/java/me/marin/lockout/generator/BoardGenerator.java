@@ -5,6 +5,7 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.client.LockoutBoard;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
+import me.marin.lockout.type.BoardType;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.DyeColor;
 import net.minecraft.world.biome.Biome;
@@ -29,15 +30,23 @@ public class BoardGenerator {
         this.structures = structures;
     }
 
-    public LockoutBoard generateBoard(int size) {
+    public LockoutBoard generateBoard(int size, String boardTypeName) {
         Collections.shuffle(registeredGoals);
 
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
+        // Filter goals based on the board type
+        BoardType boardType = BoardType.valueOf(boardTypeName.toUpperCase());
+
         ListIterator<String> it = registeredGoals.listIterator();
         while (goals.size() < size * size && it.hasNext()) {
             String goal = it.next();
+
+            // Check if the goal is part of the included goal groups for the board type
+            if (boardType.isGoalExcluded(goal)) {
+                continue; // Skip goals that belong to excluded groups
+            }
 
             if (!GoalGroup.canAdd(goal, goalTypes)) {
                 continue;
@@ -64,7 +73,7 @@ public class BoardGenerator {
         }
 
         if (goals.size() < size * size) {
-            return generateBoard(size);
+            return generateBoard(size, boardTypeName);
         }
 
         // Shuffle the board again. Some goals will always be after some other goals (GoalGroup#requirePredecessor),
