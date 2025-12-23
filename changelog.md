@@ -1,3 +1,11 @@
+## Lockout v0.10.0
+- Added new keybind "P" to access the Pick/Ban GUI (only accessable to players with operator permissions)
+	- Left Click on a goal to add it to your Picks
+	- Right Click on a goal to add it to your Bans
+- Goal Search in Pick/Ban GUI automatically filters out any goals that fail the biome/structure check.
+- Added `/RemovePicks` command.
+- Added `/RemoveBans` command.
+- Added `/PickBanLimit <number>` command. This allows you to set a limit on the amount of picks and bans.
 ## Lockout v0.9.9
 - Added Goals:
 	- Obtain 64 Coloured Terracotta
