@@ -5,11 +5,13 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import me.marin.lockout.lockout.DefaultGoalRegister;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.Networking;
+import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.command.argument.GameProfileArgumentType;
@@ -27,6 +29,8 @@ import net.minecraft.potion.Potions;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import me.marin.lockout.generator.GoalGroup;
+import net.minecraft.text.Text;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -135,6 +139,76 @@ public class LockoutInitializer implements ModInitializer {
 
                 dispatcher.getRoot().addChild(setBoardTimeRoot);
                 setBoardTimeRoot.addChild(size);
+            }
+
+            {
+                // RemovePicks command
+                dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
+                    // Remove goal-to-player mappings for picks before clearing
+                    for (String goalId : GoalGroup.PICKS.getGoals()) {
+                        GoalGroup.setGoalPlayer(goalId, null);
+                    }
+                    GoalGroup.PICKS.getGoals().clear();
+                    LockoutServer.SERVER_PICKS.clear();
+                    context.getSource().sendMessage(Text.literal("Removed picks."));
+                    
+                    // Broadcast update to all players on server
+                    if (context.getSource().getServer() != null) {
+                        // Build remaining goal-to-player map (only bans remain)
+                        java.util.Map<String, String> goalToPlayerMap = new java.util.HashMap<>();
+                        for (String goalId : LockoutServer.SERVER_BANS) {
+                            String playerName = GoalGroup.getGoalPlayer(goalId);
+                            if (playerName != null) {
+                                goalToPlayerMap.put(goalId, playerName);
+                            }
+                        }
+                        
+                        var payload = new UpdatePicksBansPayload(
+                            new java.util.ArrayList<>(LockoutServer.SERVER_PICKS),
+                            new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
+                            goalToPlayerMap
+                        );
+                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                            ServerPlayNetworking.send(player, payload);
+                        }
+                    }
+                    return 1;
+                }).build());
+            }
+
+            {
+                // RemoveBans command
+                dispatcher.getRoot().addChild(CommandManager.literal("RemoveBans").requires(PERMISSIONS).executes((context) -> {
+                    // Remove goal-to-player mappings for bans before clearing
+                    for (String goalId : GoalGroup.BANS.getGoals()) {
+                        GoalGroup.setGoalPlayer(goalId, null);
+                    }
+                    GoalGroup.BANS.getGoals().clear();
+                    LockoutServer.SERVER_BANS.clear();
+                    context.getSource().sendMessage(Text.literal("Removed bans."));
+                    
+                    // Broadcast update to all players on server
+                    if (context.getSource().getServer() != null) {
+                        // Build remaining goal-to-player map (only picks remain)
+                        java.util.Map<String, String> goalToPlayerMap = new java.util.HashMap<>();
+                        for (String goalId : LockoutServer.SERVER_PICKS) {
+                            String playerName = GoalGroup.getGoalPlayer(goalId);
+                            if (playerName != null) {
+                                goalToPlayerMap.put(goalId, playerName);
+                            }
+                        }
+                        
+                        var payload = new UpdatePicksBansPayload(
+                            new java.util.ArrayList<>(LockoutServer.SERVER_PICKS),
+                            new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
+                            goalToPlayerMap
+                        );
+                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                            ServerPlayNetworking.send(player, payload);
+                        }
+                    }
+                    return 1;
+                }).build());
             }
 
         });

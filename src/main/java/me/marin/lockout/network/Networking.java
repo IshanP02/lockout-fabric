@@ -11,8 +11,14 @@ public class Networking {
         PayloadTypeRegistry.playS2C().register(CompleteTaskPayload.ID, CompleteTaskPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(EndLockoutPayload.ID, EndLockoutPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(LockoutVersionPayload.ID, LockoutVersionPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(UpdatePicksBansPayload.ID, UpdatePicksBansPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(BroadcastPickBanPayload.ID, BroadcastPickBanPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPickBanLimitPayload.ID, SyncPickBanLimitPayload.CODEC);
 
         PayloadTypeRegistry.playC2S().register(CustomBoardPayload.ID, CustomBoardPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(LockoutVersionPayload.ID, LockoutVersionPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(UpdatePicksBansPayload.ID, UpdatePicksBansPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(BroadcastPickBanPayload.ID, BroadcastPickBanPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(SyncPickBanLimitPayload.ID, SyncPickBanLimitPayload.CODEC);
     }
 }

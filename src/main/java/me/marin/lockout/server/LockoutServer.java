@@ -9,9 +9,12 @@ import me.marin.lockout.generator.BoardGenerator;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
+import me.marin.lockout.network.BroadcastPickBanPayload;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
 import me.marin.lockout.network.StartLockoutPayload;
+import me.marin.lockout.network.SyncPickBanLimitPayload;
+import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.network.UpdateTooltipPayload;
 import me.marin.lockout.server.handlers.*;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
@@ -70,6 +73,10 @@ public class LockoutServer {
     public static final Map<LockoutRunnable, Long> gameStartRunnables = new HashMap<>();
 
     private static LockoutBoard CUSTOM_BOARD = null;
+    
+    // Server-side picks and bans storage
+    public static final List<String> SERVER_PICKS = new ArrayList<>();
+    public static final List<String> SERVER_BANS = new ArrayList<>();
 
     private static boolean isInitialized = false;
 
@@ -150,6 +157,39 @@ public class LockoutServer {
             if (lockout.hasStarted()) {
                 ServerPlayNetworking.send(player, StartLockoutPayload.INSTANCE);
             }
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
+            // Store picks/bans on server-side
+            SERVER_PICKS.clear();
+            SERVER_PICKS.addAll(payload.picks());
+            SERVER_BANS.clear();
+            SERVER_BANS.addAll(payload.bans());
+            
+            // Broadcast picks/bans update to all other players
+            for (ServerPlayerEntity otherPlayer : server.getPlayerManager().getPlayerList()) {
+                if (otherPlayer != context.player()) {
+                    ServerPlayNetworking.send(otherPlayer, payload);
+                }
+            }
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(BroadcastPickBanPayload.ID, (payload, context) -> {
+            // Broadcast the pick/ban action message to all players
+            server.execute(() -> {
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    ServerPlayNetworking.send(player, payload);
+                }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(SyncPickBanLimitPayload.ID, (payload, context) -> {
+            // Broadcast the pick/ban limit to all players
+            server.execute(() -> {
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    ServerPlayNetworking.send(player, payload);
+                }
+            });
         });
 
         ServerPlayNetworking.registerGlobalReceiver(CustomBoardPayload.ID, (payload, context) -> {
@@ -305,8 +345,18 @@ public class LockoutServer {
         // Generate & set board
         LockoutBoard lockoutBoard;
         if (CUSTOM_BOARD == null) {
+            // Populate GoalGroup with server-side picks/bans before generation
+            me.marin.lockout.generator.GoalGroup.PICKS.getGoals().clear();
+            me.marin.lockout.generator.GoalGroup.PICKS.getGoals().addAll(SERVER_PICKS);
+            me.marin.lockout.generator.GoalGroup.BANS.getGoals().clear();
+            me.marin.lockout.generator.GoalGroup.BANS.getGoals().addAll(SERVER_BANS);
+            
             BoardGenerator boardGenerator = new BoardGenerator(GoalRegistry.INSTANCE.getRegisteredGoals(), teams, AVAILABLE_DYE_COLORS, BIOME_LOCATE_DATA, STRUCTURE_LOCATE_DATA);
             lockoutBoard = boardGenerator.generateBoard(boardSize);
+            
+            // Clear after generation
+            me.marin.lockout.generator.GoalGroup.PICKS.getGoals().clear();
+            me.marin.lockout.generator.GoalGroup.BANS.getGoals().clear();
         } else {
             // Reset custom board (TODO: do this somewhere else)
             for (Goal goal : CUSTOM_BOARD.getGoals()) {
