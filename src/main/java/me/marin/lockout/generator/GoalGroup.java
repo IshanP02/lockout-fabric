@@ -173,6 +173,33 @@ public class GoalGroup {
     public static final GoalGroup SWAMP = new GoalGroup(List.of(
             BREED_FROGS, KILL_BOGGED, KILL_WITCH, KILL_SLIME
     ), 1);
+    public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+    public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+
+    private static int CUSTOM_LIMIT = Integer.MAX_VALUE;
+    
+    // Maps goal ID to player name who picked/banned it
+    private static final java.util.Map<String, String> GOAL_TO_PLAYER_MAP = new java.util.HashMap<>();
+
+    public static void setCustomLimit(int limit) {
+        CUSTOM_LIMIT = limit;
+    }
+
+    public static int getCustomLimit() {
+        return CUSTOM_LIMIT;
+    }
+    
+    public static void setGoalPlayer(String goalId, String playerName) {
+        GOAL_TO_PLAYER_MAP.put(goalId, playerName);
+    }
+    
+    public static String getGoalPlayer(String goalId) {
+        return GOAL_TO_PLAYER_MAP.get(goalId);
+    }
+    
+    public static void clearGoalPlayers() {
+        GOAL_TO_PLAYER_MAP.clear();
+    }
 
     static {
         KILL_UNIQUE_HOSTILES.requirePredecessor.add(KILL_13_UNIQUE_HOSTILE_MOBS);
