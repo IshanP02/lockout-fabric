@@ -216,6 +216,26 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
+                // CreateBoardType command - opens GUI to create custom BoardTypes
+                var commandNode = ClientCommandManager.literal("CreateBoardType").requires(ccs -> {
+                    if (MinecraftClient.getInstance().isInSingleplayer()) {
+                        return true;
+                    }
+                    return ccs.getPlayer().hasPermissionLevel(2);
+                }).executes((context) -> {
+                    MinecraftClient client = MinecraftClient.getInstance();
+                    client.send(() -> {
+                        if (client.player != null) {
+                            client.setScreen(new BoardTypeCreatorScreen());
+                        }
+                    });
+
+                    return 1;
+                }).build();
+
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
                 var commandNode = ClientCommandManager.literal("SetCustomBoard").requires(ccs -> {
                     if (MinecraftClient.getInstance().isInSingleplayer()) {
                         return true;
