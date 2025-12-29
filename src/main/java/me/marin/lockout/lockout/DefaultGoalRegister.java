@@ -19,6 +19,7 @@ import me.marin.lockout.lockout.goals.dimension.EnterEndGoal;
 import me.marin.lockout.lockout.goals.dimension.EnterNetherGoal;
 import me.marin.lockout.lockout.goals.experience.ReachXPLevel15Goal;
 import me.marin.lockout.lockout.goals.experience.ReachXPLevel30Goal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueCraftsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.kill.*;
@@ -504,6 +505,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_5_MINUTES, HaveEffectsAppliedFor5MinutesGoal.class);
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_8_MINUTES, HaveEffectsAppliedFor8MinutesGoal.class);
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_10_MINUTES, HaveEffectsAppliedFor10MinutesGoal.class);
+        INSTANCE.register(GoalType.HAVE_MOST_ADVANCEMENTS, HaveMostAdvancementsGoal.class, GoalRequirements.TEAMS_GOAL);
 
     }
 
