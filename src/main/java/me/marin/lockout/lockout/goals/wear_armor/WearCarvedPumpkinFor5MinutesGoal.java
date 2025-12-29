@@ -5,13 +5,10 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.Utility;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.WearArmorPieceGoal;
-import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Formatting;
 
@@ -41,38 +38,7 @@ public class WearCarvedPumpkinFor5MinutesGoal extends WearArmorPieceGoal impleme
 
     @Override
     public boolean satisfiedBy(PlayerInventory playerInventory) {
-        PlayerEntity player = playerInventory.player;
-        var map = LockoutServer.lockout.pumpkinWearTime;
-
-        long wornTime = map.getOrDefault(player.getUuid(), 0L);
-
-        // TODO: Do better
-        var armor = new ArrayList<ItemStack>();
-        armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.HEAD));
-        armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.CHEST));
-        armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.LEGS));
-        armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.FEET));
-
-        boolean wearingPumpkin = false;
-        for (ItemStack item : armor) {
-            if (item == null) continue;
-            if (item.getItem() == Items.CARVED_PUMPKIN) {
-                wearingPumpkin = true;
-                break;
-            }
-        }
-
-        if (wearingPumpkin) {
-            wornTime += 1;
-            map.put(player.getUuid(), wornTime);
-
-            if (wornTime % 20 == 0) {
-                ((LockoutTeamServer) LockoutServer.lockout.getPlayerTeam(player.getUuid())).sendTooltipUpdate(this, true);
-            }
-
-            return wornTime >= (FIVE_MINUTES_TICKS);
-        }
-
+        // This method is no longer used - logic moved to EndServerTickEventHandler for team-based additive behavior
         return false;
     }
 

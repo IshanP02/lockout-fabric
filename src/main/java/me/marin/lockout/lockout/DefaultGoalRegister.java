@@ -37,6 +37,9 @@ import me.marin.lockout.lockout.goals.status_effect.*;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get3StatusEffectsGoal;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get4StatusEffectsGoal;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get6StatusEffectsGoal;
+import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor5MinutesGoal;
+import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor8MinutesGoal;
+import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor10MinutesGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameCatGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameHorseGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameParrotGoal;
@@ -497,6 +500,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_STONE_TYPES, Obtain5UniqueStoneGoal.class);
 
         INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class);
+
+        INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_5_MINUTES, HaveEffectsAppliedFor5MinutesGoal.class);
+        INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_8_MINUTES, HaveEffectsAppliedFor8MinutesGoal.class);
+        INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_10_MINUTES, HaveEffectsAppliedFor10MinutesGoal.class);
 
     }
 
