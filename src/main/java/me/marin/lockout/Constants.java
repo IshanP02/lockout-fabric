@@ -18,6 +18,9 @@ public class Constants {
     public static final Identifier LOCKOUT_VERSION_PACKET = Identifier.of(NAMESPACE, "lockout_version");
 
     public static final Identifier CUSTOM_BOARD_PACKET = Identifier.of(NAMESPACE, "set_custom_board");
+    public static final Identifier UPDATE_PICKS_BANS_PACKET = Identifier.of(NAMESPACE, "update_picks_bans");
+    public static final Identifier BROADCAST_PICK_BAN_PACKET = Identifier.of(NAMESPACE, "broadcast_pick_ban");
+    public static final Identifier SYNC_PICK_BAN_LIMIT_PACKET = Identifier.of(NAMESPACE, "sync_pick_ban_limit");
 
     public static final Identifier BOARD_SCREEN_ID = Identifier.of(NAMESPACE, "board");
 
