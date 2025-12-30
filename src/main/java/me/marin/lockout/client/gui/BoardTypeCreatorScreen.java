@@ -34,11 +34,23 @@ public class BoardTypeCreatorScreen extends Screen {
     private TextWidget statusTextWidget;
     private BoardTypeGoalListWidget goalListWidget;
 
-    // Track which goals are excluded (selected for exclusion)
     private final Set<String> excludedGoals = new HashSet<>();
+    private final String editingBoardTypeName;
+    private final boolean isEditMode;
 
     public BoardTypeCreatorScreen() {
         super(Text.literal("Create Custom BoardType"));
+        this.editingBoardTypeName = null;
+        this.isEditMode = false;
+    }
+    
+    public BoardTypeCreatorScreen(JSONBoardType existingBoardType) {
+        super(Text.literal("Edit BoardType: " + existingBoardType.name));
+        this.editingBoardTypeName = existingBoardType.name;
+        this.isEditMode = true;
+        if (existingBoardType.excludedGoals != null) {
+            this.excludedGoals.addAll(existingBoardType.excludedGoals);
+        }
     }
 
     @Override
@@ -48,8 +60,7 @@ public class BoardTypeCreatorScreen extends Screen {
 
         int centerX = width / 2;
 
-        // Title
-        TextWidget titleWidget = new TextWidget(Text.literal("Create Custom BoardType").formatted(Formatting.BOLD), textRenderer);
+        TextWidget titleWidget = new TextWidget(this.title.copy().formatted(Formatting.BOLD), textRenderer);
         titleWidget.setPosition(centerX - titleWidget.getWidth() / 2, 10);
         this.addDrawableChild(titleWidget);
 
@@ -58,9 +69,10 @@ public class BoardTypeCreatorScreen extends Screen {
         nameTextField = new TextFieldWidget(textRenderer, centerX - nameFieldWidth / 2, 30, nameFieldWidth, 20, Text.empty());
         nameTextField.setMaxLength(50);
         nameTextField.setSuggestion("BoardType Name");
-        nameTextField.setChangedListener(text -> {
-            nameTextField.setSuggestion(text.isEmpty() ? "BoardType Name" : null);
-        });
+        if (isEditMode) {
+            nameTextField.setText(editingBoardTypeName);
+        }
+        nameTextField.setChangedListener(text -> nameTextField.setSuggestion(text.isEmpty() ? "BoardType Name" : null));
         this.addDrawableChild(nameTextField);
 
         // Search field
@@ -76,12 +88,10 @@ public class BoardTypeCreatorScreen extends Screen {
         });
         this.addDrawableChild(searchTextField);
 
-        // Status text (shows count of excluded goals)
         statusTextWidget = new TextWidget(getStatusText(), textRenderer);
         statusTextWidget.setPosition(centerX - statusTextWidget.getWidth() / 2, 85);
         this.addDrawableChild(statusTextWidget);
 
-        // Goal list widget (scrollable)
         int listWidth = 400;
         int listHeight = height - 180;
         goalListWidget = new BoardTypeGoalListWidget(
@@ -94,10 +104,10 @@ public class BoardTypeCreatorScreen extends Screen {
         );
         this.addDrawableChild(goalListWidget);
 
-        // Bottom buttons
         final int BOTTOM_Y = height - 30;
 
-        saveButton = ButtonWidget.builder(Text.of("Save BoardType"), (b) -> {
+        String saveButtonText = isEditMode ? "Save Changes" : "Save BoardType";
+        saveButton = ButtonWidget.builder(Text.of(saveButtonText), (b) -> {
             saveBoardType();
         }).width(120).position(centerX - 125, BOTTOM_Y).build();
         this.addDrawableChild(saveButton);
@@ -108,28 +118,17 @@ public class BoardTypeCreatorScreen extends Screen {
         this.addDrawableChild(cancelButton);
     }
 
-    /**
-     * Toggles a goal's exclusion status
-     */
     public void toggleGoalExclusion(String goalId) {
-        if (excludedGoals.contains(goalId)) {
-            excludedGoals.remove(goalId);
-        } else {
+        if (!excludedGoals.remove(goalId)) {
             excludedGoals.add(goalId);
         }
         updateStatusText();
     }
 
-    /**
-     * Checks if a goal is currently marked for exclusion
-     */
     public boolean isGoalExcluded(String goalId) {
         return excludedGoals.contains(goalId);
     }
 
-    /**
-     * Updates the status text showing excluded/total goal count
-     */
     private void updateStatusText() {
         if (statusTextWidget != null) {
             this.remove(statusTextWidget);
@@ -141,9 +140,6 @@ public class BoardTypeCreatorScreen extends Screen {
         this.addDrawableChild(statusTextWidget);
     }
 
-    /**
-     * Gets the status text for display
-     */
     private Text getStatusText() {
         int totalGoals = GoalRegistry.INSTANCE.getRegisteredGoals().size();
         int excludedCount = excludedGoals.size();
@@ -154,11 +150,7 @@ public class BoardTypeCreatorScreen extends Screen {
             .formatted(Formatting.GRAY);
     }
 
-    /**
-     * Saves the BoardType to file
-     */
     private void saveBoardType() {
-        // Clear previous error
         if (errorTextWidget != null) {
             this.remove(errorTextWidget);
             errorTextWidget = null;
@@ -166,50 +158,47 @@ public class BoardTypeCreatorScreen extends Screen {
 
         String name = nameTextField.getText().trim();
 
-        // Validate name
         if (name.isEmpty()) {
             showError("Please enter a name for the BoardType");
             return;
         }
 
-        // Check for invalid characters
         if (name.matches(".*[<>:\"/\\\\|?*].*")) {
             showError("Name contains invalid characters");
             return;
         }
 
-        // Check if name conflicts with built-in types
         try {
             BoardType.valueOf(name.toUpperCase());
             showError("Name conflicts with built-in BoardType: " + name.toUpperCase());
             return;
         } catch (IllegalArgumentException e) {
-            // Good, it's not a built-in type
+            // Not a built-in type, continue
+        }
+        
+        if (!isEditMode || !name.equals(editingBoardTypeName)) {
+            if (BoardTypeIO.INSTANCE.boardTypeExists(name)) {
+                showError("A BoardType with this name already exists");
+                return;
+            }
         }
 
-        // Create JSON object
         JSONBoardType boardType = new JSONBoardType();
         boardType.name = name;
         boardType.excludedGoals = new ArrayList<>(excludedGoals);
         boardType.description = String.format("Custom BoardType with %d goals excluded", excludedGoals.size());
 
-        // Save to file
         try {
-            // Check if file exists and handle naming
-            if (BoardTypeIO.INSTANCE.boardTypeExists(name)) {
-                String suitableName = BoardTypeIO.INSTANCE.getSuitableName(name);
-                if (!suitableName.equals(name)) {
-                    showError("A BoardType with this name already exists. Try: " + suitableName);
-                    return;
-                }
+            if (isEditMode && !name.equals(editingBoardTypeName)) {
+                BoardTypeIO.INSTANCE.deleteBoardType(editingBoardTypeName);
             }
 
             BoardTypeIO.INSTANCE.saveBoardType(boardType);
-            BoardTypeManager.INSTANCE.clearCache(); // Clear cache so new type is recognized
+            BoardTypeManager.INSTANCE.clearCache();
 
-            // Show success message
+            String action = isEditMode ? "Updated" : "Created";
             MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("Created custom BoardType: ").formatted(Formatting.GREEN)
+                Text.literal(action + " custom BoardType: ").formatted(Formatting.GREEN)
                     .append(Text.literal(name).formatted(Formatting.YELLOW))
                     .append(Text.literal(" (" + excludedGoals.size() + " goals excluded)")),
                 false
@@ -222,9 +211,6 @@ public class BoardTypeCreatorScreen extends Screen {
         }
     }
 
-    /**
-     * Shows an error message
-     */
     private void showError(String message) {
         if (errorTextWidget != null) {
             this.remove(errorTextWidget);

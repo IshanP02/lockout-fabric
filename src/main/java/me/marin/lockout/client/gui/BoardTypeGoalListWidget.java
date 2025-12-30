@@ -1,6 +1,15 @@
 package me.marin.lockout.client.gui;
 
+import me.marin.lockout.generator.GoalDataGenerator;
+import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
+import me.marin.lockout.lockout.goals.util.GoalDataConstants;
+import me.marin.lockout.lockout.interfaces.BreedAnimalGoal;
+import me.marin.lockout.lockout.interfaces.KillMobGoal;
+import me.marin.lockout.lockout.interfaces.TameAnimalGoal;
+import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
+import me.marin.lockout.lockout.texture.CycleTexturesProvider;
+import me.marin.lockout.lockout.texture.TextureProvider;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +18,10 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ScrollableWidget;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.entity.EntityType;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.SpawnEggItem;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.text.WordUtils;
@@ -18,15 +31,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Scrollable widget that displays all goals with checkboxes for selecting exclusions.
+ * Scrollable widget that displays all goals with icons for selecting exclusions.
  */
 @Environment(EnvType.CLIENT)
 public class BoardTypeGoalListWidget extends ScrollableWidget {
 
     private static final int MARGIN_X = 5;
     private static final int ENTRY_HEIGHT = 20;
-    private static final int CHECKBOX_SIZE = 12;
-    private static final int CHECKBOX_MARGIN = 5;
+    private static final int ICON_SIZE = 16;
+    private static final int ICON_MARGIN = 2;
 
     private final BoardTypeCreatorScreen parent;
     private final Map<String, GoalEntry> allGoals = new LinkedHashMap<>();
@@ -43,14 +56,99 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         this.parent = parent;
         
         // Load all goal IDs from registry
-        // We don't instantiate goals here to avoid errors with goals that require data
+        // Use data generators to properly instantiate goals that require data
         for (String goalId : GoalRegistry.INSTANCE.getRegisteredGoals()) {
-            // Format the goal name from the ID (e.g., "minecraft:obtain_stone" -> "Obtain Stone")
-            String displayName = formatGoalName(goalId);
-            allGoals.put(goalId, new GoalEntry(goalId, displayName));
+            Goal goal = null;
+            try {
+                Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(goalId);
+                // Generate random data if goal requires it
+                String data = gen.map(g -> g.generateData(new ArrayList<>(GoalDataGenerator.ALL_DYES)))
+                    .orElse(GoalDataConstants.DATA_NONE);
+                goal = GoalRegistry.INSTANCE.newGoal(goalId, data);
+            } catch (Exception e) {
+                // Some goals may still fail to instantiate
+                // That's okay, we'll show them without an icon
+            }
+            
+            String displayName = goal != null ? goal.getGoalName() : formatGoalName(goalId);
+            
+            // Get icon - try getTextureItemStack first, then check for CycleItemTexturesProvider
+            ItemStack icon = null;
+            if (goal != null) {
+                icon = goal.getTextureItemStack();
+                // If null and goal cycles through multiple items, use the first item
+                if (icon == null && goal instanceof CycleItemTexturesProvider cycleProvider) {
+                    List<net.minecraft.item.Item> items = cycleProvider.getItemsToDisplay();
+                    if (items != null && !items.isEmpty()) {
+                        icon = items.get(0).getDefaultStack();
+                    }
+                }
+                // If still null, check for entity-based goals and use spawn eggs
+                if (icon == null) {
+                    icon = getEntitySpawnEggIcon(goal);
+                }
+                // If still null and goal uses custom textures, provide a generic fallback icon
+                if (icon == null && (goal instanceof TextureProvider || goal instanceof CycleTexturesProvider)) {
+                    icon = getFallbackIconForGoal(goalId);
+                }
+            }
+            
+            allGoals.put(goalId, new GoalEntry(goalId, displayName, icon));
         }
         
         visibleGoals = new ArrayList<>(allGoals.values());
+    }
+    
+    /**
+     * Gets spawn egg icon for entity-based goals (Kill, Breed, Tame).
+     */
+    private ItemStack getEntitySpawnEggIcon(Goal goal) {
+        EntityType<?> entityType = null;
+        
+        if (goal instanceof KillMobGoal killGoal) {
+            entityType = killGoal.getEntity();
+        } else if (goal instanceof BreedAnimalGoal breedGoal) {
+            entityType = breedGoal.getAnimal();
+        } else if (goal instanceof TameAnimalGoal tameGoal) {
+            entityType = tameGoal.getAnimal();
+        }
+        
+        if (entityType != null) {
+            // Get the spawn egg from SpawnEggItem's map
+            SpawnEggItem spawnEgg = SpawnEggItem.forEntity(entityType);
+            if (spawnEgg != null) {
+                return spawnEgg.getDefaultStack();
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Provides fallback icons for goals that use custom textures (TextureProvider/CycleTexturesProvider).
+     */
+    private ItemStack getFallbackIconForGoal(String goalId) {
+        String lowerGoalId = goalId.toLowerCase();
+        
+        // Kill goals
+        if (lowerGoalId.contains("kill")) {
+            return Items.WOODEN_SWORD.getDefaultStack();
+        }
+        // Die/Death goals
+        if (lowerGoalId.contains("die")) {
+            return Items.SKELETON_SKULL.getDefaultStack();
+        }
+        // Breed goals
+        if (lowerGoalId.contains("breed")) {
+            return Items.WHEAT.getDefaultStack();
+        }
+        // Tame goals
+        if (lowerGoalId.contains("tame")) {
+            return Items.BONE.getDefaultStack();
+        }
+        
+        // Default fallback
+        return Items.PAPER.getDefaultStack();
     }
     
     @SuppressWarnings("deprecation")
@@ -124,7 +222,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (hoveredEntry != null && button == 0) { // Left click
+        if (hoveredEntry != null && button == 0 && !checkScrollbarDragged(mouseX, mouseY, button)) { // Left click on entry, not scrollbar
             parent.toggleGoalExclusion(hoveredEntry.goalId);
             MinecraftClient.getInstance().getSoundManager().play(
                 PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
@@ -133,6 +231,28 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         }
         var bl = checkScrollbarDragged(mouseX, mouseY, button);
         return super.mouseClicked(mouseX, mouseY, button) || bl;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (this.scrollbarDragged) {
+            int top = this.getY();
+            int bottom = top + this.getHeight();
+            int scrollbarHeight = this.getScrollbarThumbHeight();
+            double normalizedPos = (mouseY - top - (double) scrollbarHeight / 2.0) / (double) (bottom - top - scrollbarHeight);
+            normalizedPos = Math.max(0.0, Math.min(1.0, normalizedPos));
+            this.setScrollY(normalizedPos * (double) this.getMaxScrollY());
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            this.scrollbarDragged = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
@@ -146,48 +266,40 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     public class GoalEntry {
         private final String goalId;
         private final String displayName;
+        private final ItemStack icon;
 
-        public GoalEntry(String goalId, String goalName) {
+        public GoalEntry(String goalId, String goalName, ItemStack icon) {
             this.goalId = goalId;
-            // Format the goal name nicely (WordUtils is deprecated but still functional)
-            @SuppressWarnings("deprecation")
-            String formatted = WordUtils.capitalizeFully(goalName);
-            this.displayName = formatted;
+            this.displayName = goalName;
+            this.icon = icon;
         }
 
         public void render(DrawContext context, int x, int y, int width, int height, 
                           int mouseX, int mouseY, boolean hovered, float delta) {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            boolean isExcluded = parent.isGoalExcluded(goalId);
 
-            // Background for hovered entry
-            if (hovered) {
+            // Background - red if excluded, white if hovered
+            if (isExcluded) {
+                context.fill(x, y, x + width, y + height, 0x80FF4040);
+            } else if (hovered) {
                 context.fill(x, y, x + width, y + height, 0x80FFFFFF);
             }
 
-            // Draw checkbox
-            int checkboxX = x + CHECKBOX_MARGIN;
-            int checkboxY = y + (height - CHECKBOX_SIZE) / 2;
-            boolean isExcluded = parent.isGoalExcluded(goalId);
-
-            // Checkbox border
-            context.fill(checkboxX, checkboxY, checkboxX + CHECKBOX_SIZE, checkboxY + CHECKBOX_SIZE, 
-                hovered ? 0xFFFFFFFF : 0xFFA0A0A0);
-            context.fill(checkboxX + 1, checkboxY + 1, checkboxX + CHECKBOX_SIZE - 1, checkboxY + CHECKBOX_SIZE - 1, 
-                0xFF000000);
-
-            // Checkbox fill (if excluded)
-            if (isExcluded) {
-                context.fill(checkboxX + 2, checkboxY + 2, checkboxX + CHECKBOX_SIZE - 2, checkboxY + CHECKBOX_SIZE - 2, 
-                    0xFFFF4040);
+            // Draw goal icon if available
+            int iconX = x + ICON_MARGIN;
+            int iconY = y + (height - ICON_SIZE) / 2;
+            if (icon != null) {
+                context.drawItem(icon, iconX, iconY);
             }
 
             // Draw goal name
-            int textX = checkboxX + CHECKBOX_SIZE + CHECKBOX_MARGIN * 2;
+            int textX = iconX + ICON_SIZE + ICON_MARGIN * 2;
             int textY = y + (height - textRenderer.fontHeight) / 2;
             
             // Truncate text if too long
             String drawText = displayName;
-            int maxTextWidth = width - (CHECKBOX_SIZE + CHECKBOX_MARGIN * 3 + 5);
+            int maxTextWidth = width - (ICON_SIZE + ICON_MARGIN * 3 + 5);
             if (textRenderer.getWidth(drawText) > maxTextWidth) {
                 while (textRenderer.getWidth(drawText + "...") > maxTextWidth && drawText.length() > 0) {
                     drawText = drawText.substring(0, drawText.length() - 1);
@@ -195,8 +307,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
                 drawText = drawText + "...";
             }
 
-            context.drawText(textRenderer, drawText, textX, textY, 
-                isExcluded ? 0xFFFF6060 : 0xFFFFFFFF, false);
+            context.drawText(textRenderer, drawText, textX, textY, 0xFFFFFFFF, false);
 
             // Draw goal ID in smaller text if hovered
             if (hovered) {
