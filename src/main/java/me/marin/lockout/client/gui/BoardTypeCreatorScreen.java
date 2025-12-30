@@ -3,7 +3,6 @@ package me.marin.lockout.client.gui;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.GoalRegistry;
-import me.marin.lockout.type.BoardType;
 import me.marin.lockout.type.BoardTypeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -166,14 +165,6 @@ public class BoardTypeCreatorScreen extends Screen {
         if (name.matches(".*[<>:\"/\\\\|?*].*")) {
             showError("Name contains invalid characters");
             return;
-        }
-
-        try {
-            BoardType.valueOf(name.toUpperCase());
-            showError("Name conflicts with built-in BoardType: " + name.toUpperCase());
-            return;
-        } catch (IllegalArgumentException e) {
-            // Not a built-in type, continue
         }
         
         if (!isEditMode || !name.equals(editingBoardTypeName)) {

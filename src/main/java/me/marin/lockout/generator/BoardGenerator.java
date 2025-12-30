@@ -5,7 +5,7 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.client.LockoutBoard;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
-import me.marin.lockout.type.BoardType;
+import me.marin.lockout.type.BoardTypeManager;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.DyeColor;
 import net.minecraft.world.biome.Biome;
@@ -36,16 +36,13 @@ public class BoardGenerator {
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
-        // Filter goals based on the board type
-        BoardType boardType = BoardType.valueOf(boardTypeName.toUpperCase());
-
         ListIterator<String> it = registeredGoals.listIterator();
         while (goals.size() < size * size && it.hasNext()) {
             String goal = it.next();
 
-            // Check if the goal is part of the included goal groups for the board type
-            if (boardType.isGoalExcluded(goal)) {
-                continue; // Skip goals that belong to excluded groups
+            // Check if the goal should be excluded for this board type
+            if (BoardTypeManager.INSTANCE.isGoalExcluded(boardTypeName, goal)) {
+                continue;
             }
 
             if (!GoalGroup.canAdd(goal, goalTypes)) {
