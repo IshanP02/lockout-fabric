@@ -285,5 +285,6 @@ public class GoalType {
     public static final String HAVE_EFFECTS_APPLIED_FOR_8_MINUTES = "HAVE_EFFECTS_APPLIED_FOR_8_MINUTES";
     public static final String HAVE_EFFECTS_APPLIED_FOR_10_MINUTES = "HAVE_EFFECTS_APPLIED_FOR_10_MINUTES";
     public static final String HAVE_MOST_ADVANCEMENTS = "HAVE_MOST_ADVANCEMENTS";
+    public static final String KILL_BLAZE_WITH_SNOWBALL = "KILL_BLAZE_WITH_SNOWBALL";
 
 }
