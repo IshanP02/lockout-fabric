@@ -4,6 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
+import me.marin.lockout.lockout.goals.advancement.GetHotTouristDestinationsAdvancementGoal;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.interfaces.GetUniqueAdvancementsGoal;
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
@@ -150,6 +151,10 @@ public abstract class PlayerAdvancementTrackerMixin {
                                 if(size <= amount) {
                                     team.sendTooltipUpdate(uniqueBiome);
                                 }
+                            }
+                            // Also update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
+                            if (g instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal && advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+                                team.sendTooltipUpdate(hotTouristGoal, true);
                             }
                         }
                     }
