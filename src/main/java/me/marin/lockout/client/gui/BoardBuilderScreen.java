@@ -114,7 +114,7 @@ public class BoardBuilderScreen extends Screen {
                     centerX + boardHalfSize + 35 - CENTER_OFFSET,
                     40,
                     width / 2 - 125 + CENTER_OFFSET,
-                    height - 40 * 2, Text.empty());
+                    height - 40 * 2, Text.empty(), false, false);
             boardBuilderSearchWidget.setScrollY(scrollY);
             this.addDrawableChild(boardBuilderSearchWidget);
 
