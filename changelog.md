@@ -1,3 +1,6 @@
+## Lockout v0.10.1
+- Added Goals:
+	- Added Wear 4 Different Armor Pieces Goal
 ## Lockout v0.10.0
 - Added new keybind "P" to access the Pick/Ban GUI (only accessable to players with operator permissions)
 	- Left Click on a goal to add it to your Picks
