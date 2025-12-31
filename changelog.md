@@ -1,3 +1,26 @@
+## Lockout v0.10.2
+- Added Goals:
+	- Die to Pufferfish
+	- Kill Blaze with Snowball
+	- Have the Most Advancements
+	- Have Effects Applied for 5 Minutes
+	- Have Effects Applied for 8 Minutes
+	- Have Effects Applied for 10 Minutes
+- Added tooltip functionality to Visit All Nether Biomes Goal (so it shows the player which biomes they've visited)
+- Changed how Time Based Goals are Calculated for Team Goals:
+	- Time is now additive between all team members (If 2 people are doing the time goal, the time ticks at twice the rate)
+	- Tooltip now updates for all players on the team regardless of who is doing the goal.
+## Lockout v0.10.1
+- Added Goals:
+	- Added Wear 4 Different Armor Pieces Goal
+## Lockout v0.10.0
+- Added new keybind "P" to access the Pick/Ban GUI (only accessable to players with operator permissions)
+	- Left Click on a goal to add it to your Picks
+	- Right Click on a goal to add it to your Bans
+- Goal Search in Pick/Ban GUI automatically filters out any goals that fail the biome/structure check.
+- Added `/RemovePicks` command.
+- Added `/RemoveBans` command.
+- Added `/PickBanLimit <number>` command. This allows you to set a limit on the amount of picks and bans.
 ## Lockout v0.9.9
 - Added Goals:
 	- Obtain 64 Coloured Terracotta

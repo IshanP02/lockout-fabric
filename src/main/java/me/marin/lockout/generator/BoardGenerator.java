@@ -31,12 +31,40 @@ public class BoardGenerator {
     }
 
     public LockoutBoard generateBoard(int size, String boardTypeName) {
-        Collections.shuffle(registeredGoals);
+        // Prepare a mutable list of available goals and remove banned goals
+        List<String> availableGoals = new ArrayList<>(registeredGoals);
+        List<String> banned = GoalGroup.BANS.getGoals();
+        if (banned != null && !banned.isEmpty()) {
+            availableGoals.removeAll(banned);
+        }
+
+        Collections.shuffle(availableGoals);
 
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
-        ListIterator<String> it = registeredGoals.listIterator();
+        // If there are picks selected, force-add them first (and ensure they're not duplicated)
+        List<String> picks = GoalGroup.PICKS.getGoals();
+        if (picks != null && !picks.isEmpty()) {
+            for (String pick : picks) {
+                if (goals.size() >= size * size) break;
+                // Only add if registered and not already added, and not banned
+                if (!registeredGoals.contains(pick)) continue;
+                if (banned != null && banned.contains(pick)) continue;
+                if (goalTypes.contains(pick)) continue;
+
+                Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(pick);
+                String data = gen.map(g -> g.generateData(attainableDyes)).orElse(GoalDataConstants.DATA_NONE);
+                goals.add(new Pair<>(pick, data));
+                goalTypes.add(pick);
+
+                // Ensure we don't pick it again from the pool
+                availableGoals.remove(pick);
+            }
+        }
+
+        // Fill remaining slots from the available goals, respecting requirements
+        ListIterator<String> it = availableGoals.listIterator();
         while (goals.size() < size * size && it.hasNext()) {
             String goal = it.next();
 

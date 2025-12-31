@@ -47,8 +47,10 @@ public class Lockout {
     public final Map<LockoutTeam, Integer> mobsKilled = new HashMap<>();
 
     public final Map<UUID, Long> pumpkinWearTime = new HashMap<>();
+    public final Map<UUID, Long> appliedEffectsTime = new HashMap<>();
     public final Map<UUID, Integer> distanceSprinted = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
+    public final Map<UUID, Integer> playerAdvancements = new HashMap<>();
 
     public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
     public final Map<UUID, Integer> distanceSwam = new HashMap<>();
@@ -59,6 +61,8 @@ public class Lockout {
 
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
+    public UUID mostAdvancementsPlayer;
+    public int mostAdvancements;
 
     @Getter
     private final LockoutBoard board;

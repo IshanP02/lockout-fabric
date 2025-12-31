@@ -3,16 +3,23 @@ package me.marin.lockout.mixin.server;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
+import me.marin.lockout.lockout.goals.advancement.GetHotTouristDestinationsAdvancementGoal;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.interfaces.GetUniqueAdvancementsGoal;
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.server.LockoutServer;
 import net.minecraft.advancement.AdvancementDisplay;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Objects;
 
 import me.marin.lockout.lockout.interfaces.VisitUniqueBiomesGoal;
 
@@ -51,6 +59,35 @@ public abstract class PlayerAdvancementTrackerMixin {
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
+            PlayerEntity player = (PlayerEntity) owner;
+            // Track player advancements for HaveMostAdvancementsGoal regardless of goal completion
+            if (goal instanceof HaveMostAdvancementsGoal) {
+                Optional<AdvancementDisplay> advancementDisplay = advancement.value().display();
+                if (advancementDisplay.isPresent() && advancementDisplay.get().shouldAnnounceToChat()) {
+                    // Increment advancement count for this player
+                    lockout.playerAdvancements.putIfAbsent(owner.getUuid(), 0);
+                    lockout.playerAdvancements.merge(owner.getUuid(), 1, Integer::sum);
+
+                    int playerAdvancements = lockout.playerAdvancements.get(owner.getUuid());
+
+                    // Send client-side feedback to the player
+                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), SoundCategory.BLOCKS, 2, 0.5f);
+                    if (playerAdvancements % 5 == 0) {
+                        owner.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have completed " + playerAdvancements + " advancements."), false);
+                    }
+                    owner.sendMessage(Text.of("Advancements: " + playerAdvancements), true);
+
+                    // If this player now has more advancements than current leader, update completion
+                    if (playerAdvancements > lockout.mostAdvancements) {
+                        if (!Objects.equals(lockout.mostAdvancementsPlayer, owner.getUuid())) {
+                            lockout.updateGoalCompletion(goal, owner.getUuid());
+                        }
+                        lockout.mostAdvancementsPlayer = owner.getUuid();
+                        lockout.mostAdvancements = playerAdvancements;
+                    }
+                }
+            }
+
             if (goal.isCompleted()) continue;
 
             if (goal instanceof AdvancementGoal advancementGoal) {
@@ -114,6 +151,10 @@ public abstract class PlayerAdvancementTrackerMixin {
                                 if(size <= amount) {
                                     team.sendTooltipUpdate(uniqueBiome);
                                 }
+                            }
+                            // Also update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
+                            if (g instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal && advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+                                team.sendTooltipUpdate(hotTouristGoal, true);
                             }
                         }
                     }

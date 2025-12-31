@@ -64,7 +64,8 @@ public abstract class GoalRequirements {
         boolean hasRequiredBiome = true;
         if (getRequiredBiomes() != null) {
             for (RegistryKey<Biome> biome : getRequiredBiomes()) {
-                if (biomes.get(biome).wasLocated()) {
+                LocateData locateData = biomes.get(biome);
+                if (locateData != null && locateData.wasLocated()) {
                     hasRequiredBiome = true;
                     break;
                 } else {
@@ -77,7 +78,8 @@ public abstract class GoalRequirements {
         boolean hasRequiredStructure = true;
         if (getRequiredStructures() != null) {
             for (RegistryKey<Structure> structure : getRequiredStructures()) {
-                if (structures.get(structure).wasLocated()) {
+                LocateData locateData = structures.get(structure);
+                if (locateData != null && locateData.wasLocated()) {
                     hasRequiredStructure = true;
                     break;
                 } else {

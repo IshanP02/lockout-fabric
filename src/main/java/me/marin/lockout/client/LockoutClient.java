@@ -10,7 +10,9 @@ import me.marin.lockout.network.*;
 import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import me.marin.lockout.generator.GoalGroup;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -45,6 +47,7 @@ public class LockoutClient implements ClientModInitializer {
     public static Lockout lockout;
     public static boolean amIPlayingLockout = false;
     private static KeyBinding keyBinding;
+    private static KeyBinding goalListKeyBinding;
     public static int CURRENT_TICK = 0;
     public static final Map<String, String> goalTooltipMap = new HashMap<>();
 
@@ -99,6 +102,60 @@ public class LockoutClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(UpdateTooltipPayload.ID, (payload, context) -> {
             goalTooltipMap.put(payload.goal(), payload.tooltip());
+        });
+        ClientPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Update picks and bans lists
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.PICKS.getGoals().addAll(payload.picks());
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.BANS.getGoals().addAll(payload.bans());
+                
+                // Update goal-to-player mapping
+                GoalGroup.clearGoalPlayers();
+                for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
+                    GoalGroup.setGoalPlayer(entry.getKey(), entry.getValue());
+                }
+                
+                // Refresh the GUI if it's open
+                if (client.currentScreen instanceof GoalListScreen goalListScreen) {
+                    goalListScreen.refreshPanels();
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(BroadcastPickBanPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                if (client.player != null) {
+                    // Format the goal name
+                    String goalName = org.apache.commons.lang3.text.WordUtils.capitalize(
+                        payload.goalId().replace("_", " ").toLowerCase(), ' '
+                    );
+                    
+                    // Create and display the message
+                    Text message;
+                    if ("pick".equals(payload.action())) {
+                        message = Text.literal(payload.playerName() + " has picked " + goalName + "!").withColor(0x55FF55);
+                    } else if ("ban".equals(payload.action())) {
+                        message = Text.literal(payload.playerName() + " has banned " + goalName + "!").withColor(0xFF5555);
+                    } else if ("unpick".equals(payload.action())) {
+                        message = Text.literal(payload.playerName() + " has unpicked " + goalName + ".").formatted(net.minecraft.util.Formatting.GRAY);
+                    } else { // "unban"
+                        message = Text.literal(payload.playerName() + " has unbanned " + goalName + ".").formatted(net.minecraft.util.Formatting.GRAY);
+                    }
+                    client.player.sendMessage(message, false);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(SyncPickBanLimitPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                GoalGroup.setCustomLimit(payload.limit());
+                if (client.player != null) {
+                    client.player.sendMessage(Text.literal("Pick/Ban limit set to " + payload.limit()), false);
+                }
+            });
         });
         ClientPlayNetworking.registerGlobalReceiver(StartLockoutPayload.ID, (payload, context) -> {
             lockout.setStarted(true);
@@ -163,6 +220,17 @@ public class LockoutClient implements ClientModInitializer {
         ArgumentTypeRegistry.registerArgumentType(Constants.BOARD_POSITION_ARGUMENT_TYPE, BoardPositionArgumentType.class, ConstantArgumentSerializer.of(BoardPositionArgumentType::newInstance));
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            {
+                var commandNode = ClientCommandManager.literal("PickBanLimit").then(
+                    ClientCommandManager.argument("limit", IntegerArgumentType.integer(0)).executes(ctx -> {
+                        int limit = IntegerArgumentType.getInteger(ctx, "limit");
+                        // Send to server so it can broadcast to all players
+                        ClientPlayNetworking.send(new SyncPickBanLimitPayload(limit));
+                        return 1;
+                    })
+                ).build();
+                dispatcher.getRoot().addChild(commandNode);
+            }
             {
                 var commandNode = ClientCommandManager.literal("BoardPosition").build();
                 var positionNode = ClientCommandManager.argument("board position", BoardPositionArgumentType.newInstance()).executes((context) -> {
@@ -388,6 +456,13 @@ public class LockoutClient implements ClientModInitializer {
                 "category.lockout.keybinds" // The translation key of the keybinding's category.
         ));
 
+        goalListKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.lockout.open_goal_list",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_P,
+                "category.lockout.keybinds"
+        ));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             CURRENT_TICK++;
 
@@ -409,14 +484,32 @@ public class LockoutClient implements ClientModInitializer {
                 // Open GUI
                 client.setScreen(new BoardScreen(BOARD_SCREEN_HANDLER.create(0, client.player.getInventory()), client.player.getInventory(), Text.empty()));
             }
+
+            boolean goalListPressed = false;
+            while (goalListKeyBinding.wasPressed()) {
+                goalListPressed = true;
+            }
+            if (goalListPressed) {
+                if (client.currentScreen != null || client.player == null) {
+                    return;
+                }
+                // Only allow operators to open the goal list screen
+                if (!client.player.hasPermissionLevel(2)) {
+                    client.player.sendMessage(Text.literal("You must be an operator to access the Goal List!").formatted(net.minecraft.util.Formatting.RED), false);
+                    return;
+                }
+                client.setScreen(new GoalListScreen());
+            }
         });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             LockoutConfig.load(); // reload config every time player joins world
-
+            // Build locate cache once on join so opening the goal list doesn't trigger expensive searches
+            client.execute(() -> ClientLocateUtil.buildCacheFromRegisteredGoals(client));
         });
         ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> {
             lockout = null;
             goalTooltipMap.clear();
+            ClientLocateUtil.clearCache();
         }));
 
         HandledScreens.register(BOARD_SCREEN_HANDLER, BoardScreen::new);

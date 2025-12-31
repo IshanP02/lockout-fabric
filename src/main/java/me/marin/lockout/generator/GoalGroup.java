@@ -74,6 +74,9 @@ public class GoalGroup {
     public static final GoalGroup EFFECT_X = new GoalGroup(List.of(
             GET_3_STATUS_EFFECTS_AT_ONCE, GET_4_STATUS_EFFECTS_AT_ONCE, GET_6_STATUS_EFFECTS_AT_ONCE
     ), 1);
+    public static final GoalGroup HAVE_EFFECT_X_MINUTES = new GoalGroup(List.of(
+            HAVE_EFFECTS_APPLIED_FOR_5_MINUTES, HAVE_EFFECTS_APPLIED_FOR_8_MINUTES, HAVE_EFFECTS_APPLIED_FOR_10_MINUTES
+    ), 1);
     public static final GoalGroup DEATH_DAMAGE = new GoalGroup(List.of(
             DIE_BY_ANVIL, DIE_BY_BEE_STING, DIE_BY_BERRY_BUSH, DIE_BY_CACTUS, DIE_BY_FALLING_OFF_VINE, DIE_BY_FALLING_STALACTITE, DIE_BY_FIREWORK,
             DIE_BY_INTENTIONAL_GAME_DESIGN, DIE_BY_IRON_GOLEM, DIE_BY_MAGIC, DIE_BY_TNT_MINECART, OPPONENT_DIES, OPPONENT_DIES_3_TIMES,
@@ -182,6 +185,36 @@ public class GoalGroup {
             OPPONENT_OBTAINS_OBSIDIAN, OPPONENT_OBTAINS_SEEDS, OPPONENT_DIES_3_TIMES, OPPONENT_DIES, OPPONENT_EATS_FOOD, 
             HAVE_YOUR_SHIELD_DISABLED, KILL_ALL_RAID_MOBS, KILL_BREEZE_USING_WIND_CHARGE
     ), 1);
+    public static final GoalGroup HAVE_MORE = new GoalGroup(List.of(
+            HAVE_MORE_UNIQUE_CRAFTS, HAVE_MORE_XP_LEVELS, HAVE_MOST_ADVANCEMENTS
+    ), 1);
+    public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+    public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+
+    private static int CUSTOM_LIMIT = Integer.MAX_VALUE;
+    
+    // Maps goal ID to player name who picked/banned it
+    private static final java.util.Map<String, String> GOAL_TO_PLAYER_MAP = new java.util.HashMap<>();
+
+    public static void setCustomLimit(int limit) {
+        CUSTOM_LIMIT = limit;
+    }
+
+    public static int getCustomLimit() {
+        return CUSTOM_LIMIT;
+    }
+    
+    public static void setGoalPlayer(String goalId, String playerName) {
+        GOAL_TO_PLAYER_MAP.put(goalId, playerName);
+    }
+    
+    public static String getGoalPlayer(String goalId) {
+        return GOAL_TO_PLAYER_MAP.get(goalId);
+    }
+    
+    public static void clearGoalPlayers() {
+        GOAL_TO_PLAYER_MAP.clear();
+    }
 
     static {
         KILL_UNIQUE_HOSTILES.requirePredecessor.add(KILL_13_UNIQUE_HOSTILE_MOBS);
@@ -214,6 +247,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(EAT_X_UNIQUE_FOOD);
         GOAL_GROUPS.add(EFFECT);
         GOAL_GROUPS.add(EFFECT_X);
+        GOAL_GROUPS.add(HAVE_EFFECT_X_MINUTES);
         GOAL_GROUPS.add(DEATH_DAMAGE);
         GOAL_GROUPS.add(BIOME);
         GOAL_GROUPS.add(UNIQUE_BIOMES);
@@ -242,6 +276,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(RAID);
         GOAL_GROUPS.add(BREAK_ITEM);
         GOAL_GROUPS.add(SWAMP);
+        GOAL_GROUPS.add(HAVE_MORE);
     }
 
 

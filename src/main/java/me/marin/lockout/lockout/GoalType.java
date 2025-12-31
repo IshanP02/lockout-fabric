@@ -202,6 +202,7 @@ public class GoalType {
     public static final String GET_20_ADVANCEMENTS = "GET_20_ADVANCEMENTS";
     public static final String GET_30_ADVANCEMENTS = "GET_30_ADVANCEMENTS";
     public static final String WEAR_UNIQUE_COLORED_LEATHER_ARMOR = "WEAR_UNIQUE_COLORED_LEATHER_ARMOR";
+    public static final String WEAR_4_UNIQUE_ARMOR_PIECES = "WEAR_4_UNIQUE_ARMOR_PIECES";
     public static final String KILL_OTHER_PLAYER = "KILL_OTHER_PLAYER";
     public static final String TAKE_200_DAMAGE = "TAKE_200_DAMAGE";
     public static final String OPPONENT_OBTAINS_CRAFTING_TABLE = "OPPONENT_OBTAINS_CRAFTING_TABLE";
@@ -281,5 +282,11 @@ public class GoalType {
     public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
     public static final String OBTAIN_5_UNIQUE_STONE_TYPES = "OBTAIN_5_UNIQUE_STONE_TYPES";
     public static final String DIE_TO_WARDEN = "DIE_TO_WARDEN";
+    public static final String HAVE_EFFECTS_APPLIED_FOR_5_MINUTES = "HAVE_EFFECTS_APPLIED_FOR_5_MINUTES";
+    public static final String HAVE_EFFECTS_APPLIED_FOR_8_MINUTES = "HAVE_EFFECTS_APPLIED_FOR_8_MINUTES";
+    public static final String HAVE_EFFECTS_APPLIED_FOR_10_MINUTES = "HAVE_EFFECTS_APPLIED_FOR_10_MINUTES";
+    public static final String HAVE_MOST_ADVANCEMENTS = "HAVE_MOST_ADVANCEMENTS";
+    public static final String KILL_BLAZE_WITH_SNOWBALL = "KILL_BLAZE_WITH_SNOWBALL";
+    public static final String DIE_TO_PUFFERFISH = "DIE_TO_PUFFERFISH";
 
 }

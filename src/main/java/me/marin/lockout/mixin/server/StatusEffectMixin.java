@@ -38,6 +38,7 @@ public class StatusEffectMixin {
                     lockout.completeGoal(goal, player);
                 }
             }
+            
         }
     }
 
