@@ -145,7 +145,7 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                             if (appliedTime >= (20 * 60 * haveEffectsGoal.getMinutes())) {
                                 ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
                                 if (player != null) {
-                                    lockout.completeGoal(goal, player);
+                                    lockout.completeGoal(goal, team);
                                 }
                             }
                         }
@@ -188,7 +188,7 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                             if (wornTime >= (20 * 60 * 5)) {
                                 ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
                                 if (player != null) {
-                                    lockout.completeGoal(goal, player);
+                                    lockout.completeGoal(goal, team);
                                 }
                             }
                         }
