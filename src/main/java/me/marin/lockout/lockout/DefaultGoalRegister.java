@@ -507,6 +507,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_10_MINUTES, HaveEffectsAppliedFor10MinutesGoal.class);
         INSTANCE.register(GoalType.HAVE_MOST_ADVANCEMENTS, HaveMostAdvancementsGoal.class, GoalRequirements.TEAMS_GOAL);
         INSTANCE.register(GoalType.KILL_BLAZE_WITH_SNOWBALL, KillBlazeWithSnowballGoal.class);
+        INSTANCE.register(GoalType.DIE_TO_PUFFERFISH, DieToPufferfishGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(LUKEWARM_OCEAN, WARM_OCEAN, DEEP_LUKEWARM_OCEAN))
+                .build()
+        );
 
     }
 
