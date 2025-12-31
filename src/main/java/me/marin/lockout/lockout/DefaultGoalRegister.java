@@ -138,8 +138,14 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class, GoalRequirements.MONUMENT);
         INSTANCE.register(GoalType.KILL_GHAST, KillGhastGoal.class);
         INSTANCE.register(GoalType.KILL_BAT, KillBatGoal.class);
-        INSTANCE.register(GoalType.KILL_SNOW_GOLEM, KillSnowGolemGoal.class);
-        INSTANCE.register(GoalType.KILL_SNOW_GOLEM_IN_NETHER, KillSnowGolemInNetherGoal.class);
+        INSTANCE.register(GoalType.KILL_SNOW_GOLEM, KillSnowGolemGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(GROVE, SNOWY_SLOPES, JAGGED_PEAKS, FROZEN_PEAKS, FROZEN_OCEAN, DEEP_FROZEN_OCEAN, WINDSWEPT_HILLS, WINDSWEPT_FOREST, WINDSWEPT_GRAVELLY_HILLS, SNOWY_TAIGA, FROZEN_RIVER, SNOWY_BEACH, SNOWY_PLAINS, ICE_SPIKES))
+                .build()
+        );
+        INSTANCE.register(GoalType.KILL_SNOW_GOLEM_IN_NETHER, KillSnowGolemInNetherGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(GROVE, SNOWY_SLOPES, JAGGED_PEAKS, FROZEN_PEAKS, FROZEN_OCEAN, DEEP_FROZEN_OCEAN, WINDSWEPT_HILLS, WINDSWEPT_FOREST, WINDSWEPT_GRAVELLY_HILLS, SNOWY_TAIGA, FROZEN_RIVER, SNOWY_BEACH, SNOWY_PLAINS, ICE_SPIKES))
+                .build()
+        );
         INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class, GoalRequirements.MONUMENT);
         INSTANCE.register(GoalType.KILL_COLORED_SHEEP, KillColoredSheepGoal.class, null,
                 GoalDataGenerator.builder().withDye(attainableDyes -> {
@@ -370,7 +376,12 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OPPONENT_HIT_BY_EGG, OpponentHitByEggGoal.class,
                 GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
         INSTANCE.register(GoalType.OPPONENT_HIT_BY_SNOWBALL, OpponentHitBySnowballGoal.class,
-                GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
+                new GoalRequirements.Builder()
+                        .biomes(List.of(GROVE, SNOWY_SLOPES, JAGGED_PEAKS, FROZEN_PEAKS, FROZEN_OCEAN, DEEP_FROZEN_OCEAN, WINDSWEPT_HILLS, WINDSWEPT_FOREST, WINDSWEPT_GRAVELLY_HILLS, SNOWY_TAIGA, FROZEN_RIVER, SNOWY_BEACH, SNOWY_PLAINS, ICE_SPIKES))
+                        .isTeamSizeOk((size) -> size == 2)
+                        .partOfRandomPool(false)
+                        .build()
+        );
         INSTANCE.register(GoalType.OPPONENT_TAKES_100_DAMAGE, OpponentTakes100DamageGoal.class,
                 GoalRequirements.TO2_ONLY_GOAL);
         INSTANCE.register(GoalType.OPPONENT_TAKES_FALL_DAMAGE, OpponentTakesFallDamageGoal.class,
@@ -507,7 +518,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_8_MINUTES, HaveEffectsAppliedFor8MinutesGoal.class);
         INSTANCE.register(GoalType.HAVE_EFFECTS_APPLIED_FOR_10_MINUTES, HaveEffectsAppliedFor10MinutesGoal.class);
         INSTANCE.register(GoalType.HAVE_MOST_ADVANCEMENTS, HaveMostAdvancementsGoal.class, GoalRequirements.TEAMS_GOAL);
-        INSTANCE.register(GoalType.KILL_BLAZE_WITH_SNOWBALL, KillBlazeWithSnowballGoal.class);
+        INSTANCE.register(GoalType.KILL_BLAZE_WITH_SNOWBALL, KillBlazeWithSnowballGoal.class, new GoalRequirements.Builder()
+                .biomes(List.of(GROVE, SNOWY_SLOPES, JAGGED_PEAKS, FROZEN_PEAKS, FROZEN_OCEAN, DEEP_FROZEN_OCEAN, WINDSWEPT_HILLS, WINDSWEPT_FOREST, WINDSWEPT_GRAVELLY_HILLS, SNOWY_TAIGA, FROZEN_RIVER, SNOWY_BEACH, SNOWY_PLAINS, ICE_SPIKES))
+                .build()
+        );
         INSTANCE.register(GoalType.DIE_TO_PUFFERFISH, DieToPufferfishGoal.class, new GoalRequirements.Builder()
                 .biomes(List.of(LUKEWARM_OCEAN, WARM_OCEAN, DEEP_LUKEWARM_OCEAN))
                 .build()
