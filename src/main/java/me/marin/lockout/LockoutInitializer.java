@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import static me.marin.lockout.Constants.MAX_BOARD_SIZE;
+import static me.marin.lockout.Constants.MIN_BOARD_SIZE;
 import static me.marin.lockout.Constants.NAMESPACE;
 
 public class LockoutInitializer implements ModInitializer {
@@ -135,10 +136,19 @@ public class LockoutInitializer implements ModInitializer {
                 // SetBoardSize command
 
                 var setBoardTimeRoot = CommandManager.literal("SetBoardSize").requires(PERMISSIONS).build();
-                var size = CommandManager.argument("board size", IntegerArgumentType.integer(3, 7)).executes(LockoutServer::setBoardSize).build();
+                var size = CommandManager.argument("board size", IntegerArgumentType.integer(MIN_BOARD_SIZE, MAX_BOARD_SIZE)).executes(LockoutServer::setBoardSize).build();
 
                 dispatcher.getRoot().addChild(setBoardTimeRoot);
                 setBoardTimeRoot.addChild(size);
+            }
+
+            {
+                // BoardType command
+                var boardTypeRoot = CommandManager.literal("BoardType").requires(PERMISSIONS).build();
+                var boardTypeArgument = CommandManager.argument("board type", StringArgumentType.word()).executes(LockoutServer::setBoardType).build();
+
+                dispatcher.getRoot().addChild(boardTypeRoot);
+                boardTypeRoot.addChild(boardTypeArgument);
             }
 
             {

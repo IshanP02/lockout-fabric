@@ -3,9 +3,11 @@ package me.marin.lockout.client;
 import me.marin.lockout.*;
 import me.marin.lockout.client.gui.*;
 import me.marin.lockout.json.JSONBoard;
+import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.network.*;
+import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -27,6 +29,7 @@ import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 import oshi.util.tuples.Pair;
 
@@ -52,6 +55,18 @@ public class LockoutClient implements ClientModInitializer {
 
     static {
         BOARD_SCREEN_HANDLER = new ScreenHandlerType<>(BoardScreenHandler::new, FeatureFlags.VANILLA_FEATURES);
+    }
+
+    private static boolean hasPermission() {
+        return MinecraftClient.getInstance().isInSingleplayer() || 
+               MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.hasPermissionLevel(2);
+    }
+
+    private static void sendBoardTypeMessage(Text message) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null) {
+            client.player.sendMessage(message, false);
+        }
     }
 
     @Override
@@ -281,6 +296,113 @@ public class LockoutClient implements ClientModInitializer {
                 }).build();
 
                 commandNode.addChild(boardNameNode);
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
+                var commandNode = ClientCommandManager.literal("CreateBoardType")
+                    .requires(ccs -> hasPermission())
+                    .executes((context) -> {
+                        MinecraftClient.getInstance().send(() -> 
+                            MinecraftClient.getInstance().setScreen(new BoardTypeCreatorScreen()));
+                        return 1;
+                    }).build();
+
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
+                var commandNode = ClientCommandManager.literal("EditBoardType")
+                    .requires(ccs -> hasPermission())
+                    .build();
+
+                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                    .executes((context) -> {
+                        String boardTypeName = context.getArgument("board type name", String.class);
+
+                        MinecraftClient.getInstance().send(() -> {
+                            try {
+                                JSONBoardType existingBoardType = BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
+                                if (existingBoardType == null) {
+                                    sendBoardTypeMessage(Text.literal("BoardType not found: ").formatted(Formatting.RED)
+                                        .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    return;
+                                }
+                                MinecraftClient.getInstance().setScreen(new BoardTypeCreatorScreen(existingBoardType));
+                            } catch (IOException e) {
+                                Lockout.error(e);
+                                sendBoardTypeMessage(Text.literal("Failed to load BoardType: " + e.getMessage()).formatted(Formatting.RED));
+                            }
+                        });
+                        return 1;
+                    }).build();
+
+                commandNode.addChild(boardTypeNameNode);
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
+                var commandNode = ClientCommandManager.literal("ListBoardTypes")
+                    .requires(ccs -> hasPermission())
+                    .executes((context) -> {
+                        MinecraftClient.getInstance().send(() -> {
+                            try {
+                                List<String> customBoardTypes = BoardTypeIO.INSTANCE.getSavedBoardTypes();
+                                
+                                if (customBoardTypes.isEmpty()) {
+                                    sendBoardTypeMessage(Text.literal("No custom BoardTypes found.").formatted(Formatting.YELLOW));
+                                    return;
+                                }
+
+                                String storagePath = MinecraftClient.getInstance().runDirectory.toPath().resolve("lockout-boardtypes").toString();
+                                sendBoardTypeMessage(Text.literal("Storage location: ").formatted(Formatting.GRAY)
+                                    .append(Text.literal(storagePath).formatted(Formatting.AQUA)));
+                                sendBoardTypeMessage(Text.literal("Custom BoardTypes (" + customBoardTypes.size() + "):").formatted(Formatting.GREEN));
+                                
+                                for (String boardTypeName : customBoardTypes) {
+                                    try {
+                                        JSONBoardType boardType = BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
+                                        int excludedCount = boardType.excludedGoals != null ? boardType.excludedGoals.size() : 0;
+                                        sendBoardTypeMessage(Text.literal("  - ").formatted(Formatting.GRAY)
+                                            .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW))
+                                            .append(Text.literal(" (" + excludedCount + " goals excluded)").formatted(Formatting.GRAY)));
+                                    } catch (IOException e) {
+                                        sendBoardTypeMessage(Text.literal("  - ").formatted(Formatting.GRAY)
+                                            .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    }
+                                }
+                            } catch (IOException e) {
+                                Lockout.error(e);
+                                sendBoardTypeMessage(Text.literal("Failed to list BoardTypes: " + e.getMessage()).formatted(Formatting.RED));
+                            }
+                        });
+                        return 1;
+                    }).build();
+
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
+                var commandNode = ClientCommandManager.literal("DeleteBoardType")
+                    .requires(ccs -> hasPermission())
+                    .build();
+
+                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                    .executes((context) -> {
+                        String boardTypeName = context.getArgument("board type name", String.class);
+
+                        MinecraftClient.getInstance().send(() -> {
+                            boolean success = BoardTypeIO.INSTANCE.deleteBoardType(boardTypeName);
+                            
+                            if (success) {
+                                BoardTypeManager.INSTANCE.clearCache();
+                                sendBoardTypeMessage(Text.literal("Deleted custom BoardType: ").formatted(Formatting.GREEN)
+                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                            } else {
+                                sendBoardTypeMessage(Text.literal("Failed to delete BoardType: ").formatted(Formatting.RED)
+                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                            }
+                        });
+                        return 1;
+                    }).build();
+
+                commandNode.addChild(boardTypeNameNode);
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
