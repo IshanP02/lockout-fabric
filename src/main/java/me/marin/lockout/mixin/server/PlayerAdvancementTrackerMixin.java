@@ -152,8 +152,14 @@ public abstract class PlayerAdvancementTrackerMixin {
                                     team.sendTooltipUpdate(uniqueBiome);
                                 }
                             }
-                            // Also update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
-                            if (g instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal && advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+                        }
+                    }
+
+                    // Always update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
+                    // even if the biome was already discovered by a teammate
+                    if (advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+                        for (Goal g : lockout.getBoard().getGoals()) {
+                            if (g instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal) {
                                 team.sendTooltipUpdate(hotTouristGoal, true);
                             }
                         }
