@@ -176,6 +176,9 @@ public class GoalGroup {
     public static final GoalGroup SWAMP = new GoalGroup(List.of(
             BREED_FROGS, KILL_BOGGED, KILL_WITCH, KILL_SLIME
     ), 1);
+    public static final GoalGroup HAVE_MORE = new GoalGroup(List.of(
+            HAVE_MORE_UNIQUE_CRAFTS, HAVE_MORE_XP_LEVELS, HAVE_MOST_ADVANCEMENTS
+    ), 1);
     public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
 
@@ -264,6 +267,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(RAID);
         GOAL_GROUPS.add(BREAK_ITEM);
         GOAL_GROUPS.add(SWAMP);
+        GOAL_GROUPS.add(HAVE_MORE);
     }
 
 
