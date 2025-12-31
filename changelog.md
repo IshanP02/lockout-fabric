@@ -10,6 +10,9 @@
 - Changed how Time Based Goals are Calculated for Team Goals:
 	- Time is now additive between all team members (If 2 people are doing the time goal, the time ticks at twice the rate)
 	- Tooltip now updates for all players on the team regardless of who is doing the goal.
+## Lockout v0.10.1
+- Added Goals:
+	- Added Wear 4 Different Armor Pieces Goal
 ## Lockout v0.10.0
 - Added new keybind "P" to access the Pick/Ban GUI (only accessable to players with operator permissions)
 	- Left Click on a goal to add it to your Picks
