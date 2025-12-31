@@ -74,6 +74,9 @@ public class GoalGroup {
     public static final GoalGroup EFFECT_X = new GoalGroup(List.of(
             GET_3_STATUS_EFFECTS_AT_ONCE, GET_4_STATUS_EFFECTS_AT_ONCE, GET_6_STATUS_EFFECTS_AT_ONCE
     ), 1);
+    public static final GoalGroup HAVE_EFFECT_X_MINUTES = new GoalGroup(List.of(
+            HAVE_EFFECTS_APPLIED_FOR_5_MINUTES, HAVE_EFFECTS_APPLIED_FOR_8_MINUTES, HAVE_EFFECTS_APPLIED_FOR_10_MINUTES
+    ), 1);
     public static final GoalGroup DEATH_DAMAGE = new GoalGroup(List.of(
             DIE_BY_ANVIL, DIE_BY_BEE_STING, DIE_BY_BERRY_BUSH, DIE_BY_CACTUS, DIE_BY_FALLING_OFF_VINE, DIE_BY_FALLING_STALACTITE, DIE_BY_FIREWORK,
             DIE_BY_INTENTIONAL_GAME_DESIGN, DIE_BY_IRON_GOLEM, DIE_BY_MAGIC, DIE_BY_TNT_MINECART, OPPONENT_DIES, OPPONENT_DIES_3_TIMES,
@@ -173,6 +176,9 @@ public class GoalGroup {
     public static final GoalGroup SWAMP = new GoalGroup(List.of(
             BREED_FROGS, KILL_BOGGED, KILL_WITCH, KILL_SLIME
     ), 1);
+    public static final GoalGroup HAVE_MORE = new GoalGroup(List.of(
+            HAVE_MORE_UNIQUE_CRAFTS, HAVE_MORE_XP_LEVELS, HAVE_MOST_ADVANCEMENTS
+    ), 1);
     public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
 
@@ -232,6 +238,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(EAT_X_UNIQUE_FOOD);
         GOAL_GROUPS.add(EFFECT);
         GOAL_GROUPS.add(EFFECT_X);
+        GOAL_GROUPS.add(HAVE_EFFECT_X_MINUTES);
         GOAL_GROUPS.add(DEATH_DAMAGE);
         GOAL_GROUPS.add(BIOME);
         GOAL_GROUPS.add(UNIQUE_BIOMES);
@@ -260,6 +267,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(RAID);
         GOAL_GROUPS.add(BREAK_ITEM);
         GOAL_GROUPS.add(SWAMP);
+        GOAL_GROUPS.add(HAVE_MORE);
     }
 
 

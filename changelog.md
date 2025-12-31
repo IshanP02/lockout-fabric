@@ -1,3 +1,15 @@
+## Lockout v0.10.2
+- Added Goals:
+	- Die to Pufferfish
+	- Kill Blaze with Snowball
+	- Have the Most Advancements
+	- Have Effects Applied for 5 Minutes
+	- Have Effects Applied for 8 Minutes
+	- Have Effects Applied for 10 Minutes
+- Added tooltip functionality to Visit All Nether Biomes Goal (so it shows the player which biomes they've visited)
+- Changed how Time Based Goals are Calculated for Team Goals:
+	- Time is now additive between all team members (If 2 people are doing the time goal, the time ticks at twice the rate)
+	- Tooltip now updates for all players on the team regardless of who is doing the goal.
 ## Lockout v0.10.1
 - Added Goals:
 	- Added Wear 4 Different Armor Pieces Goal
