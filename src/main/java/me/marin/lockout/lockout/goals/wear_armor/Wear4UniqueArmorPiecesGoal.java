@@ -46,14 +46,38 @@ public class Wear4UniqueArmorPiecesGoal extends WearArmorGoal {
         armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.LEGS));
         armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.FEET));
 
-        var uniqueItems = new HashSet<Item>();
+        // Check that we have 4 armor pieces
         for (ItemStack itemStack : armor) {
-            if (itemStack.isEmpty() || !uniqueItems.add(itemStack.getItem())) {
+            if (itemStack.isEmpty()) {
+                return false;
+            }
+        }
+
+        // Check that all armor pieces are different materials
+        var uniqueMaterials = new HashSet<String>();
+        for (ItemStack itemStack : armor) {
+            String material = getArmorMaterial(itemStack.getItem());
+            if (material == null || !uniqueMaterials.add(material)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private String getArmorMaterial(Item item) {
+        if (HELMETS.contains(item) || CHESTPLATES.contains(item) || LEGGINGS.contains(item) || BOOTS.contains(item)) {
+            String itemName = item.toString();
+            // Extract material from item name (e.g., "leather_helmet" -> "leather")
+            if (itemName.contains("leather")) return "leather";
+            if (itemName.contains("golden")) return "golden";
+            if (itemName.contains("chainmail")) return "chainmail";
+            if (itemName.contains("iron")) return "iron";
+            if (itemName.contains("diamond")) return "diamond";
+            if (itemName.contains("netherite")) return "netherite";
+            if (itemName.contains("turtle")) return "turtle";
+        }
+        return null;
     }
 
     private int lastTickArmorChanged = -1;
