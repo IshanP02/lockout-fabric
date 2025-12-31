@@ -351,6 +351,9 @@ public class LockoutClient implements ClientModInitializer {
                                     return;
                                 }
 
+                                String storagePath = MinecraftClient.getInstance().runDirectory.toPath().resolve("lockout-boardtypes").toString();
+                                sendBoardTypeMessage(Text.literal("Storage location: ").formatted(Formatting.GRAY)
+                                    .append(Text.literal(storagePath).formatted(Formatting.AQUA)));
                                 sendBoardTypeMessage(Text.literal("Custom BoardTypes (" + customBoardTypes.size() + "):").formatted(Formatting.GREEN));
                                 
                                 for (String boardTypeName : customBoardTypes) {

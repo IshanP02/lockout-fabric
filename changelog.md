@@ -1,3 +1,10 @@
+## Lockout v0.10.3
+- Added New Commands
+	- Added CreateBoardGroup command
+	- Added DeleteBoardGroup command
+	- Added ListBoardGroups command
+	- Added EditBoardGroup command
+	- Changed board limit from 7 to 12 and lower limit from 3 to 1
 ## Lockout v0.10.2
 - Added Goals:
 	- Die to Pufferfish
