@@ -55,39 +55,31 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         super(x, y, width, height, message);
         this.parent = parent;
         
-        // Load all goal IDs from registry
-        // Use data generators to properly instantiate goals that require data
         for (String goalId : GoalRegistry.INSTANCE.getRegisteredGoals()) {
             Goal goal = null;
             try {
                 Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(goalId);
-                // Generate random data if goal requires it
                 String data = gen.map(g -> g.generateData(new ArrayList<>(GoalDataGenerator.ALL_DYES)))
                     .orElse(GoalDataConstants.DATA_NONE);
                 goal = GoalRegistry.INSTANCE.newGoal(goalId, data);
             } catch (Exception e) {
-                // Some goals may still fail to instantiate
-                // That's okay, we'll show them without an icon
+                // Goal instantiation failed, will show without icon
             }
             
             String displayName = goal != null ? goal.getGoalName() : formatGoalName(goalId);
             
-            // Get icon - try getTextureItemStack first, then check for CycleItemTexturesProvider
             ItemStack icon = null;
             if (goal != null) {
                 icon = goal.getTextureItemStack();
-                // If null and goal cycles through multiple items, use the first item
                 if (icon == null && goal instanceof CycleItemTexturesProvider cycleProvider) {
                     List<net.minecraft.item.Item> items = cycleProvider.getItemsToDisplay();
                     if (items != null && !items.isEmpty()) {
                         icon = items.get(0).getDefaultStack();
                     }
                 }
-                // If still null, check for entity-based goals and use spawn eggs
                 if (icon == null) {
                     icon = getEntitySpawnEggIcon(goal);
                 }
-                // If still null and goal uses custom textures, provide a generic fallback icon
                 if (icon == null && (goal instanceof TextureProvider || goal instanceof CycleTexturesProvider)) {
                     icon = getFallbackIconForGoal(goalId);
                 }
@@ -99,9 +91,6 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         visibleGoals = new ArrayList<>(allGoals.values());
     }
     
-    /**
-     * Gets spawn egg icon for entity-based goals (Kill, Breed, Tame).
-     */
     private ItemStack getEntitySpawnEggIcon(Goal goal) {
         EntityType<?> entityType = null;
         
@@ -114,7 +103,6 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         }
         
         if (entityType != null) {
-            // Get the spawn egg from SpawnEggItem's map
             SpawnEggItem spawnEgg = SpawnEggItem.forEntity(entityType);
             if (spawnEgg != null) {
                 return spawnEgg.getDefaultStack();
@@ -124,38 +112,28 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         return null;
     }
     
-    /**
-     * Provides fallback icons for goals that use custom textures (TextureProvider/CycleTexturesProvider).
-     */
     private ItemStack getFallbackIconForGoal(String goalId) {
         String lowerGoalId = goalId.toLowerCase();
         
-        // Kill goals
         if (lowerGoalId.contains("kill")) {
             return Items.WOODEN_SWORD.getDefaultStack();
         }
-        // Die/Death goals
         if (lowerGoalId.contains("die")) {
             return Items.SKELETON_SKULL.getDefaultStack();
         }
-        // Breed goals
         if (lowerGoalId.contains("breed")) {
             return Items.WHEAT.getDefaultStack();
         }
-        // Tame goals
         if (lowerGoalId.contains("tame")) {
             return Items.BONE.getDefaultStack();
         }
         
-        // Default fallback
         return Items.PAPER.getDefaultStack();
     }
     
     @SuppressWarnings("deprecation")
     private String formatGoalName(String goalId) {
-        // Remove namespace prefix if present
         String name = goalId.contains(":") ? goalId.substring(goalId.indexOf(":") + 1) : goalId;
-        // Replace underscores with spaces and capitalize each word
         return WordUtils.capitalizeFully(name.replace("_", " "));
     }
 
@@ -184,7 +162,6 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         for (GoalEntry entry : visibleGoals) {
             int entryY = getY() + y - (int) getScrollY();
             
-            // Only render if visible
             if (entryY + ENTRY_HEIGHT >= this.top && entryY < this.top + getHeight()) {
                 entry.render(context, getX() + MARGIN_X, entryY, rowWidth, ENTRY_HEIGHT, 
                     mouseX, mouseY, Objects.equals(entry, hoveredEntry), delta);
@@ -222,7 +199,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (hoveredEntry != null && button == 0 && !checkScrollbarDragged(mouseX, mouseY, button)) { // Left click on entry, not scrollbar
+        if (hoveredEntry != null && button == 0 && !checkScrollbarDragged(mouseX, mouseY, button)) {
             parent.toggleGoalExclusion(hoveredEntry.goalId);
             MinecraftClient.getInstance().getSoundManager().play(
                 PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
@@ -256,13 +233,8 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-        // Narration for accessibility
-    }
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
 
-    /**
-     * Represents a single goal entry in the list
-     */
     public class GoalEntry {
         private final String goalId;
         private final String displayName;
@@ -279,25 +251,21 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
             boolean isExcluded = parent.isGoalExcluded(goalId);
 
-            // Background - red if excluded, white if hovered
             if (isExcluded) {
                 context.fill(x, y, x + width, y + height, 0x80FF4040);
             } else if (hovered) {
                 context.fill(x, y, x + width, y + height, 0x80FFFFFF);
             }
 
-            // Draw goal icon if available
             int iconX = x + ICON_MARGIN;
             int iconY = y + (height - ICON_SIZE) / 2;
             if (icon != null) {
                 context.drawItem(icon, iconX, iconY);
             }
 
-            // Draw goal name
             int textX = iconX + ICON_SIZE + ICON_MARGIN * 2;
             int textY = y + (height - textRenderer.fontHeight) / 2;
             
-            // Truncate text if too long
             String drawText = displayName;
             int maxTextWidth = width - (ICON_SIZE + ICON_MARGIN * 3 + 5);
             if (textRenderer.getWidth(drawText) > maxTextWidth) {
@@ -309,7 +277,6 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
 
             context.drawText(textRenderer, drawText, textX, textY, 0xFFFFFFFF, false);
 
-            // Draw goal ID in smaller text if hovered
             if (hovered) {
                 String idText = "[" + goalId + "]";
                 int idWidth = textRenderer.getWidth(idText);
