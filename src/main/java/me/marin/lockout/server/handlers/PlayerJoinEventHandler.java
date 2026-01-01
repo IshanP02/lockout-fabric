@@ -2,6 +2,8 @@ package me.marin.lockout.server.handlers;
 
 import me.marin.lockout.LockoutInitializer;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.UpdatePicksBansPayload;
+import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -29,5 +31,13 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
         player.networkHandler.sendPacket(new CommonPingS2CPacket(id));
 
         waitingForVersionPacketPlayersMap.put(player, id);
+        
+        // Always sync server-side picks/bans to the joining player (even if empty, to clear client-side data)
+        ServerPlayNetworking.send(player, new UpdatePicksBansPayload(
+            LockoutServer.SERVER_PICKS,
+            LockoutServer.SERVER_BANS,
+            LockoutServer.SERVER_GOAL_TO_PLAYER_MAP
+        ));
     }
 }
+

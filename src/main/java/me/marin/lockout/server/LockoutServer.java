@@ -77,6 +77,7 @@ public class LockoutServer {
     // Server-side picks and bans storage
     public static final List<String> SERVER_PICKS = new ArrayList<>();
     public static final List<String> SERVER_BANS = new ArrayList<>();
+    public static final Map<String, String> SERVER_GOAL_TO_PLAYER_MAP = new HashMap<>();
 
     private static boolean isInitialized = false;
 
@@ -160,11 +161,13 @@ public class LockoutServer {
         });
 
         ServerPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
-            // Store picks/bans on server-side
+            // Store picks/bans and goal-to-player mapping on server-side
             SERVER_PICKS.clear();
             SERVER_PICKS.addAll(payload.picks());
             SERVER_BANS.clear();
             SERVER_BANS.addAll(payload.bans());
+            SERVER_GOAL_TO_PLAYER_MAP.clear();
+            SERVER_GOAL_TO_PLAYER_MAP.putAll(payload.goalToPlayerMap());
             
             // Broadcast picks/bans update to all other players
             for (ServerPlayerEntity otherPlayer : server.getPlayerManager().getPlayerList()) {
