@@ -8,7 +8,7 @@
 - Added /CancelPickBanSession to force stop a PickBanSession
 - Fixed BoardType to work on servers
 - Fixed various bugs related to PickBanSessions and BoardTypes
-- Fixed autocomplete in lockout and blackout
+- Fixed autocomplete in lockout and blackout (Taken from Specnr)
 - Added random team option to lockout
 ## Lockout v0.10.3
 - Added New Commands
@@ -20,8 +20,8 @@
 ## Lockout v0.10.2
 - Added Goals:
 	- Die to Pufferfish
-	- Kill Blaze with Snowball
-	- Have the Most Advancements
+	- Kill Blaze with Snowball (Taken from Specnr)
+	- Have the Most Advancements (Taken from Specnr)
 	- Have Effects Applied for 5 Minutes
 	- Have Effects Applied for 8 Minutes
 	- Have Effects Applied for 10 Minutes
