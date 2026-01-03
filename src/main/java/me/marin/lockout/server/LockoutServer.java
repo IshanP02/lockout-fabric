@@ -70,6 +70,7 @@ public class LockoutServer {
 
     private static int lockoutStartTime = 60;
     private static int boardSize;
+    private static String boardType;
 
     public static Lockout lockout;
     public static MinecraftServer server;
@@ -536,7 +537,7 @@ public class LockoutServer {
             me.marin.lockout.generator.GoalGroup.BANS.getGoals().addAll(SERVER_BANS);
             
             BoardGenerator boardGenerator = new BoardGenerator(GoalRegistry.INSTANCE.getRegisteredGoals(), teams, AVAILABLE_DYE_COLORS, BIOME_LOCATE_DATA, STRUCTURE_LOCATE_DATA);
-            lockoutBoard = boardGenerator.generateBoard(boardSize);
+            lockoutBoard = boardGenerator.generateBoard(boardSize, boardType);
             
             // Clear after generation
             me.marin.lockout.generator.GoalGroup.PICKS.getGoals().clear();
@@ -808,6 +809,14 @@ public class LockoutServer {
 
         boardSize = size;
         context.getSource().sendMessage(Text.of("Updated board size to " + size + "."));
+        return 1;
+    }
+
+    public static int setBoardType(CommandContext<ServerCommandSource> context) {
+        String type = context.getArgument("board type", String.class);
+
+        boardType = type;
+        context.getSource().sendMessage(Text.of("Updated board type to " + boardType + "."));
         return 1;
     }
 

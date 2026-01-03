@@ -428,4 +428,8 @@ public class GoalGroup {
         return false;
     }
 
+    public boolean containsGoal(String goal) {
+        return goals.contains(goal);
+    }
+
 }
