@@ -16,6 +16,7 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.text.Text;
 import me.marin.lockout.client.ClientLocateUtil;
 import me.marin.lockout.client.ClientPickBanSessionHolder;
+import me.marin.lockout.client.LockoutClient;
 import net.minecraft.sound.SoundEvents;
 import me.marin.lockout.LocateData;
 import me.marin.lockout.generator.GoalGroup;
@@ -53,6 +54,29 @@ public class GoalListScreen extends Screen {
     public GoalListScreen() {
         super(Text.literal("Goal List"));
         this.displayedGoals = new ArrayList<>();
+    }
+    
+    /**
+     * Refresh the GUI when board type changes
+     */
+    public void refreshFromBoardType() {
+        // The search widget will automatically re-render with grayed out excluded goals
+        // But we need to rebuild the panels to remove any excluded goals from picks/bans
+        refreshPanels();
+        
+        // Remove any excluded goals from picks/bans lists
+        GoalGroup.PENDING_PICKS.getGoals().removeIf(goalId -> 
+            LockoutClient.currentExcludedGoals.contains(goalId)
+        );
+        GoalGroup.PENDING_BANS.getGoals().removeIf(goalId -> 
+            LockoutClient.currentExcludedGoals.contains(goalId)
+        );
+        
+        // Refresh panels again after removal
+        refreshPanels();
+        
+        // Send update to server
+        sendPicksBansUpdate();
     }
 
     @Override
@@ -231,6 +255,15 @@ public class GoalListScreen extends Screen {
     }
 
     private void toggleGoalInPicks(String goalId) {
+        // Block interaction if goal is excluded by board type
+        if (LockoutClient.currentExcludedGoals.contains(goalId)) {
+            MinecraftClient.getInstance().player.sendMessage(
+                Text.literal("This goal is excluded by the current board type!").withColor(0xFF5555),
+                false
+            );
+            return;
+        }
+        
         // Check if goal is locked in PICKS or BANS
         List<String> lockedPicks = GoalGroup.PICKS.getGoals();
         List<String> lockedBans = GoalGroup.BANS.getGoals();
@@ -300,6 +333,15 @@ public class GoalListScreen extends Screen {
     }
 
     private void toggleGoalInBans(String goalId) {
+        // Block interaction if goal is excluded by board type
+        if (LockoutClient.currentExcludedGoals.contains(goalId)) {
+            MinecraftClient.getInstance().player.sendMessage(
+                Text.literal("This goal is excluded by the current board type!").withColor(0xFF5555),
+                false
+            );
+            return;
+        }
+        
         // Check if goal is locked in PICKS or BANS
         List<String> lockedPicks = GoalGroup.PICKS.getGoals();
         List<String> lockedBans = GoalGroup.BANS.getGoals();
@@ -463,6 +505,17 @@ public class GoalListScreen extends Screen {
         displayedGoals.clear();
         displayedGoals.addAll(GoalRegistry.INSTANCE.getRegisteredGoals());
     }
+    
+    /**
+     * Refresh the goal list and search widget when board type changes
+     */
+    private void refreshGoals() {
+        loadGoals();
+        if (searchWidget != null) {
+            searchWidget.refreshGoals();
+        }
+    }
+    
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
@@ -567,10 +620,6 @@ public class GoalListScreen extends Screen {
                 
                 net.minecraft.scoreboard.Team playerTeam = mc.player.getScoreboardTeam();
                 if (playerTeam == null) {
-                    mc.player.sendMessage(
-                        Text.literal("You are not on a team!").withColor(0xFF5555),
-                        false
-                    );
                     return super.mouseClicked(mouseX, mouseY, button); // Only allow button clicks
                 }
                 

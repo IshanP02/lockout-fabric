@@ -2,6 +2,7 @@ package me.marin.lockout.server.handlers;
 
 import me.marin.lockout.LockoutInitializer;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.SetBoardTypePayload;
 import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.server.LockoutServer;
@@ -41,6 +42,11 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
             LockoutServer.SERVER_BANS,
             LockoutServer.SERVER_GOAL_TO_PLAYER_MAP
         ));
+        
+        // Sync board type if one is set
+        if (LockoutServer.boardType != null && !LockoutServer.boardType.isEmpty()) {
+            ServerPlayNetworking.send(player, new SetBoardTypePayload(LockoutServer.boardType, LockoutServer.boardTypeExcludedGoals));
+        }
         
         // If there's an active pick/ban session, sync it to the joining player
         if (LockoutServer.activePickBanSession != null) {

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import me.marin.lockout.LocateData;
+import me.marin.lockout.client.LockoutClient;
 import me.marin.lockout.generator.GoalRequirements;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
@@ -165,11 +166,47 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             .collect(Collectors.toList());
         visibleEntries = buildEntriesWithHeaders(filteredGoals);
     }
+    
+    /**
+     * Refresh the widget when board type changes
+     */
+    public void refreshFromBoardType() {
+        // Just trigger a re-render, the excluded goals will be grayed out in render()
+        // No need to rebuild entries since we want to show all goals, just gray out excluded ones
+    }
+    
+    /**
+     * Check if a goal is excluded by the current board type
+     */
+    private boolean isExcludedByBoardType(String goalId) {
+        if (!enablePickBan) return false; // Only check in PickBan GUI
+        return LockoutClient.currentExcludedGoals.contains(goalId);
+    }
+    
+    /**
+     * Refresh the goal list from the registry (used when board type changes)
+     */
+    public void refreshGoals() {
+        registeredGoals.clear();
+        for (String id : GoalRegistry.INSTANCE.getRegisteredGoals()) {
+            registeredGoals.putIfAbsent(id, new GoalEntry(id));
+        }
+        visibleEntries = buildEntriesWithHeaders(new ArrayList<>(registeredGoals.values()));
+    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (hovered instanceof GoalEntry hoveredGoal && enablePickBan) {
             String goalId = hoveredGoal.goal.getId();
+            
+            // Block interaction if goal is excluded by board type
+            if (isExcludedByBoardType(goalId)) {
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("This goal is excluded by the current board type!").withColor(0xFF5555),
+                    false
+                );
+                return true; // Block the click
+            }
             
             // Check if there's an active pick/ban session
             me.marin.lockout.network.UpdatePickBanSessionPayload session = me.marin.lockout.client.ClientPickBanSessionHolder.getActiveSession();
@@ -209,10 +246,6 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
                 // Get the player's team from scoreboard
                 net.minecraft.scoreboard.Team playerTeam = client.player.getScoreboardTeam();
                 if (playerTeam == null) {
-                    client.player.sendMessage(
-                        Text.literal("You are not on a team!").withColor(0xFF5555),
-                        false
-                    );
                     return true; // Block the interaction
                 }
                 
@@ -414,6 +447,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             List<String> pendingBans = me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals();
             
             boolean isLocked = picks.contains(goal.getId()) || bans.contains(goal.getId());
+            boolean isExcluded = isExcludedByBoardType(goal.getId());
             
             // Highlight picked/banned goals only if enabled
             if (highlightPicksBans) {
@@ -431,12 +465,13 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             goal.render(context, textRenderer, x, y);
             context.drawTextWithShadow(textRenderer, displayName, x + 18, y + 5, Color.WHITE.getRGB());
             
-            // Gray out locked goals only in pick/ban GUI, not in board builder
-            if (isLocked && enablePickBan) {
+            // Gray out locked goals or board type excluded goals (only in pick/ban GUI)
+            if (enablePickBan && (isLocked || isExcluded)) {
                 context.fill(x - 1, y, x + entryWidth + 2, y + entryHeight - 1, 0x88000000); // semi-transparent black overlay
             }
             
-            if (hovered) {
+            // Only show hover border if goal is not excluded
+            if (hovered && !isExcluded) {
                 context.drawBorder(x - 1, y - 1, entryWidth + 2, entryHeight, Color.LIGHT_GRAY.getRGB());
             }
         }

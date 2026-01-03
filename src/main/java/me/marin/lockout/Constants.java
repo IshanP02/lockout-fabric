@@ -21,6 +21,8 @@ public class Constants {
     public static final Identifier UPDATE_PICKS_BANS_PACKET = Identifier.of(NAMESPACE, "update_picks_bans");
     public static final Identifier BROADCAST_PICK_BAN_PACKET = Identifier.of(NAMESPACE, "broadcast_pick_ban");
     public static final Identifier SYNC_PICK_BAN_LIMIT_PACKET = Identifier.of(NAMESPACE, "sync_pick_ban_limit");
+    public static final Identifier SET_BOARD_TYPE_PACKET = Identifier.of(NAMESPACE, "set_board_type");
+    public static final Identifier UPLOAD_BOARD_TYPE_PACKET = Identifier.of(NAMESPACE, "upload_board_type");
     
     public static final Identifier START_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "start_pick_ban_session");
     public static final Identifier UPDATE_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "update_pick_ban_session");

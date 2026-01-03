@@ -15,12 +15,14 @@ import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.EndPickBanSessionPayload;
 import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.SetBoardTypePayload;
 import me.marin.lockout.network.StartLockoutPayload;
 import me.marin.lockout.network.StartPickBanSessionPayload;
 import me.marin.lockout.network.SyncPickBanLimitPayload;
 import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.network.UpdateTooltipPayload;
+import me.marin.lockout.network.UploadBoardTypePayload;
 import me.marin.lockout.server.handlers.*;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -70,7 +72,8 @@ public class LockoutServer {
 
     private static int lockoutStartTime = 60;
     private static int boardSize;
-    private static String boardType;
+    public static String boardType;
+    public static java.util.List<String> boardTypeExcludedGoals = new java.util.ArrayList<>();
 
     public static Lockout lockout;
     public static MinecraftServer server;
@@ -207,6 +210,33 @@ public class LockoutServer {
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                     ServerPlayNetworking.send(player, payload);
                 }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(UploadBoardTypePayload.ID, (payload, context) -> {
+            server.execute(() -> {
+                // Store the uploaded board type data on the server
+                boardType = payload.boardTypeName();
+                boardTypeExcludedGoals = new java.util.ArrayList<>(payload.excludedGoals());
+                
+                // Clear all picks and bans (both server-side and goal groups)
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                GoalGroup.clearGoalPlayers();
+                SERVER_PICKS.clear();
+                SERVER_BANS.clear();
+                SERVER_GOAL_TO_PLAYER_MAP.clear();
+                
+                // Broadcast to all clients
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    ServerPlayNetworking.send(player, new SetBoardTypePayload(boardType, boardTypeExcludedGoals));
+                    // Also send picks/bans update to clear client-side lists
+                    ServerPlayNetworking.send(player, new UpdatePicksBansPayload(SERVER_PICKS, SERVER_BANS, SERVER_GOAL_TO_PLAYER_MAP));
+                }
+                
+                context.player().sendMessage(Text.literal("Board type '" + boardType + "' uploaded to server (" + boardTypeExcludedGoals.size() + " goals excluded)."), false);
             });
         });
 
@@ -809,14 +839,6 @@ public class LockoutServer {
 
         boardSize = size;
         context.getSource().sendMessage(Text.of("Updated board size to " + size + "."));
-        return 1;
-    }
-
-    public static int setBoardType(CommandContext<ServerCommandSource> context) {
-        String type = context.getArgument("board type", String.class);
-
-        boardType = type;
-        context.getSource().sendMessage(Text.of("Updated board type to " + boardType + "."));
         return 1;
     }
 

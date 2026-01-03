@@ -7,6 +7,7 @@ import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.network.*;
+import me.marin.lockout.type.BoardTypeIO;
 import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -46,6 +47,8 @@ public class LockoutClient implements ClientModInitializer {
 
     public static Lockout lockout;
     public static boolean amIPlayingLockout = false;
+    public static String currentBoardType = null; // Current board type for filtering goals
+    public static java.util.List<String> currentExcludedGoals = new java.util.ArrayList<>(); // Excluded goals from server
     private static KeyBinding keyBinding;
     private static KeyBinding goalListKeyBinding;
     public static int CURRENT_TICK = 0;
@@ -112,6 +115,12 @@ public class LockoutClient implements ClientModInitializer {
                 GoalGroup.BANS.getGoals().clear();
                 GoalGroup.BANS.getGoals().addAll(payload.bans());
                 
+                // If the payload has empty picks/bans, also clear pending lists
+                if (payload.picks().isEmpty() && payload.bans().isEmpty()) {
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                }
+                
                 // Update goal-to-player mapping
                 GoalGroup.clearGoalPlayers();
                 for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
@@ -154,6 +163,23 @@ public class LockoutClient implements ClientModInitializer {
                 GoalGroup.setCustomLimit(payload.limit());
                 if (client.player != null) {
                     client.player.sendMessage(Text.literal("Pick/Ban limit set to " + payload.limit()), false);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(SetBoardTypePayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Store the board type and excluded goals from the server
+                currentBoardType = payload.boardType();
+                currentExcludedGoals = payload.excludedGoals();
+                
+                // If PickBan GUI is open, refresh it
+                if (client.currentScreen instanceof GoalListScreen screen) {
+                    screen.refreshFromBoardType();
+                }
+                
+                if (client.player != null) {
+                    client.player.sendMessage(Text.literal("Board type updated to: " + payload.boardType() + " (" + currentExcludedGoals.size() + " goals excluded)"), false);
                 }
             });
         });
@@ -488,6 +514,43 @@ public class LockoutClient implements ClientModInitializer {
                         return 1;
                     }).build();
 
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
+                var commandNode = ClientCommandManager.literal("BoardType")
+                    .requires(ccs -> hasPermission())
+                    .build();
+
+                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                    .executes((context) -> {
+                        String boardTypeName = context.getArgument("board type name", String.class);
+
+                        MinecraftClient.getInstance().send(() -> {
+                            try {
+                                me.marin.lockout.json.JSONBoardType boardType = me.marin.lockout.type.BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
+                                if (boardType == null) {
+                                    sendBoardTypeMessage(Text.literal("BoardType not found: ").formatted(Formatting.RED)
+                                        .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    return;
+                                }
+                                
+                                java.util.List<String> excludedGoals = boardType.excludedGoals != null ? boardType.excludedGoals : new java.util.ArrayList<>();
+                                
+                                // Send to server
+                                ClientPlayNetworking.send(new me.marin.lockout.network.UploadBoardTypePayload(boardTypeName, excludedGoals));
+                                
+                                sendBoardTypeMessage(Text.literal("Board type set to '").formatted(Formatting.GREEN)
+                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW))
+                                    .append(Text.literal("' (" + excludedGoals.size() + " goals excluded).").formatted(Formatting.GREEN)));
+                            } catch (IOException e) {
+                                Lockout.error(e);
+                                sendBoardTypeMessage(Text.literal("Failed to load BoardType: " + e.getMessage()).formatted(Formatting.RED));
+                            }
+                        });
+                        return 1;
+                    }).build();
+
+                commandNode.addChild(boardTypeNameNode);
                 dispatcher.getRoot().addChild(commandNode);
             }
             {

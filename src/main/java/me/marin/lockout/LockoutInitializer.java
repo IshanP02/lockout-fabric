@@ -148,15 +148,6 @@ public class LockoutInitializer implements ModInitializer {
             }
 
             {
-                // BoardType command
-                var boardTypeRoot = CommandManager.literal("BoardType").requires(PERMISSIONS).build();
-                var boardTypeArgument = CommandManager.argument("board type", StringArgumentType.word()).executes(LockoutServer::setBoardType).build();
-
-                dispatcher.getRoot().addChild(boardTypeRoot);
-                boardTypeRoot.addChild(boardTypeArgument);
-            }
-
-            {
                 // RemovePicks command
                 dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
                     // Remove goal-to-player mappings for picks before clearing

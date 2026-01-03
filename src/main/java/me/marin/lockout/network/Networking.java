@@ -14,6 +14,7 @@ public class Networking {
         PayloadTypeRegistry.playS2C().register(UpdatePicksBansPayload.ID, UpdatePicksBansPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BroadcastPickBanPayload.ID, BroadcastPickBanPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(SyncPickBanLimitPayload.ID, SyncPickBanLimitPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(SetBoardTypePayload.ID, SetBoardTypePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(StartPickBanSessionPayload.ID, StartPickBanSessionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdatePickBanSessionPayload.ID, UpdatePickBanSessionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(EndPickBanSessionPayload.ID, EndPickBanSessionPayload.CODEC);
@@ -24,5 +25,6 @@ public class Networking {
         PayloadTypeRegistry.playC2S().register(BroadcastPickBanPayload.ID, BroadcastPickBanPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(SyncPickBanLimitPayload.ID, SyncPickBanLimitPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(LockPickBanSelectionsPayload.ID, LockPickBanSelectionsPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(UploadBoardTypePayload.ID, UploadBoardTypePayload.CODEC);
     }
 }

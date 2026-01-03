@@ -1,10 +1,10 @@
-package me.marin.lockout.client.gui;
+package me.marin.lockout.type;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.json.JSONBoardType;
-import net.minecraft.client.MinecraftClient;
+import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.util.List;
 
 public class BoardTypeIO {
 
-    public static final Path DIRECTORY = MinecraftClient.getInstance().runDirectory.toPath().resolve("lockout-boardtypes");
+    public static final Path DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("lockout-boardtypes");
     public static final String FILE_EXTENSION = ".json";
 
     public static final BoardTypeIO INSTANCE = new BoardTypeIO();

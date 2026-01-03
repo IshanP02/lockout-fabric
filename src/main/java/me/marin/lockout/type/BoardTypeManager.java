@@ -1,7 +1,6 @@
 package me.marin.lockout.type;
 
 import me.marin.lockout.Lockout;
-import me.marin.lockout.client.gui.BoardTypeIO;
 import me.marin.lockout.json.JSONBoardType;
 
 import java.io.IOException;
