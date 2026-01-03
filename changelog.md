@@ -8,6 +8,8 @@
 - Added /CancelPickBanSession to force stop a PickBanSession
 - Fixed BoardType to work on servers
 - Fixed various bugs related to PickBanSessions and BoardTypes
+- Fixed autocomplete in lockout and blackout
+- Added random team option to lockout
 ## Lockout v0.10.3
 - Added New Commands
 	- Added CreateBoardGroup command
