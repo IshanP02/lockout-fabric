@@ -10,6 +10,7 @@ import me.marin.lockout.generator.GoalGroup;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
+import me.marin.lockout.network.AnnounceGoalFocusPayload;
 import me.marin.lockout.network.BroadcastPickBanPayload;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.EndPickBanSessionPayload;
@@ -74,6 +75,11 @@ public class LockoutServer {
     private static int boardSize;
     public static String boardType;
     public static java.util.List<String> boardTypeExcludedGoals = new java.util.ArrayList<>();
+
+    // Cooldown system for goal pings
+    private static final int MAX_PINGS = 4;
+    private static final long COOLDOWN_WINDOW_MS = 15000; // 15 seconds
+    private static final Map<UUID, List<Long>> playerPingTimestamps = new HashMap<>();
 
     public static Lockout lockout;
     public static MinecraftServer server;
@@ -237,6 +243,76 @@ public class LockoutServer {
                 }
                 
                 context.player().sendMessage(Text.literal("Board type '" + boardType + "' uploaded to server (" + boardTypeExcludedGoals.size() + " goals excluded)."), false);
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(AnnounceGoalFocusPayload.ID, (payload, context) -> {
+            server.execute(() -> {
+                ServerPlayerEntity player = context.player();
+                
+                // Check if lockout is active
+                if (!Lockout.exists(lockout)) {
+                    return;
+                }
+                
+                // Get player's team
+                Team playerTeam = player.getScoreboardTeam();
+                if (playerTeam == null) {
+                    return;
+                }
+                
+                // Cooldown check
+                UUID playerId = player.getUuid();
+                long currentTime = System.currentTimeMillis();
+                List<Long> timestamps = playerPingTimestamps.getOrDefault(playerId, new ArrayList<>());
+                
+                // Remove timestamps older than the cooldown window
+                timestamps.removeIf(time -> currentTime - time > COOLDOWN_WINDOW_MS);
+                
+                // Check if player has exceeded the limit
+                if (timestamps.size() >= MAX_PINGS) {
+                    long oldestPing = timestamps.get(0);
+                    long timeUntilCooldownEnds = COOLDOWN_WINDOW_MS - (currentTime - oldestPing);
+                    int secondsRemaining = (int) Math.ceil(timeUntilCooldownEnds / 1000.0);
+                    
+                    player.sendMessage(
+                        Text.literal("Your ping is on cooldown, please wait " + secondsRemaining + " seconds!")
+                            .formatted(Formatting.RED),
+                        false
+                    );
+                    return;
+                }
+                
+                // Add current ping timestamp
+                timestamps.add(currentTime);
+                playerPingTimestamps.put(playerId, timestamps);
+                
+                // Format goal name
+                String goalName = org.apache.commons.lang3.text.WordUtils.capitalize(
+                    payload.goalId().replace("_", " ").toLowerCase(), ' '
+                );
+                
+                // Create message based on action type
+                Text message;
+                float pitch;
+                if (payload.isReminder()) {
+                    message = Text.literal(player.getName().getString() + " is reminding their team about " + goalName + "!")
+                        .formatted(Formatting.GOLD);
+                    pitch = 0.5f;
+                } else {
+                    message = Text.literal(player.getName().getString() + " is currently working on " + goalName + "!")
+                        .formatted(Formatting.AQUA);
+                    pitch = 1.0f;
+                }
+                
+                // Send message and play sound to all team members
+                for (ServerPlayerEntity teamPlayer : server.getPlayerManager().getPlayerList()) {
+                    Team team = teamPlayer.getScoreboardTeam();
+                    if (team != null && team.getName().equals(playerTeam.getName())) {
+                        teamPlayer.sendMessage(message, false);
+                        teamPlayer.playSoundToPlayer(net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), net.minecraft.sound.SoundCategory.BLOCKS, 1.0f, pitch);
+                    }
+                }
             });
         });
 

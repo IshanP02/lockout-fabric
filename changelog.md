@@ -1,3 +1,5 @@
+## Lockout v0.10.5
+- Added Goal Pings
 ## Lockout v0.10.4
 - Merged BoardType with Pick Ban GUI
 - Added /SimulatePickBans

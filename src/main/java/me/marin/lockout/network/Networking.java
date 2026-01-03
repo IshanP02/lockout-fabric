@@ -26,5 +26,6 @@ public class Networking {
         PayloadTypeRegistry.playC2S().register(SyncPickBanLimitPayload.ID, SyncPickBanLimitPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(LockPickBanSelectionsPayload.ID, LockPickBanSelectionsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(UploadBoardTypePayload.ID, UploadBoardTypePayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(AnnounceGoalFocusPayload.ID, AnnounceGoalFocusPayload.CODEC);
     }
 }
