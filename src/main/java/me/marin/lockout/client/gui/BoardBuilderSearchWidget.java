@@ -49,7 +49,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
     private final boolean highlightPicksBans;
     private final boolean enablePickBan;
 
-    public BoardBuilderSearchWidget(int x, int y, int width, int height, Text text, boolean highlightPicksBans, boolean enablePickBan) {
+    public BoardBuilderSearchWidget(int x, int y, int width, int height, Text text, boolean highlightPicksBans, boolean enablePickBan, String initialSearch) {
         super(x, y, width, height, text);
         this.highlightPicksBans = highlightPicksBans;
         this.enablePickBan = enablePickBan;
@@ -57,7 +57,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             registeredGoals.putIfAbsent(id, new GoalEntry(id));
         }
         visibleEntries = buildEntriesWithHeaders(new ArrayList<>(registeredGoals.values()));
-        searchUpdated(BoardBuilderData.INSTANCE.getSearch());
+        searchUpdated(initialSearch != null ? initialSearch : "");
     }
 
     public void filterByRequirements(Map<RegistryKey<Biome>, LocateData> biomes, Map<RegistryKey<Structure>, LocateData> structures) {
@@ -169,10 +169,70 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (hovered instanceof GoalEntry hoveredGoal && enablePickBan) {
-            List<String> picks = me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
-            List<String> bans = me.marin.lockout.generator.GoalGroup.BANS.getGoals();
             String goalId = hoveredGoal.goal.getId();
+            
+            // Check if there's an active pick/ban session
+            me.marin.lockout.network.UpdatePickBanSessionPayload session = me.marin.lockout.client.ClientPickBanSessionHolder.getActiveSession();
+            
+            // During a session, use PENDING lists for temporary selections; otherwise use PICKS/BANS
+            List<String> picks = session != null 
+                ? me.marin.lockout.generator.GoalGroup.PENDING_PICKS.getGoals() 
+                : me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
+            List<String> bans = session != null 
+                ? me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals() 
+                : me.marin.lockout.generator.GoalGroup.BANS.getGoals();
+            
+            // Check if goal is locked in PICKS or BANS (all locked goals from all teams)
+            List<String> lockedPicks = me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
+            List<String> lockedBans = me.marin.lockout.generator.GoalGroup.BANS.getGoals();
+            
+            if (lockedPicks.contains(goalId) || lockedBans.contains(goalId)) {
+                String message = session != null 
+                    ? "This goal has already been locked by a team!"
+                    : "This goal is locked. Use /RemovePicks or /RemoveBans to unlock it.";
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal(message).withColor(0xFF5555),
+                    false
+                );
+                return true;
+            }
+            
+            if (session != null) {
+                // Check if player is on the active team FIRST - this blocks ANY interaction
+                MinecraftClient client = MinecraftClient.getInstance();
+                if (client.player == null) {
+                    return true; // Block if no player
+                }
+                
+                String activeTeamName = session.isTeam1Turn() ? session.team1Name() : session.team2Name();
+                
+                // Get the player's team from scoreboard
+                net.minecraft.scoreboard.Team playerTeam = client.player.getScoreboardTeam();
+                if (playerTeam == null) {
+                    client.player.sendMessage(
+                        Text.literal("You are not on a team!").withColor(0xFF5555),
+                        false
+                    );
+                    return true; // Block the interaction
+                }
+                
+                if (!playerTeam.getName().equals(activeTeamName)) {
+                    return true; // Block the interaction
+                }
+            }
+            
             if (button == 0) { // Left click: toggle pick
+                // Check if at pick limit during session
+                if (session != null && !picks.contains(goalId)) {
+                    if (picks.size() >= session.selectionLimit()) {
+                        MinecraftClient.getInstance().player.sendMessage(
+                            Text.literal("You've reached the maximum number of picks (" + session.selectionLimit() + ")").withColor(0xFF5555),
+                            false
+                        );
+                        return true;
+                    }
+                }
+                
                 if (picks.contains(goalId)) {
                     picks.remove(goalId);
                 } else {
@@ -181,6 +241,17 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
                     MinecraftClient.getInstance().player.sendMessage(Text.literal("Added to Picks!"), false);
                 }
             } else if (button == 1) { // Right click: toggle ban
+                // Check if at ban limit during session
+                if (session != null && !bans.contains(goalId)) {
+                    if (bans.size() >= session.selectionLimit()) {
+                        MinecraftClient.getInstance().player.sendMessage(
+                            Text.literal("You've reached the maximum number of bans (" + session.selectionLimit() + ")").withColor(0xFF5555),
+                            false
+                        );
+                        return true;
+                    }
+                }
+                
                 if (bans.contains(goalId)) {
                     bans.remove(goalId);
                 } else {
@@ -336,14 +407,20 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
+            // Check if goal is locked (in PICKS or BANS, but not PENDING)
+            List<String> picks = me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
+            List<String> bans = me.marin.lockout.generator.GoalGroup.BANS.getGoals();
+            List<String> pendingPicks = me.marin.lockout.generator.GoalGroup.PENDING_PICKS.getGoals();
+            List<String> pendingBans = me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals();
+            
+            boolean isLocked = picks.contains(goal.getId()) || bans.contains(goal.getId());
+            
             // Highlight picked/banned goals only if enabled
             if (highlightPicksBans) {
-                List<String> picks = me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
-                List<String> bans = me.marin.lockout.generator.GoalGroup.BANS.getGoals();
                 int highlightColor = 0;
-                if (picks.contains(goal.getId())) {
+                if (picks.contains(goal.getId()) || pendingPicks.contains(goal.getId())) {
                     highlightColor = 0x5500FF55; // semi-transparent green
-                } else if (bans.contains(goal.getId())) {
+                } else if (bans.contains(goal.getId()) || pendingBans.contains(goal.getId())) {
                     highlightColor = 0x55FF5555; // semi-transparent red
                 }
                 if (highlightColor != 0) {
@@ -353,6 +430,12 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
 
             goal.render(context, textRenderer, x, y);
             context.drawTextWithShadow(textRenderer, displayName, x + 18, y + 5, Color.WHITE.getRGB());
+            
+            // Gray out locked goals only in pick/ban GUI, not in board builder
+            if (isLocked && enablePickBan) {
+                context.fill(x - 1, y, x + entryWidth + 2, y + entryHeight - 1, 0x88000000); // semi-transparent black overlay
+            }
+            
             if (hovered) {
                 context.drawBorder(x - 1, y - 1, entryWidth + 2, entryHeight, Color.LIGHT_GRAY.getRGB());
             }

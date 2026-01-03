@@ -181,6 +181,8 @@ public class GoalGroup {
     ), 1);
     public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+    public static final GoalGroup PENDING_PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
+    public static final GoalGroup PENDING_BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
 
     // Groups for Mapping Categories in Search Widget
     public static final GoalGroup TOOLS_CATEGORY = new GoalGroup(List.of(

@@ -2,8 +2,10 @@ package me.marin.lockout.server.handlers;
 
 import me.marin.lockout.LockoutInitializer;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.server.LockoutServer;
+import me.marin.lockout.server.PickBanSession;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -11,6 +13,7 @@ import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 import static me.marin.lockout.server.LockoutServer.waitingForVersionPacketPlayersMap;
 
@@ -38,6 +41,36 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
             LockoutServer.SERVER_BANS,
             LockoutServer.SERVER_GOAL_TO_PLAYER_MAP
         ));
+        
+        // If there's an active pick/ban session, sync it to the joining player
+        if (LockoutServer.activePickBanSession != null) {
+            PickBanSession session = LockoutServer.activePickBanSession;
+            
+            // Use goal-to-player map from the session
+            java.util.Map<String, String> goalToPlayerMap = session.getGoalToPlayerMap();
+            
+            // Send current session state to the player
+            UpdatePickBanSessionPayload payload = new UpdatePickBanSessionPayload(
+                session.getCurrentRound(),
+                session.isTeam1Turn(),
+                session.getTeam1Name(),
+                session.getTeam2Name(),
+                session.getAllLockedPicks(),
+                session.getAllLockedBans(),
+                session.getPendingPicks(),
+                session.getPendingBans(),
+                session.getSelectionLimit(),
+                goalToPlayerMap,
+                session.getMaxRounds()
+            );
+            ServerPlayNetworking.send(player, payload);
+            
+            // Notify the player about the ongoing session
+            player.sendMessage(
+                Text.literal("A pick/ban session is in progress. Round " + session.getCurrentRound() + "/" + session.getMaxRounds()).withColor(0xFFAA00),
+                false
+            );
+        }
     }
 }
 

@@ -32,8 +32,13 @@ public class BoardGenerator {
     public LockoutBoard generateBoard(int size) {
         // Prepare a mutable list of available goals and remove banned goals
         List<String> availableGoals = new ArrayList<>(registeredGoals);
-        List<String> banned = GoalGroup.BANS.getGoals();
-        if (banned != null && !banned.isEmpty()) {
+        
+        // Combine BANS and PENDING_BANS for board generation
+        List<String> banned = new ArrayList<>();
+        banned.addAll(GoalGroup.BANS.getGoals());
+        banned.addAll(GoalGroup.PENDING_BANS.getGoals());
+        
+        if (!banned.isEmpty()) {
             availableGoals.removeAll(banned);
         }
 
@@ -42,9 +47,12 @@ public class BoardGenerator {
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
-        // If there are picks selected, force-add them first (and ensure they're not duplicated)
-        List<String> picks = GoalGroup.PICKS.getGoals();
-        if (picks != null && !picks.isEmpty()) {
+        // Combine PICKS and PENDING_PICKS for board generation
+        List<String> picks = new ArrayList<>();
+        picks.addAll(GoalGroup.PICKS.getGoals());
+        picks.addAll(GoalGroup.PENDING_PICKS.getGoals());
+        
+        if (!picks.isEmpty()) {
             for (String pick : picks) {
                 if (goals.size() >= size * size) break;
                 // Only add if registered and not already added, and not banned

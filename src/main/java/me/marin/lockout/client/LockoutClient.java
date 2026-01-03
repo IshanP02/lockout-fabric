@@ -142,6 +142,118 @@ public class LockoutClient implements ClientModInitializer {
                 }
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(StartPickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Clear all goal groups before starting the session
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                GoalGroup.clearGoalPlayers();
+                
+                // Create initial session state
+                UpdatePickBanSessionPayload initialState = new UpdatePickBanSessionPayload(
+                    1, // currentRound
+                    true, // isTeam1Turn
+                    payload.team1Name(),
+                    payload.team2Name(),
+                    new java.util.HashSet<>(), // allLockedPicks
+                    new java.util.HashSet<>(), // allLockedBans
+                    new java.util.ArrayList<>(), // pendingPicks
+                    new java.util.ArrayList<>(), // pendingBans
+                    payload.selectionLimit(),
+                    new java.util.HashMap<>(), // goalToPlayerMap
+                    3 // maxRounds - default, will be updated by server if different
+                );
+                ClientPickBanSessionHolder.setActiveSession(initialState);
+                
+                // Open the pick/ban GUI for players
+                client.setScreen(new GoalListScreen());
+                
+                if (client.player != null) {
+                    client.player.sendMessage(
+                        Text.literal("Pick/ban session started: " + payload.team1Name() + " vs " + payload.team2Name()).withColor(0x55FF55),
+                        false
+                    );
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(UpdatePickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Update client-side session state
+                ClientPickBanSessionHolder.setActiveSession(payload);
+                
+                // Update client-side pick/ban lists to show locked goals BEFORE refreshing GUI
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.PICKS.getGoals().addAll(payload.allLockedPicks());
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.BANS.getGoals().addAll(payload.allLockedBans());
+                
+                // Update goal-to-player mapping from payload
+                GoalGroup.clearGoalPlayers();
+                for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
+                    GoalGroup.setGoalPlayer(entry.getKey(), entry.getValue());
+                }
+                
+                // Clear PENDING goal groups to prevent duplicates and reset limit
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                
+                // Update the GUI if it's open (now panels will have updated picks/bans)
+                if (client.currentScreen instanceof GoalListScreen goalListScreen) {
+                    goalListScreen.refreshForPickBanSession(payload);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(EndPickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                if (payload.cancelled()) {
+                    // Clear all goal groups when cancelled
+                    GoalGroup.PICKS.getGoals().clear();
+                    GoalGroup.BANS.getGoals().clear();
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                    GoalGroup.clearGoalPlayers();
+                } else {
+                    // Update final picks/bans if session completed normally
+                    GoalGroup.PICKS.getGoals().clear();
+                    GoalGroup.PICKS.getGoals().addAll(payload.finalPicks());
+                    GoalGroup.BANS.getGoals().clear();
+                    GoalGroup.BANS.getGoals().addAll(payload.finalBans());
+                    
+                    // Update goal-to-player mapping
+                    GoalGroup.clearGoalPlayers();
+                    for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
+                        GoalGroup.setGoalPlayer(entry.getKey(), entry.getValue());
+                    }
+                    
+                    // Clear PENDING goal groups
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                }
+                
+                // Clear client-side session state
+                ClientPickBanSessionHolder.clearSession();
+                
+                // Close the GUI if open
+                if (client.currentScreen instanceof GoalListScreen) {
+                    client.setScreen(null);
+                }
+                
+                if (client.player != null) {
+                    if (payload.cancelled()) {
+                        client.player.sendMessage(
+                            Text.literal("Pick/ban session has been cancelled by an admin.").withColor(0xFF5555),
+                            false
+                        );
+                    }
+                    // Note: Completion message is sent by server broadcast, not here
+                }
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(StartLockoutPayload.ID, (payload, context) -> {
             lockout.setStarted(true);
             context.client().execute(() -> {
@@ -374,8 +486,9 @@ public class LockoutClient implements ClientModInitializer {
                 if (client.currentScreen != null || client.player == null) {
                     return;
                 }
-                // Only allow operators to open the goal list screen
-                if (!client.player.hasPermissionLevel(2)) {
+                // Allow anyone to open during active pick/ban session, otherwise only operators
+                boolean hasActiveSession = ClientPickBanSessionHolder.getActiveSession() != null;
+                if (!hasActiveSession && !client.player.hasPermissionLevel(2)) {
                     client.player.sendMessage(Text.literal("You must be an operator to access the Goal List!").formatted(net.minecraft.util.Formatting.RED), false);
                     return;
                 }
