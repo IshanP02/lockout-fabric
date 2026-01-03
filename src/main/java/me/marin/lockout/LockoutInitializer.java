@@ -62,6 +62,8 @@ public class LockoutInitializer implements ModInitializer {
                     var commandNode = CommandManager.literal("lockout").requires(PERMISSIONS).build();
                     var teamsNode = CommandManager.literal("teams").build();
                     var playersNode = CommandManager.literal("players").build();
+                    var randomNode = CommandManager.literal("random").executes(LockoutServer::lockoutRandomCommandLogic).build();
+                    var teamCountNode = CommandManager.argument("team count", IntegerArgumentType.integer(2, 16)).executes(LockoutServer::lockoutRandomCommandLogic).build();
                     //TODO make custom argument types
                     var teamListNode = CommandManager.argument("team names", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
                     var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
@@ -69,6 +71,8 @@ public class LockoutInitializer implements ModInitializer {
                     dispatcher.getRoot().addChild(commandNode);
                     commandNode.addChild(teamsNode);
                     commandNode.addChild(playersNode);
+                    commandNode.addChild(randomNode);
+                    randomNode.addChild(teamCountNode);
                     teamsNode.addChild(teamListNode);
                     playersNode.addChild(playerListNode);
                 }

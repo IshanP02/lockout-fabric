@@ -297,6 +297,81 @@ public class LockoutServer {
         return 1;
     }
 
+    public static int lockoutRandomCommandLogic(CommandContext<ServerCommandSource> context) {
+        Integer teamCount = null;
+        try {
+            teamCount = context.getArgument("team count", Integer.class);
+        } catch (Exception ignored) {}
+        
+        List<LockoutTeamServer> teams = createRandomTeams(context, teamCount);
+        if (teams == null) return 0;
+
+        startLockout(teams);
+        return 1;
+    }
+
+    private static List<LockoutTeamServer> createRandomTeams(CommandContext<ServerCommandSource> context, Integer teamCount) {
+        PlayerManager playerManager = server.getPlayerManager();
+        List<ServerPlayerEntity> allPlayers = new ArrayList<>(playerManager.getPlayerList());
+        
+        if (allPlayers.isEmpty()) {
+            context.getSource().sendError(Text.literal("No players online to create teams."));
+            return null;
+        }
+
+        if (allPlayers.size() < 2) {
+            context.getSource().sendError(Text.literal("Need at least 2 players online for random lockout."));
+            return null;
+        }
+
+        // Shuffle players
+        java.util.Collections.shuffle(allPlayers);
+        
+        List<LockoutTeamServer> teams = new ArrayList<>();
+        
+        if (teamCount == null) {
+            // Default: Create 1v1 teams (each player on their own team)
+            for (int i = 0; i < allPlayers.size(); i++) {
+                ServerPlayerEntity player = allPlayers.get(i);
+                teams.add(new LockoutTeamServer(
+                    List.of(player.getName().getString()),
+                    Formatting.byColorIndex(Lockout.COLOR_ORDERS[i % Lockout.COLOR_ORDERS.length]),
+                    server
+                ));
+            }
+        } else {
+            // Create specified number of teams
+            if (teamCount > allPlayers.size()) {
+                context.getSource().sendError(Text.literal("Cannot create " + teamCount + " teams with only " + allPlayers.size() + " players."));
+                return null;
+            }
+            
+            // Create lists to hold player names for each team
+            List<List<String>> teamPlayerNames = new ArrayList<>();
+            for (int i = 0; i < teamCount; i++) {
+                teamPlayerNames.add(new ArrayList<>());
+            }
+            
+            // Assign players to teams in round-robin fashion
+            for (int i = 0; i < allPlayers.size(); i++) {
+                ServerPlayerEntity player = allPlayers.get(i);
+                int teamIndex = i % teamCount;
+                teamPlayerNames.get(teamIndex).add(player.getName().getString());
+            }
+            
+            // Create teams with the player lists
+            for (int i = 0; i < teamCount; i++) {
+                teams.add(new LockoutTeamServer(
+                    teamPlayerNames.get(i),
+                    Formatting.byColorIndex(Lockout.COLOR_ORDERS[i % Lockout.COLOR_ORDERS.length]),
+                    server
+                ));
+            }
+        }
+        
+        return teams;
+    }
+
     private static void startLockout(List<LockoutTeamServer> teams) {
         // Clear old runnables
         gameStartRunnables.clear();
