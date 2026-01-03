@@ -642,7 +642,7 @@ public class LockoutServer {
             me.marin.lockout.generator.GoalGroup.BANS.getGoals().addAll(SERVER_BANS);
             
             BoardGenerator boardGenerator = new BoardGenerator(GoalRegistry.INSTANCE.getRegisteredGoals(), teams, AVAILABLE_DYE_COLORS, BIOME_LOCATE_DATA, STRUCTURE_LOCATE_DATA);
-            lockoutBoard = boardGenerator.generateBoard(boardSize, boardType);
+            lockoutBoard = boardGenerator.generateBoard(boardSize, boardType, boardTypeExcludedGoals);
 
             // Check if board generation failed due to insufficient goals
             if (lockoutBoard == null) {
