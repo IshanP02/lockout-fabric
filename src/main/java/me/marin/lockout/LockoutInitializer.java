@@ -4,7 +4,9 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import me.marin.lockout.lockout.DefaultGoalRegister;
 import me.marin.lockout.network.CustomBoardPayload;
+import me.marin.lockout.network.EndPickBanSessionPayload;
 import me.marin.lockout.network.Networking;
+import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.api.ModInitializer;
@@ -27,9 +29,12 @@ import net.minecraft.loot.function.SetPotionLootFunction;
 import net.minecraft.loot.provider.number.UniformLootNumberProvider;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import me.marin.lockout.generator.GoalGroup;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 import java.util.Objects;
@@ -143,15 +148,6 @@ public class LockoutInitializer implements ModInitializer {
             }
 
             {
-                // BoardType command
-                var boardTypeRoot = CommandManager.literal("BoardType").requires(PERMISSIONS).build();
-                var boardTypeArgument = CommandManager.argument("board type", StringArgumentType.word()).executes(LockoutServer::setBoardType).build();
-
-                dispatcher.getRoot().addChild(boardTypeRoot);
-                boardTypeRoot.addChild(boardTypeArgument);
-            }
-
-            {
                 // RemovePicks command
                 dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
                     // Remove goal-to-player mappings for picks before clearing
@@ -219,6 +215,155 @@ public class LockoutInitializer implements ModInitializer {
                     }
                     return 1;
                 }).build());
+            }
+
+            {
+                // SimulatePickBans command
+                var simulatePickBansRoot = CommandManager.literal("SimulatePickBans").requires(PERMISSIONS).build();
+                var team1Arg = CommandManager.argument("team1", StringArgumentType.word()).build();
+                var team2Arg = CommandManager.argument("team2", StringArgumentType.word()).executes(context -> {
+                    String team1Name = StringArgumentType.getString(context, "team1");
+                    String team2Name = StringArgumentType.getString(context, "team2");
+                    
+                    ServerScoreboard scoreboard = context.getSource().getServer().getScoreboard();
+                    Team team1 = scoreboard.getTeam(team1Name);
+                    Team team2 = scoreboard.getTeam(team2Name);
+                    
+                    if (team1 == null) {
+                        context.getSource().sendError(Text.literal("Team " + team1Name + " does not exist."));
+                        return 0;
+                    }
+                    if (team2 == null) {
+                        context.getSource().sendError(Text.literal("Team " + team2Name + " does not exist."));
+                        return 0;
+                    }
+                    if (team1.equals(team2)) {
+                        context.getSource().sendError(Text.literal("Cannot start pick/ban with the same team twice."));
+                        return 0;
+                    }
+                    
+                    return LockoutServer.startPickBanSession(context, team1, team2);
+                }).build();
+
+                dispatcher.getRoot().addChild(simulatePickBansRoot);
+                simulatePickBansRoot.addChild(team1Arg);
+                team1Arg.addChild(team2Arg);
+            }
+
+            {
+                // CancelPickBanSession command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("CancelPickBanSession")
+                        .requires(PERMISSIONS)
+                        .executes(context -> {
+                            if (LockoutServer.activePickBanSession == null) {
+                                context.getSource().sendError(Text.literal("No active pick/ban session to cancel."));
+                                return 0;
+                            }
+                            
+                            // Clear all goal groups on server
+                            GoalGroup.PICKS.getGoals().clear();
+                            GoalGroup.BANS.getGoals().clear();
+                            GoalGroup.PENDING_PICKS.getGoals().clear();
+                            GoalGroup.PENDING_BANS.getGoals().clear();
+                            GoalGroup.clearGoalPlayers();
+                            
+                            // Clear the session
+                            LockoutServer.activePickBanSession = null;
+                            
+                            // Broadcast cancellation to all players
+                            EndPickBanSessionPayload payload = new EndPickBanSessionPayload(
+                                true,
+                                new java.util.HashSet<>(),
+                                new java.util.HashSet<>(),
+                                new java.util.HashMap<>()
+                            );
+                            for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                ServerPlayNetworking.send(player, payload);
+                            }
+                            
+                            context.getSource().sendMessage(Text.literal("Pick/ban session cancelled."));
+                            return 1;
+                        })
+                        .build()
+                );
+            }
+
+            {
+                // PickBanSelectionLimit command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("PickBanSelectionLimit")
+                        .requires(PERMISSIONS)
+                        .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 5))
+                            .executes(context -> {
+                                int limit = IntegerArgumentType.getInteger(context, "limit");
+                                
+                                if (LockoutServer.activePickBanSession == null) {
+                                    // If no active session, store the limit for the next session
+                                    LockoutServer.defaultPickBanLimit = limit;
+                                    context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit + " for the next session."));
+                                    return 1;
+                                }
+                                
+                                // Can only change limit before any rounds are locked
+                                if (LockoutServer.activePickBanSession.getCurrentRound() > 1) {
+                                    context.getSource().sendError(Text.literal("Cannot change selection limit after round 1 has started."));
+                                    return 0;
+                                }
+                                
+                                LockoutServer.activePickBanSession.setSelectionLimit(limit);
+                                
+                                // Use goal-to-player map from the session
+                                java.util.Map<String, String> goalToPlayerMap = LockoutServer.activePickBanSession.getGoalToPlayerMap();
+                                
+                                // Broadcast the new limit to all players
+                                UpdatePickBanSessionPayload payload = new UpdatePickBanSessionPayload(
+                                    LockoutServer.activePickBanSession.getCurrentRound(),
+                                    LockoutServer.activePickBanSession.isTeam1Turn(),
+                                    LockoutServer.activePickBanSession.getTeam1Name(),
+                                    LockoutServer.activePickBanSession.getTeam2Name(),
+                                    LockoutServer.activePickBanSession.getAllLockedPicks(),
+                                    LockoutServer.activePickBanSession.getAllLockedBans(),
+                                    LockoutServer.activePickBanSession.getPendingPicks(),
+                                    LockoutServer.activePickBanSession.getPendingBans(),
+                                    LockoutServer.activePickBanSession.getSelectionLimit(),
+                                    goalToPlayerMap,
+                                    LockoutServer.activePickBanSession.getMaxRounds()
+                                );
+                                
+                                for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                    ServerPlayNetworking.send(player, payload);
+                                }
+                                
+                                context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit));
+                                return 1;
+                            })
+                        )
+                        .build()
+                );
+            }
+
+            {
+                // MaxRounds command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("MaxRounds")
+                        .requires(PERMISSIONS)
+                        .then(CommandManager.argument("rounds", IntegerArgumentType.integer(1, 10))
+                            .executes(context -> {
+                                int rounds = IntegerArgumentType.getInteger(context, "rounds");
+                                
+                                if (LockoutServer.activePickBanSession != null) {
+                                    context.getSource().sendError(Text.literal("Cannot change max rounds during an active session."));
+                                    return 0;
+                                }
+                                
+                                LockoutServer.defaultMaxRounds = rounds;
+                                context.getSource().sendMessage(Text.literal("Max rounds set to " + rounds + " for the next session."));
+                                return 1;
+                            })
+                        )
+                        .build()
+                );
             }
 
         });

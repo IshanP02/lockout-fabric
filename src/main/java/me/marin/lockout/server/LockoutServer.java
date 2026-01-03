@@ -6,16 +6,23 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.marin.lockout.*;
 import me.marin.lockout.client.LockoutBoard;
 import me.marin.lockout.generator.BoardGenerator;
+import me.marin.lockout.generator.GoalGroup;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.network.BroadcastPickBanPayload;
 import me.marin.lockout.network.CustomBoardPayload;
+import me.marin.lockout.network.EndPickBanSessionPayload;
+import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.SetBoardTypePayload;
 import me.marin.lockout.network.StartLockoutPayload;
+import me.marin.lockout.network.StartPickBanSessionPayload;
 import me.marin.lockout.network.SyncPickBanLimitPayload;
+import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.network.UpdateTooltipPayload;
+import me.marin.lockout.network.UploadBoardTypePayload;
 import me.marin.lockout.server.handlers.*;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -65,7 +72,8 @@ public class LockoutServer {
 
     private static int lockoutStartTime = 60;
     private static int boardSize;
-    private static String boardType;
+    public static String boardType;
+    public static java.util.List<String> boardTypeExcludedGoals = new java.util.ArrayList<>();
 
     public static Lockout lockout;
     public static MinecraftServer server;
@@ -78,6 +86,16 @@ public class LockoutServer {
     // Server-side picks and bans storage
     public static final List<String> SERVER_PICKS = new ArrayList<>();
     public static final List<String> SERVER_BANS = new ArrayList<>();
+    public static final Map<String, String> SERVER_GOAL_TO_PLAYER_MAP = new HashMap<>();
+    
+    // Active pick/ban session
+    public static PickBanSession activePickBanSession = null;
+    
+    // Default pick/ban limit (can be set before starting a session)
+    public static int defaultPickBanLimit = 2;
+    
+    // Default max rounds (can be set before starting a session)
+    public static int defaultMaxRounds = 3;
 
     private static boolean isInitialized = false;
 
@@ -161,11 +179,13 @@ public class LockoutServer {
         });
 
         ServerPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
-            // Store picks/bans on server-side
+            // Store picks/bans and goal-to-player mapping on server-side
             SERVER_PICKS.clear();
             SERVER_PICKS.addAll(payload.picks());
             SERVER_BANS.clear();
             SERVER_BANS.addAll(payload.bans());
+            SERVER_GOAL_TO_PLAYER_MAP.clear();
+            SERVER_GOAL_TO_PLAYER_MAP.putAll(payload.goalToPlayerMap());
             
             // Broadcast picks/bans update to all other players
             for (ServerPlayerEntity otherPlayer : server.getPlayerManager().getPlayerList()) {
@@ -189,6 +209,161 @@ public class LockoutServer {
             server.execute(() -> {
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                     ServerPlayNetworking.send(player, payload);
+                }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(UploadBoardTypePayload.ID, (payload, context) -> {
+            server.execute(() -> {
+                // Store the uploaded board type data on the server
+                boardType = payload.boardTypeName();
+                boardTypeExcludedGoals = new java.util.ArrayList<>(payload.excludedGoals());
+                
+                // Clear all picks and bans (both server-side and goal groups)
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                GoalGroup.clearGoalPlayers();
+                SERVER_PICKS.clear();
+                SERVER_BANS.clear();
+                SERVER_GOAL_TO_PLAYER_MAP.clear();
+                
+                // Broadcast to all clients
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    ServerPlayNetworking.send(player, new SetBoardTypePayload(boardType, boardTypeExcludedGoals));
+                    // Also send picks/bans update to clear client-side lists
+                    ServerPlayNetworking.send(player, new UpdatePicksBansPayload(SERVER_PICKS, SERVER_BANS, SERVER_GOAL_TO_PLAYER_MAP));
+                }
+                
+                context.player().sendMessage(Text.literal("Board type '" + boardType + "' uploaded to server (" + boardTypeExcludedGoals.size() + " goals excluded)."), false);
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(LockPickBanSelectionsPayload.ID, (payload, context) -> {
+            server.execute(() -> {
+                if (activePickBanSession == null) {
+                    context.player().sendMessage(Text.literal("No active pick/ban session."), false);
+                    return;
+                }
+
+                String playerName = context.player().getName().getString();
+                
+                // Verify player is on active team
+                if (!activePickBanSession.isPlayerOnActiveTeam(playerName)) {
+                    context.player().sendMessage(Text.literal("It's not your team's turn!"), false);
+                    return;
+                }
+                
+                // Get pending picks/bans from the payload (sent from client)
+                List<String> pendingPicks = new ArrayList<>(payload.pendingPicks());
+                List<String> pendingBans = new ArrayList<>(payload.pendingBans());
+                Map<String, String> goalToPlayerMap = payload.goalToPlayerMap();
+                
+                // Debug: log the sizes
+                System.out.println("DEBUG: Pending picks size: " + pendingPicks.size() + ", Pending bans size: " + pendingBans.size() + ", Limit: " + activePickBanSession.getSelectionLimit());
+                System.out.println("DEBUG: Pending picks: " + pendingPicks);
+                System.out.println("DEBUG: Pending bans: " + pendingBans);
+                
+                // Verify they have the right number of selections
+                int limit = activePickBanSession.getSelectionLimit();
+                if (pendingPicks.size() != limit || pendingBans.size() != limit) {
+                    context.player().sendMessage(
+                        Text.literal("You must select exactly " + limit + " picks and " + limit + " bans before locking."),
+                        false
+                    );
+                    return;
+                }
+                
+                // Clear any existing pending selections and add the new ones
+                activePickBanSession.clearPendingSelections();
+                for (String goalId : pendingPicks) {
+                    activePickBanSession.addPendingPick(goalId);
+                    // Store the player who selected this goal
+                    String teamPlayerName = goalToPlayerMap.get(goalId);
+                    if (playerName != null) {
+                        activePickBanSession.setGoalPlayer(goalId, playerName);
+                    }
+                }
+                for (String goalId : pendingBans) {
+                    activePickBanSession.addPendingBan(goalId);
+                    // Store the player who selected this goal
+                    String teamPlayerName = goalToPlayerMap.get(goalId);
+                    if (teamPlayerName != null) {
+                        activePickBanSession.setGoalPlayer(goalId, teamPlayerName);
+                    }
+                }
+                
+                // Lock the selections
+                activePickBanSession.lockCurrentSelections();
+                
+                // Clear the pending goal groups
+                me.marin.lockout.generator.GoalGroup.PENDING_PICKS.getGoals().clear();
+                me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals().clear();
+                
+                // Check if session is complete
+                if (activePickBanSession.isComplete()) {
+                    // Session complete - finalize picks/bans
+                    SERVER_PICKS.clear();
+                    SERVER_PICKS.addAll(activePickBanSession.getAllLockedPicks());
+                    SERVER_BANS.clear();
+                    SERVER_BANS.addAll(activePickBanSession.getAllLockedBans());
+                    
+                    // Update global pick/ban lists
+                    me.marin.lockout.generator.GoalGroup.PICKS.getGoals().clear();
+                    me.marin.lockout.generator.GoalGroup.PICKS.getGoals().addAll(SERVER_PICKS);
+                    me.marin.lockout.generator.GoalGroup.BANS.getGoals().clear();
+                    me.marin.lockout.generator.GoalGroup.BANS.getGoals().addAll(SERVER_BANS);
+                    
+                    // Get goal-to-player map from session
+                    Map<String, String> finalGoalToPlayerMap = activePickBanSession.getGoalToPlayerMap();
+                    
+                    // Broadcast end to all players with final picks/bans
+                    EndPickBanSessionPayload endPayload = new EndPickBanSessionPayload(
+                        false,
+                        new HashSet<>(SERVER_PICKS),
+                        new HashSet<>(SERVER_BANS),
+                        finalGoalToPlayerMap
+                    );
+                    for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                        ServerPlayNetworking.send(player, endPayload);
+                    }
+                    
+                    // Clear the session
+                    activePickBanSession = null;
+                    
+                    server.getPlayerManager().broadcast(
+                        Text.literal("Pick/ban session completed! Picks and bans have been finalized.").withColor(0xFFAA00),
+                        false
+                    );
+                } else {
+                    // Use the goal-to-player map from the session
+                    Map<String, String> newGoalToPlayerMap = activePickBanSession.getGoalToPlayerMap();
+                    
+                    // Broadcast updated session state to all players
+                    UpdatePickBanSessionPayload updatePayload = new UpdatePickBanSessionPayload(
+                        activePickBanSession.getCurrentRound(),
+                        activePickBanSession.isTeam1Turn(),
+                        activePickBanSession.getTeam1Name(),
+                        activePickBanSession.getTeam2Name(),
+                        activePickBanSession.getAllLockedPicks(),
+                        activePickBanSession.getAllLockedBans(),
+                        activePickBanSession.getPendingPicks(),
+                        activePickBanSession.getPendingBans(),
+                        activePickBanSession.getSelectionLimit(),
+                        newGoalToPlayerMap,
+                        activePickBanSession.getMaxRounds()
+                    );
+                    
+                    for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                        ServerPlayNetworking.send(player, updatePayload);
+                    }
+                    
+                    server.getPlayerManager().broadcast(
+                        Text.literal("Round " + activePickBanSession.getCurrentRound() + "/" + activePickBanSession.getMaxRounds() + " - " + 
+                                   activePickBanSession.getCurrentActiveTeamName() + "'s turn").withColor(0xFFAA00),
+                        false
+                    );
                 }
             });
         });
@@ -223,6 +398,45 @@ public class LockoutServer {
                 player.sendMessage(Text.literal("Set custom board."));
             }
         });
+    }
+
+    public static int startPickBanSession(CommandContext<ServerCommandSource> context, Team team1, Team team2) {
+        if (activePickBanSession != null) {
+            context.getSource().sendError(Text.literal("A pick/ban session is already active! Use /CancelPickBanSession to cancel it first."));
+            return 0;
+        }
+
+        // Clear all goal groups before starting the session
+        GoalGroup.PICKS.getGoals().clear();
+        GoalGroup.BANS.getGoals().clear();
+        GoalGroup.PENDING_PICKS.getGoals().clear();
+        GoalGroup.PENDING_BANS.getGoals().clear();
+
+        // Create new session with the default limit and max rounds
+        activePickBanSession = new PickBanSession(team1, team2, server, defaultMaxRounds);
+        activePickBanSession.setSelectionLimit(defaultPickBanLimit);
+
+        // Broadcast session start to all players
+        StartPickBanSessionPayload payload = new StartPickBanSessionPayload(
+            team1.getName(),
+            team2.getName(),
+            activePickBanSession.getSelectionLimit()
+        );
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(player, payload);
+        }
+
+        context.getSource().sendMessage(
+            Text.literal("Started pick/ban session: " + team1.getName() + " vs " + team2.getName())
+        );
+        
+        server.getPlayerManager().broadcast(
+            Text.literal("Pick/ban session started! Round 1/" + activePickBanSession.getMaxRounds() + " - " + team1.getName() + "'s turn").withColor(0x55FF55),
+            false
+        );
+
+        return 1;
     }
 
     public static LocateData locateBiome(MinecraftServer server, RegistryKey<Biome> biome) {
@@ -625,14 +839,6 @@ public class LockoutServer {
 
         boardSize = size;
         context.getSource().sendMessage(Text.of("Updated board size to " + size + "."));
-        return 1;
-    }
-
-    public static int setBoardType(CommandContext<ServerCommandSource> context) {
-        String type = context.getArgument("board type", String.class);
-
-        boardType = type;
-        context.getSource().sendMessage(Text.of("Updated board type to " + boardType + "."));
         return 1;
     }
 

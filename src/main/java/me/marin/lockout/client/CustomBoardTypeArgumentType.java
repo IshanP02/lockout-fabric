@@ -8,7 +8,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.marin.lockout.Lockout;
-import me.marin.lockout.client.gui.BoardTypeIO;
+import me.marin.lockout.type.BoardTypeIO;
 import net.minecraft.command.CommandSource;
 import net.minecraft.text.Text;
 

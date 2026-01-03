@@ -3,6 +3,7 @@ package me.marin.lockout.client.gui;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.GoalRegistry;
+import me.marin.lockout.type.BoardTypeIO;
 import me.marin.lockout.type.BoardTypeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;

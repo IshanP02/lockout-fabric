@@ -7,6 +7,7 @@ import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.network.*;
+import me.marin.lockout.type.BoardTypeIO;
 import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -46,6 +47,8 @@ public class LockoutClient implements ClientModInitializer {
 
     public static Lockout lockout;
     public static boolean amIPlayingLockout = false;
+    public static String currentBoardType = null; // Current board type for filtering goals
+    public static java.util.List<String> currentExcludedGoals = new java.util.ArrayList<>(); // Excluded goals from server
     private static KeyBinding keyBinding;
     private static KeyBinding goalListKeyBinding;
     public static int CURRENT_TICK = 0;
@@ -112,6 +115,12 @@ public class LockoutClient implements ClientModInitializer {
                 GoalGroup.BANS.getGoals().clear();
                 GoalGroup.BANS.getGoals().addAll(payload.bans());
                 
+                // If the payload has empty picks/bans, also clear pending lists
+                if (payload.picks().isEmpty() && payload.bans().isEmpty()) {
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                }
+                
                 // Update goal-to-player mapping
                 GoalGroup.clearGoalPlayers();
                 for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
@@ -154,6 +163,135 @@ public class LockoutClient implements ClientModInitializer {
                 GoalGroup.setCustomLimit(payload.limit());
                 if (client.player != null) {
                     client.player.sendMessage(Text.literal("Pick/Ban limit set to " + payload.limit()), false);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(SetBoardTypePayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Store the board type and excluded goals from the server
+                currentBoardType = payload.boardType();
+                currentExcludedGoals = payload.excludedGoals();
+                
+                // If PickBan GUI is open, refresh it
+                if (client.currentScreen instanceof GoalListScreen screen) {
+                    screen.refreshFromBoardType();
+                }
+                
+                if (client.player != null) {
+                    client.player.sendMessage(Text.literal("Board type updated to: " + payload.boardType() + " (" + currentExcludedGoals.size() + " goals excluded)"), false);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(StartPickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Clear all goal groups before starting the session
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                GoalGroup.clearGoalPlayers();
+                
+                // Create initial session state
+                UpdatePickBanSessionPayload initialState = new UpdatePickBanSessionPayload(
+                    1, // currentRound
+                    true, // isTeam1Turn
+                    payload.team1Name(),
+                    payload.team2Name(),
+                    new java.util.HashSet<>(), // allLockedPicks
+                    new java.util.HashSet<>(), // allLockedBans
+                    new java.util.ArrayList<>(), // pendingPicks
+                    new java.util.ArrayList<>(), // pendingBans
+                    payload.selectionLimit(),
+                    new java.util.HashMap<>(), // goalToPlayerMap
+                    3 // maxRounds - default, will be updated by server if different
+                );
+                ClientPickBanSessionHolder.setActiveSession(initialState);
+                
+                // Open the pick/ban GUI for players
+                client.setScreen(new GoalListScreen());
+                
+                if (client.player != null) {
+                    client.player.sendMessage(
+                        Text.literal("Pick/ban session started: " + payload.team1Name() + " vs " + payload.team2Name()).withColor(0x55FF55),
+                        false
+                    );
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(UpdatePickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Update client-side session state
+                ClientPickBanSessionHolder.setActiveSession(payload);
+                
+                // Update client-side pick/ban lists to show locked goals BEFORE refreshing GUI
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.PICKS.getGoals().addAll(payload.allLockedPicks());
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.BANS.getGoals().addAll(payload.allLockedBans());
+                
+                // Update goal-to-player mapping from payload
+                GoalGroup.clearGoalPlayers();
+                for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
+                    GoalGroup.setGoalPlayer(entry.getKey(), entry.getValue());
+                }
+                
+                // Clear PENDING goal groups to prevent duplicates and reset limit
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                
+                // Update the GUI if it's open (now panels will have updated picks/bans)
+                if (client.currentScreen instanceof GoalListScreen goalListScreen) {
+                    goalListScreen.refreshForPickBanSession(payload);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(EndPickBanSessionPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                if (payload.cancelled()) {
+                    // Clear all goal groups when cancelled
+                    GoalGroup.PICKS.getGoals().clear();
+                    GoalGroup.BANS.getGoals().clear();
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                    GoalGroup.clearGoalPlayers();
+                } else {
+                    // Update final picks/bans if session completed normally
+                    GoalGroup.PICKS.getGoals().clear();
+                    GoalGroup.PICKS.getGoals().addAll(payload.finalPicks());
+                    GoalGroup.BANS.getGoals().clear();
+                    GoalGroup.BANS.getGoals().addAll(payload.finalBans());
+                    
+                    // Update goal-to-player mapping
+                    GoalGroup.clearGoalPlayers();
+                    for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
+                        GoalGroup.setGoalPlayer(entry.getKey(), entry.getValue());
+                    }
+                    
+                    // Clear PENDING goal groups
+                    GoalGroup.PENDING_PICKS.getGoals().clear();
+                    GoalGroup.PENDING_BANS.getGoals().clear();
+                }
+                
+                // Clear client-side session state
+                ClientPickBanSessionHolder.clearSession();
+                
+                // Close the GUI if open
+                if (client.currentScreen instanceof GoalListScreen) {
+                    client.setScreen(null);
+                }
+                
+                if (client.player != null) {
+                    if (payload.cancelled()) {
+                        client.player.sendMessage(
+                            Text.literal("Pick/ban session has been cancelled by an admin.").withColor(0xFF5555),
+                            false
+                        );
+                    }
+                    // Note: Completion message is sent by server broadcast, not here
                 }
             });
         });
@@ -379,6 +517,43 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
+                var commandNode = ClientCommandManager.literal("BoardType")
+                    .requires(ccs -> hasPermission())
+                    .build();
+
+                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                    .executes((context) -> {
+                        String boardTypeName = context.getArgument("board type name", String.class);
+
+                        MinecraftClient.getInstance().send(() -> {
+                            try {
+                                me.marin.lockout.json.JSONBoardType boardType = me.marin.lockout.type.BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
+                                if (boardType == null) {
+                                    sendBoardTypeMessage(Text.literal("BoardType not found: ").formatted(Formatting.RED)
+                                        .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    return;
+                                }
+                                
+                                java.util.List<String> excludedGoals = boardType.excludedGoals != null ? boardType.excludedGoals : new java.util.ArrayList<>();
+                                
+                                // Send to server
+                                ClientPlayNetworking.send(new me.marin.lockout.network.UploadBoardTypePayload(boardTypeName, excludedGoals));
+                                
+                                sendBoardTypeMessage(Text.literal("Board type set to '").formatted(Formatting.GREEN)
+                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW))
+                                    .append(Text.literal("' (" + excludedGoals.size() + " goals excluded).").formatted(Formatting.GREEN)));
+                            } catch (IOException e) {
+                                Lockout.error(e);
+                                sendBoardTypeMessage(Text.literal("Failed to load BoardType: " + e.getMessage()).formatted(Formatting.RED));
+                            }
+                        });
+                        return 1;
+                    }).build();
+
+                commandNode.addChild(boardTypeNameNode);
+                dispatcher.getRoot().addChild(commandNode);
+            }
+            {
                 var commandNode = ClientCommandManager.literal("DeleteBoardType")
                     .requires(ccs -> hasPermission())
                     .build();
@@ -496,8 +671,9 @@ public class LockoutClient implements ClientModInitializer {
                 if (client.currentScreen != null || client.player == null) {
                     return;
                 }
-                // Only allow operators to open the goal list screen
-                if (!client.player.hasPermissionLevel(2)) {
+                // Allow anyone to open during active pick/ban session, otherwise only operators
+                boolean hasActiveSession = ClientPickBanSessionHolder.getActiveSession() != null;
+                if (!hasActiveSession && !client.player.hasPermissionLevel(2)) {
                     client.player.sendMessage(Text.literal("You must be an operator to access the Goal List!").formatted(net.minecraft.util.Formatting.RED), false);
                     return;
                 }

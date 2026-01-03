@@ -1,3 +1,13 @@
+## Lockout v0.10.4
+- Merged BoardType with Pick Ban GUI
+- Added /SimulatePickBans
+	- Simulates a Turn-Based Pick/Ban system that goes through Rounds of Picks and Bans
+	- Automatically filters out goals excluded in /BoardType
+- Added /MaxRounds to add how many Rounds a PickBanSession has
+- Added /PickBanSelectionLimit to limit how many goals can be picked/banned per round.
+- Added /CancelPickBanSession to force stop a PickBanSession
+- Fixed BoardType to work on servers
+- Fixed various bugs related to PickBanSessions and BoardTypes
 ## Lockout v0.10.3
 - Added New Commands
 	- Added CreateBoardGroup command
