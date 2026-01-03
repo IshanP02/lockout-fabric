@@ -143,10 +143,9 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                             map.put(uuid, appliedTime);
 
                             if (appliedTime >= (20 * 60 * haveEffectsGoal.getMinutes())) {
-                                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
-                                if (player != null) {
-                                    lockout.completeGoal(goal, player);
-                                }
+                                // Complete for the team instead of individual player
+                                lockout.completeGoal(goal, team);
+                                break; // Only need to complete once for the team
                             }
                         }
 

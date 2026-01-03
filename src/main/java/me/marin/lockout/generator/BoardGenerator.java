@@ -5,6 +5,7 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.client.LockoutBoard;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
+import me.marin.lockout.type.BoardTypeManager;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.DyeColor;
 import net.minecraft.world.biome.Biome;
@@ -29,11 +30,16 @@ public class BoardGenerator {
         this.structures = structures;
     }
 
-    public LockoutBoard generateBoard(int size) {
+    public LockoutBoard generateBoard(int size, String boardTypeName) {
         // Prepare a mutable list of available goals and remove banned goals
         List<String> availableGoals = new ArrayList<>(registeredGoals);
-        List<String> banned = GoalGroup.BANS.getGoals();
-        if (banned != null && !banned.isEmpty()) {
+        
+        // Combine BANS and PENDING_BANS for board generation
+        List<String> banned = new ArrayList<>();
+        banned.addAll(GoalGroup.BANS.getGoals());
+        banned.addAll(GoalGroup.PENDING_BANS.getGoals());
+        
+        if (!banned.isEmpty()) {
             availableGoals.removeAll(banned);
         }
 
@@ -42,9 +48,12 @@ public class BoardGenerator {
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
-        // If there are picks selected, force-add them first (and ensure they're not duplicated)
-        List<String> picks = GoalGroup.PICKS.getGoals();
-        if (picks != null && !picks.isEmpty()) {
+        // Combine PICKS and PENDING_PICKS for board generation
+        List<String> picks = new ArrayList<>();
+        picks.addAll(GoalGroup.PICKS.getGoals());
+        picks.addAll(GoalGroup.PENDING_PICKS.getGoals());
+        
+        if (!picks.isEmpty()) {
             for (String pick : picks) {
                 if (goals.size() >= size * size) break;
                 // Only add if registered and not already added, and not banned
@@ -66,6 +75,11 @@ public class BoardGenerator {
         ListIterator<String> it = availableGoals.listIterator();
         while (goals.size() < size * size && it.hasNext()) {
             String goal = it.next();
+
+            // Check if the goal should be excluded for this board type
+            if (BoardTypeManager.INSTANCE.isGoalExcluded(boardTypeName, goal)) {
+                continue;
+            }
 
             if (!GoalGroup.canAdd(goal, goalTypes)) {
                 continue;
@@ -92,7 +106,7 @@ public class BoardGenerator {
         }
 
         if (goals.size() < size * size) {
-            return generateBoard(size);
+            return generateBoard(size, boardTypeName);
         }
 
         // Shuffle the board again. Some goals will always be after some other goals (GoalGroup#requirePredecessor),
