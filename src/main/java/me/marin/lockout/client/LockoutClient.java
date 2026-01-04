@@ -35,6 +35,7 @@ import org.lwjgl.glfw.GLFW;
 import oshi.util.tuples.Pair;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,13 +110,33 @@ public class LockoutClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             client.execute(() -> {
-                // Update picks and bans lists
-                GoalGroup.PICKS.getGoals().clear();
-                GoalGroup.PICKS.getGoals().addAll(payload.picks());
-                GoalGroup.BANS.getGoals().clear();
-                GoalGroup.BANS.getGoals().addAll(payload.bans());
+                // During pick/ban session, the payload contains combined PICKS + PENDING_PICKS
+                // We need to separate locked goals from pending goals
+                List<String> lockedPicks = new ArrayList<>(GoalGroup.PICKS.getGoals());
+                List<String> lockedBans = new ArrayList<>(GoalGroup.BANS.getGoals());
                 
-                // If the payload has empty picks/bans, also clear pending lists
+                // Clear and update PICKS (locked goals only)
+                GoalGroup.PICKS.getGoals().clear();
+                GoalGroup.PICKS.getGoals().addAll(lockedPicks);
+                GoalGroup.BANS.getGoals().clear();
+                GoalGroup.BANS.getGoals().addAll(lockedBans);
+                
+                // Update PENDING lists with new selections (excluding already locked goals)
+                GoalGroup.PENDING_PICKS.getGoals().clear();
+                for (String pick : payload.picks()) {
+                    if (!lockedPicks.contains(pick)) {
+                        GoalGroup.PENDING_PICKS.getGoals().add(pick);
+                    }
+                }
+                
+                GoalGroup.PENDING_BANS.getGoals().clear();
+                for (String ban : payload.bans()) {
+                    if (!lockedBans.contains(ban)) {
+                        GoalGroup.PENDING_BANS.getGoals().add(ban);
+                    }
+                }
+                
+                // If the payload has empty picks/bans, clear everything
                 if (payload.picks().isEmpty() && payload.bans().isEmpty()) {
                     GoalGroup.PENDING_PICKS.getGoals().clear();
                     GoalGroup.PENDING_BANS.getGoals().clear();
@@ -137,6 +158,16 @@ public class LockoutClient implements ClientModInitializer {
             MinecraftClient client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
+                    // Only update the goal player mapping for other players
+                    // The actual list syncing is handled by UpdatePicksBansPayload
+                    boolean isFromCurrentPlayer = payload.playerName().equals(client.player.getName().getString());
+                    
+                    if (!isFromCurrentPlayer) {
+                        if ("pick".equals(payload.action()) || "ban".equals(payload.action())) {
+                            GoalGroup.setGoalPlayer(payload.goalId(), payload.playerName());
+                        }
+                    }
+                    
                     // Format the goal name
                     String goalName = org.apache.commons.lang3.text.WordUtils.capitalize(
                         payload.goalId().replace("_", " ").toLowerCase(), ' '
