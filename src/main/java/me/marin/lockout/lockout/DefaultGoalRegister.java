@@ -322,6 +322,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.USE_ANVIL, UseAnvilGoal.class);
         INSTANCE.register(GoalType.USE_CAULDRON, UseCauldronGoal.class);
         INSTANCE.register(GoalType.USE_COMPOSTER, UseComposterGoal.class);
+        INSTANCE.register(GoalType.LOCK_MAP_USING_CARTOGRAPHY_TABLE, LockMapUsingCartographyTableGoal.class);
         INSTANCE.register(GoalType.USE_ENCHANTING_TABLE, UseEnchantingTableGoal.class);
         INSTANCE.register(GoalType.USE_GRINDSTONE, UseGrindstoneGoal.class);
         INSTANCE.register(GoalType.USE_JUKEBOX, UseJukeboxGoal.class);

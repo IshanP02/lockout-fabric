@@ -183,6 +183,7 @@ public class GoalType {
     public static final String USE_SMITHING_TABLE = "USE_SMITHING_TABLE";
     public static final String USE_CAULDRON = "USE_CAULDRON";
     public static final String USE_COMPOSTER = "USE_COMPOSTER";
+    public static final String LOCK_MAP_USING_CARTOGRAPHY_TABLE = "LOCK_MAP_USING_CARTOGRAPHY_TABLE";
     public static final String USE_JUKEBOX = "USE_JUKEBOX";
     public static final String USE_GLOW_INK = "USE_GLOW_INK";
     public static final String EMPTY_HUNGER_BAR = "EMPTY_HUNGER_BAR";

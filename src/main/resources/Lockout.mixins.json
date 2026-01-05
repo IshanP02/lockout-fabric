@@ -35,6 +35,7 @@
     "server.PlayerMixin",
     "server.PotionContentsComponentMixin",
     "server.RaidMixin",
+    "server.ScreenHandlerMixin",
     "server.ServerPlayerEntityMixin",
     "server.SlotMixin",
     "server.SmithingScreenHandlerMixin",
