@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Lockout v0.10.6
 - Added New Goals:
 	- Lock Map using Cartography Table
@@ -9,6 +10,10 @@
 	- Attach Lead to Fox
 	- Attach Lead to Iron Golem
 	- Attach Lead to Strider
+=======
+## Lockout v0.10.5
+- Added Goal Pings
+>>>>>>> main
 ## Lockout v0.10.4
 - Merged BoardType with Pick Ban GUI
 - Added /SimulatePickBans
