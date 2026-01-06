@@ -3,6 +3,7 @@ package me.marin.lockout.lockout;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalDataGenerator;
 import me.marin.lockout.generator.GoalRequirements;
+import me.marin.lockout.lockout.goals.attach_lead.*;
 import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
@@ -159,6 +160,16 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.BREED_RABBIT, BreedRabbitGoal.class);
         INSTANCE.register(GoalType.BREED_SHEEP, BreedSheepGoal.class);
         INSTANCE.register(GoalType.BREED_STRIDER, BreedStriderGoal.class);
+        INSTANCE.register(GoalType.LEASH_4_UNIQUE_ENTITIES_AT_ONCE, Leash4UniqueEntitiesAtOnceGoal.class);
+        INSTANCE.register(GoalType.LEASH_6_UNIQUE_ENTITIES_AT_ONCE, Leash6UniqueEntitiesAtOnceGoal.class);
+        INSTANCE.register(GoalType.LEASH_8_UNIQUE_ENTITIES_AT_ONCE, Leash8UniqueEntitiesAtOnceGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_COW, LeashCowGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, LeashCherryChestBoatGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_DOLPHIN, LeashDolphinGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FOX, LeashFoxGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FROG, LeashFrogGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_IRON_GOLEM, LeashIronGolemGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_STRIDER, LeashStriderGoal.class);
         INSTANCE.register(GoalType.USE_BREWING_STAND, GetLocalBreweryAdvancementGoal.class);
         INSTANCE.register(GoalType.BREW_FIRE_RESISTANCE_POTION, BrewFireResistancePotionGoal.class);
         INSTANCE.register(GoalType.BREW_HEALING_POTION, BrewHealingPotionGoal.class);
@@ -322,6 +333,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.USE_ANVIL, UseAnvilGoal.class);
         INSTANCE.register(GoalType.USE_CAULDRON, UseCauldronGoal.class);
         INSTANCE.register(GoalType.USE_COMPOSTER, UseComposterGoal.class);
+        INSTANCE.register(GoalType.LOCK_MAP_USING_CARTOGRAPHY_TABLE, LockMapUsingCartographyTableGoal.class);
         INSTANCE.register(GoalType.USE_ENCHANTING_TABLE, UseEnchantingTableGoal.class);
         INSTANCE.register(GoalType.USE_GRINDSTONE, UseGrindstoneGoal.class);
         INSTANCE.register(GoalType.USE_JUKEBOX, UseJukeboxGoal.class);
@@ -509,8 +521,6 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.USE_GLOW_INK, UseGlowInkGoal.class);
         INSTANCE.register(GoalType.OBTAIN_WRITTEN_BOOK, ObtainWrittenBookGoal.class);
-
-
     }
 
 }
