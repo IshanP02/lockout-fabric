@@ -1,3 +1,14 @@
+## Lockout v0.10.6
+- Added New Goals:
+	- Lock Map using Cartography Table
+	- Leash 4/6/8 Unique Entities at Once
+	- Attach Lead to Cow
+	- Attach Lead to Cherry Chest Boat
+	- Attach Lead to Dolphin
+	- Attach Lead to Frog
+	- Attach Lead to Fox
+	- Attach Lead to Iron Golem
+	- Attach Lead to Strider
 ## Lockout v0.10.4
 - Merged BoardType with Pick Ban GUI
 - Added /SimulatePickBans
