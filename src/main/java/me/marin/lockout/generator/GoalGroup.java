@@ -179,6 +179,13 @@ public class GoalGroup {
     public static final GoalGroup HAVE_MORE = new GoalGroup(List.of(
             HAVE_MORE_UNIQUE_CRAFTS, HAVE_MORE_XP_LEVELS, HAVE_MOST_ADVANCEMENTS
     ), 1);
+    public static final GoalGroup LEASH = new GoalGroup(List.of(
+        ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, ATTACH_LEAD_TO_COW, ATTACH_LEAD_TO_DOLPHIN, ATTACH_LEAD_TO_FOX, ATTACH_LEAD_TO_FROG, ATTACH_LEAD_TO_IRON_GOLEM, ATTACH_LEAD_TO_STRIDER
+    ), 1);
+    public static final GoalGroup LEASH_UNIQUE = new GoalGroup(List.of(
+        LEASH_4_UNIQUE_ENTITIES_AT_ONCE, LEASH_6_UNIQUE_ENTITIES_AT_ONCE, LEASH_8_UNIQUE_ENTITIES_AT_ONCE
+    ), 1);
+
     public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup PENDING_PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
@@ -207,6 +214,11 @@ public class GoalGroup {
             BREED_4_UNIQUE_ANIMALS, BREED_6_UNIQUE_ANIMALS, BREED_8_UNIQUE_ANIMALS, BREED_ARMADILLO, BREED_CHICKEN, BREED_COW, BREED_FOX, 
             BREED_FROGS, BREED_GOAT, BREED_HOGLIN, BREED_PIG, BREED_RABBIT, BREED_SHEEP, BREED_STRIDER
     ), Integer.MAX_VALUE);
+    public static final GoalGroup LEASH_CATEGORY = new GoalGroup(List.of(
+            LEASH_4_UNIQUE_ENTITIES_AT_ONCE, LEASH_6_UNIQUE_ENTITIES_AT_ONCE, LEASH_8_UNIQUE_ENTITIES_AT_ONCE, ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, ATTACH_LEAD_TO_COW, ATTACH_LEAD_TO_DOLPHIN, ATTACH_LEAD_TO_FOX, 
+            ATTACH_LEAD_TO_FROG, ATTACH_LEAD_TO_IRON_GOLEM, ATTACH_LEAD_TO_STRIDER
+    ), Integer.MAX_VALUE);
+
     public static final GoalGroup BREWING_CATEGORY = new GoalGroup(List.of(
             USE_BREWING_STAND, BREW_FIRE_RESISTANCE_POTION, BREW_HEALING_POTION, BREW_INVISIBILITY_POTION, BREW_POISON_POTION, BREW_SWIFTNESS_POTION,
             BREW_WATER_BREATHING_POTION, BREW_WEAKNESS_POTION, BREW_LINGERING_POTION
@@ -363,6 +375,8 @@ public class GoalGroup {
         GOAL_GROUPS.add(BREAK_ITEM);
         GOAL_GROUPS.add(SWAMP);
         GOAL_GROUPS.add(HAVE_MORE);
+        GOAL_GROUPS.add(LEASH);
+        GOAL_GROUPS.add(LEASH_UNIQUE);
     }
 
 

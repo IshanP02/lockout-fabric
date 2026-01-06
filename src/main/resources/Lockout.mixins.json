@@ -29,6 +29,7 @@
     "server.HorseScreenHandlerMixin",
     "server.ItemFrameEntityMixin",
     "server.ItemMixin",
+    "server.LeashableMixin",
     "server.LivingEntityMixin",
     "server.PlayerAdvancementTrackerMixin",
     "server.PlayerInventoryAccessor",

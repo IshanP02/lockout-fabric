@@ -289,5 +289,15 @@ public class GoalType {
     public static final String HAVE_MOST_ADVANCEMENTS = "HAVE_MOST_ADVANCEMENTS";
     public static final String KILL_BLAZE_WITH_SNOWBALL = "KILL_BLAZE_WITH_SNOWBALL";
     public static final String DIE_TO_PUFFERFISH = "DIE_TO_PUFFERFISH";
+    public static final String LEASH_4_UNIQUE_ENTITIES_AT_ONCE = "LEASH_4_UNIQUE_ENTITIES_AT_ONCE";
+    public static final String LEASH_6_UNIQUE_ENTITIES_AT_ONCE = "LEASH_6_UNIQUE_ENTITIES_AT_ONCE";
+    public static final String LEASH_8_UNIQUE_ENTITIES_AT_ONCE = "LEASH_8_UNIQUE_ENTITIES_AT_ONCE";
+    public static final String ATTACH_LEAD_TO_COW = "ATTACH_LEAD_TO_COW";
+    public static final String ATTACH_LEAD_TO_CHERRY_CHEST_BOAT = "ATTACH_LEAD_TO_CHERRY_CHEST_BOAT";
+    public static final String ATTACH_LEAD_TO_DOLPHIN = "ATTACH_LEAD_TO_DOLPHIN";
+    public static final String ATTACH_LEAD_TO_FOX = "ATTACH_LEAD_TO_FOX";
+    public static final String ATTACH_LEAD_TO_FROG = "ATTACH_LEAD_TO_FROG";
+    public static final String ATTACH_LEAD_TO_IRON_GOLEM = "ATTACH_LEAD_TO_IRON_GOLEM";
+    public static final String ATTACH_LEAD_TO_STRIDER = "ATTACH_LEAD_TO_STRIDER";
 
 }
