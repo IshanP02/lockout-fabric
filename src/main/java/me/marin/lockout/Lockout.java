@@ -59,7 +59,9 @@ public class Lockout {
     public final Map<LockoutTeam, Integer> damageByUniqueSources = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> damageTypesTaken = new HashMap<>();
     public final Map<UUID, Integer> distanceByBoat = new HashMap<>();
+    public final Map<UUID, Integer> creeperKills = new LinkedHashMap<>();
 
+    public UUID mostCreeperKillsPlayer;
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
     public UUID mostAdvancementsPlayer;
@@ -371,6 +373,36 @@ public class Lockout {
         if (!largestLevelPlayers.contains(mostLevelsPlayer)) {
             this.mostLevelsPlayer = largestLevelPlayers.get(0);
             updateGoalCompletion(goal, largestLevelPlayers.get(0));
+        }
+    }
+
+    public void recalculateCreeperKillsGoal(Goal goal) {
+        List<UUID> mostKillsPlayers = new ArrayList<>();
+        int mostKills = 0;
+
+        for (UUID uuid : creeperKills.keySet()) {
+            if (creeperKills.get(uuid) == mostKills) {
+                mostKillsPlayers.add(uuid);
+                continue;
+            }
+            if (creeperKills.get(uuid) > mostKills) {
+                mostKillsPlayers.clear();
+                mostKillsPlayers.add(uuid);
+                mostKills = creeperKills.get(uuid);
+            }
+        }
+
+        if (mostKills == 0) {
+            if (this.mostCreeperKillsPlayer != null) {
+                this.mostCreeperKillsPlayer = null;
+                clearGoalCompletion(goal, true);
+            }
+            return;
+        }
+
+        if (!mostKillsPlayers.contains(mostCreeperKillsPlayer)) {
+            this.mostCreeperKillsPlayer = mostKillsPlayers.get(0);
+            updateGoalCompletion(goal, mostKillsPlayers.get(0));
         }
     }
 }

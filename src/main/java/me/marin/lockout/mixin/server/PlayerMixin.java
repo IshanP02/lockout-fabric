@@ -39,7 +39,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import me.marin.lockout.lockout.goals.misc.Crouch100mGoal;
 import me.marin.lockout.lockout.goals.misc.Swim500mGoal;
-import me.marin.lockout.lockout.goals.misc.DamagedBy8UniqueSourcesGoal;
+import me.marin.lockout.lockout.interfaces.DamagedByUniqueSourcesGoal;
 
 import java.util.Objects;
 
@@ -126,7 +126,7 @@ public abstract class PlayerMixin {
                 }
             }
 
-            if (goal instanceof DamagedBy8UniqueSourcesGoal damagedGoal) {
+            if (goal instanceof DamagedByUniqueSourcesGoal damagedGoal) {
                 var entry = source.getTypeRegistryEntry();
                 net.minecraft.registry.RegistryKey<net.minecraft.entity.damage.DamageType> damageTypeKey = null;
                 if (entry != null) {
@@ -140,15 +140,17 @@ public abstract class PlayerMixin {
                     if (added) {
                         lockout.damageByUniqueSources.putIfAbsent(team, 0);
                         lockout.damageByUniqueSources.merge(team, 1, Integer::sum);
-
-                        if (team instanceof me.marin.lockout.LockoutTeamServer) {
-                            team.sendTooltipUpdate(damagedGoal);
-                        }
+                    }
+                    
+                    // Send tooltip update for this goal (whether damage was newly added or not)
+                    if (team instanceof me.marin.lockout.LockoutTeamServer) {
+                        team.sendTooltipUpdate(damagedGoal);
                     }
                 }
-                // Check for completion (7 unique damage types)
-                if (lockout.damageByUniqueSources.get(team) >= 8) {
-                    lockout.complete1v1Goal(damagedGoal, team, true, player.getName().getString() + " took damage from 8 Unique Sources.");
+                // Check for completion using dynamic amount
+                int requiredAmount = damagedGoal.getAmount();
+                if (lockout.damageByUniqueSources.get(team) >= requiredAmount) {
+                    lockout.complete1v1Goal(damagedGoal, team, true, player.getName().getString() + " took damage from " + requiredAmount + " Unique Sources.");
                 }
             }
 
