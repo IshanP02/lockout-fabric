@@ -1,4 +1,4 @@
-## Lockout v0.10.7
+## Lockout v0.10.8
 - Various Bugfixes
 ## Lockout v0.10.7
 - Added New Goals:
