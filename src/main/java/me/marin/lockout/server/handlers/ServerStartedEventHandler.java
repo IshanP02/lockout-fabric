@@ -72,6 +72,15 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
             }
             long end = System.currentTimeMillis();
             Lockout.log("Located " + BIOME_LOCATE_DATA.size() + " biomes and " + STRUCTURE_LOCATE_DATA.size() + " structures in " + String.format("%.2f", ((end-start)/1000.0)) + "s!");
+            
+            // Send locate data to all connected clients
+            me.marin.lockout.network.SyncLocateDataPayload payload = new me.marin.lockout.network.SyncLocateDataPayload(
+                new java.util.HashMap<>(BIOME_LOCATE_DATA),
+                new java.util.HashMap<>(STRUCTURE_LOCATE_DATA)
+            );
+            for (net.minecraft.server.network.ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, payload);
+            }
         });
     }
 }

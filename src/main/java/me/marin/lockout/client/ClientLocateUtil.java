@@ -25,6 +25,22 @@ public class ClientLocateUtil {
     private static final Map<RegistryKey<Biome>, LocateData> CACHED_BIOMES = new HashMap<>();
     private static final Map<RegistryKey<Structure>, LocateData> CACHED_STRUCTURES = new HashMap<>();
     private static boolean CACHE_BUILT = false;
+    
+    // Server-provided locate data (for multiplayer)
+    private static final Map<RegistryKey<Biome>, LocateData> SERVER_BIOMES = new HashMap<>();
+    private static final Map<RegistryKey<Structure>, LocateData> SERVER_STRUCTURES = new HashMap<>();
+    private static boolean HAS_SERVER_DATA = false;
+
+    /**
+     * Update the cached locate data with server-provided data
+     */
+    public static void setServerLocateData(Map<RegistryKey<Biome>, LocateData> biomes, Map<RegistryKey<Structure>, LocateData> structures) {
+        SERVER_BIOMES.clear();
+        SERVER_BIOMES.putAll(biomes);
+        SERVER_STRUCTURES.clear();
+        SERVER_STRUCTURES.putAll(structures);
+        HAS_SERVER_DATA = true;
+    }
 
     /**
      * Build the locate cache once at world load. Call this when the client world finishes loading.
@@ -122,6 +138,17 @@ public class ClientLocateUtil {
     }
 
     public static Map<RegistryKey<Biome>, LocateData> locateBiomes(MinecraftClient client, Iterable<RegistryKey<Biome>> biomesToCheck) {
+        // Prefer server-provided data if available (multiplayer)
+        if (HAS_SERVER_DATA) {
+            Map<RegistryKey<Biome>, LocateData> result = new HashMap<>();
+            for (RegistryKey<Biome> k : biomesToCheck) {
+                LocateData d = SERVER_BIOMES.get(k);
+                if (d != null) result.put(k, d);
+            }
+            return result;
+        }
+        
+        // Fall back to cached or local locate (singleplayer)
         if (CACHE_BUILT) {
             Map<RegistryKey<Biome>, LocateData> result = new HashMap<>();
             for (RegistryKey<Biome> k : biomesToCheck) {
@@ -134,6 +161,17 @@ public class ClientLocateUtil {
     }
 
     public static Map<RegistryKey<Structure>, LocateData> locateStructures(MinecraftClient client, Iterable<RegistryKey<Structure>> structuresToCheck) {
+        // Prefer server-provided data if available (multiplayer)
+        if (HAS_SERVER_DATA) {
+            Map<RegistryKey<Structure>, LocateData> result = new HashMap<>();
+            for (RegistryKey<Structure> k : structuresToCheck) {
+                LocateData d = SERVER_STRUCTURES.get(k);
+                if (d != null) result.put(k, d);
+            }
+            return result;
+        }
+        
+        // Fall back to cached or local locate (singleplayer)
         if (CACHE_BUILT) {
             Map<RegistryKey<Structure>, LocateData> result = new HashMap<>();
             for (RegistryKey<Structure> k : structuresToCheck) {
@@ -152,5 +190,8 @@ public class ClientLocateUtil {
         CACHED_BIOMES.clear();
         CACHED_STRUCTURES.clear();
         CACHE_BUILT = false;
+        SERVER_BIOMES.clear();
+        SERVER_STRUCTURES.clear();
+        HAS_SERVER_DATA = false;
     }
 }
