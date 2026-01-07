@@ -1,4 +1,6 @@
 ## Lockout v0.10.7
+- Various Bugfixes
+## Lockout v0.10.7
 - Added New Goals:
 	- Eat All Soups
 	- Have Most Creeper Kills (KOTH)
