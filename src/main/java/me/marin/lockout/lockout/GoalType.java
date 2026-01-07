@@ -255,6 +255,7 @@ public class GoalType {
     public static final String OBTAIN_POTTERY_SHERD = "OBTAIN_POTTERY_SHERD";
     public static final String OPPONENT_HIT_BY_ARROW = "OPPONENT_HIT_BY_ARROW";
     public static final String DAMAGED_BY_8_UNIQUE_SOURCES = "DAMAGED_BY_8_UNIQUE_SOURCES";
+    public static final String DAMAGED_BY_12_UNIQUE_SOURCES = "DAMAGED_BY_12_UNIQUE_SOURCES";
     public static final String BREW_FIRE_RESISTANCE_POTION = "BREW_FIRE_RESISTANCE_POTION";
     public static final String OBTAIN_3_UNIQUE_BANNER_PATTERNS = "OBTAIN_3_UNIQUE_BANNER_PATTERNS";
     public static final String OBTAIN_ALL_TORCHES = "OBTAIN_ALL_TORCHES";
@@ -299,5 +300,9 @@ public class GoalType {
     public static final String ATTACH_LEAD_TO_FROG = "ATTACH_LEAD_TO_FROG";
     public static final String ATTACH_LEAD_TO_IRON_GOLEM = "ATTACH_LEAD_TO_IRON_GOLEM";
     public static final String ATTACH_LEAD_TO_STRIDER = "ATTACH_LEAD_TO_STRIDER";
+    public static final String OBTAIN_DRIED_KELP_BLOCK = "OBTAIN_DRIED_KELP_BLOCK";
+    public static final String OBTAIN_3_UNIQUE_MUSIC_DISCS = "OBTAIN_3_UNIQUE_MUSIC_DISCS";
+    public static final String HAVE_MORE_CREEPER_KILLS = "HAVE_MOST_CREEPER_KILLS";
+    public static final String EAT_ALL_SOUPS = "EAT_ALL_SOUPS";
 
 }

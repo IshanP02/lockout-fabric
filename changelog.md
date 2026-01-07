@@ -1,3 +1,13 @@
+## Lockout v0.10.7
+- Added New Goals:
+	- Eat All Soups
+	- Have Most Creeper Kills (KOTH)
+	- Damaged By 12 Unique Sources
+	- Obtain 3 Unique Music Discs
+	- Obtain Dried Kelp Block
+- Updated Old Goals with 1.21.8 Items
+	- Obtain 4 Unique Saplings (Pale Oak Sapling)
+	- Obtain 6 Unique Flowers (Cactus Flower, Wildflowers, Pink Petals, Open/Closed Eyeblossom)
 ## Lockout v0.10.6
 - Added New Goals:
 	- Lock Map using Cartography Table

@@ -21,6 +21,7 @@ import me.marin.lockout.lockout.goals.dimension.EnterNetherGoal;
 import me.marin.lockout.lockout.goals.experience.ReachXPLevel15Goal;
 import me.marin.lockout.lockout.goals.experience.ReachXPLevel30Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueCraftsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.kill.*;
@@ -164,10 +165,19 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.LEASH_6_UNIQUE_ENTITIES_AT_ONCE, Leash6UniqueEntitiesAtOnceGoal.class);
         INSTANCE.register(GoalType.LEASH_8_UNIQUE_ENTITIES_AT_ONCE, Leash8UniqueEntitiesAtOnceGoal.class);
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_COW, LeashCowGoal.class);
-        INSTANCE.register(GoalType.ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, LeashCherryChestBoatGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, LeashCherryChestBoatGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(CHERRY_GROVE))
+                        .build()
+                );
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_DOLPHIN, LeashDolphinGoal.class);
-        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FOX, LeashFoxGoal.class);
-        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FROG, LeashFrogGoal.class);
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FOX, LeashFoxGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(TAIGA, OLD_GROWTH_SPRUCE_TAIGA, OLD_GROWTH_PINE_TAIGA, SNOWY_TAIGA, GROVE))
+                        .build()
+                );
+        INSTANCE.register(GoalType.ATTACH_LEAD_TO_FROG, LeashFrogGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(SWAMP))
+                        .build()
+                );
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_IRON_GOLEM, LeashIronGolemGoal.class);
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_STRIDER, LeashStriderGoal.class);
         INSTANCE.register(GoalType.USE_BREWING_STAND, GetLocalBreweryAdvancementGoal.class);
@@ -184,6 +194,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.EAT_15_UNIQUE_FOOD, Eat15UniqueFoodsGoal.class);
         INSTANCE.register(GoalType.EAT_20_UNIQUE_FOOD, Eat20UniqueFoodsGoal.class);
         INSTANCE.register(GoalType.EAT_25_UNIQUE_FOOD, Eat25UniqueFoodsGoal.class);
+        INSTANCE.register(GoalType.EAT_ALL_SOUPS, EatAllSoupsGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(VILLAGE_PLAINS, VILLAGE_SNOWY))
+                        .build()
+                );
         INSTANCE.register(GoalType.EAT_BEETROOT_SOUP, EatBeetrootSoupGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(VILLAGE_PLAINS, VILLAGE_SNOWY))
                         .build()
@@ -343,6 +357,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.USE_STONECUTTER, UseStonecutterGoal.class);
         INSTANCE.register(GoalType.FILL_ARMOR_STAND, FillArmorStandGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_MUSIC_DISCS, Obtain3UniqueMusicDiscsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SAPLINGS, Obtain4UniqueSaplingsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SEEDS, Obtain4UniqueSeedsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
@@ -410,6 +425,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_DIAMOND_BLOCK, ObtainDiamondBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DISPENSER, ObtainDispenserGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DRAGON_EGG, ObtainDragonEggGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_DRIED_KELP_BLOCK, ObtainDriedKelpBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_EMERALD_BLOCK, ObtainEmeraldBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ENCHANT_BOTTLE, ObtainEnchantBottleGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ENDER_CHEST, ObtainEnderChestGoal.class);
@@ -449,6 +465,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.REACH_EXP_LEVEL_30, ReachXPLevel30Goal.class);
         INSTANCE.register(GoalType.HAVE_MORE_XP_LEVELS, HaveMostXPLevelsGoal.class,
                         GoalRequirements.TEAMS_GOAL);
+        INSTANCE.register(GoalType.HAVE_MORE_CREEPER_KILLS, HaveMostCreeperKillsGoal.class);
         INSTANCE.register(GoalType.HAVE_MORE_UNIQUE_CRAFTS, HaveMostUniqueCraftsGoal.class);
         INSTANCE.register(GoalType.HAVE_MOST_ADVANCEMENTS, HaveMostAdvancementsGoal.class);
         INSTANCE.register(GoalType.GET_10_ADVANCEMENTS, Get10UniqueAdvancementsGoal.class);
@@ -500,6 +517,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.TAKE_200_DAMAGE, Take200DamageGoal.class);
         INSTANCE.register(GoalType.DEAL_400_DAMAGE, Deal400DamageGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_8_UNIQUE_SOURCES, DamagedBy8UniqueSourcesGoal.class);
+        INSTANCE.register(GoalType.DAMAGED_BY_12_UNIQUE_SOURCES, DamagedBy12UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
         INSTANCE.register(GoalType.FILL_BUNDLE_WITH_BUNDLES, FillBundleWithBundlesGoal.class);
         INSTANCE.register(GoalType.FILL_CAMPFIRE, FillCampfireWithFoodGoal.class);

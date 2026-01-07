@@ -4,6 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutRunnable;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.misc.EmptyHungerBarGoal;
 import me.marin.lockout.lockout.goals.misc.ReachBedrockGoal;
@@ -58,6 +59,14 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                     lockout.levels.put(player.getUuid(), player.isDead() ? 0 : player.experienceLevel);
                 }
                 lockout.recalculateXPGoal(goal);
+            }
+
+            if (goal instanceof HaveMostCreeperKillsGoal) {
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    int creeperKills = player.getStatHandler().getStat(net.minecraft.stat.Stats.KILLED.getOrCreateStat(net.minecraft.entity.EntityType.CREEPER));
+                    lockout.creeperKills.put(player.getUuid(), creeperKills);
+                }
+                lockout.recalculateCreeperKillsGoal(goal);
             }
 
             if (goal.isCompleted()) continue;

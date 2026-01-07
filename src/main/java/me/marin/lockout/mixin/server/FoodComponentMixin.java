@@ -5,6 +5,7 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.opponent.OpponentEatsFoodGoal;
 import me.marin.lockout.lockout.interfaces.ConsumeItemGoal;
+import me.marin.lockout.lockout.interfaces.ConsumeSomeOfTheFoodsGoal;
 import me.marin.lockout.lockout.interfaces.EatUniqueFoodsGoal;
 import me.marin.lockout.server.LockoutServer;
 import net.minecraft.component.DataComponentTypes;
@@ -13,6 +14,7 @@ import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,6 +47,21 @@ public class FoodComponentMixin {
             if (goal instanceof ConsumeItemGoal consumeItemGoal) {
                 if (consumeItemGoal.getItem().equals(itemStack.getItem())) {
                     lockout.completeGoal(goal, player);
+                }
+            }
+            if (goal instanceof ConsumeSomeOfTheFoodsGoal consumeSomeOfTheFoodsGoal) {
+                FoodComponent foodComponent = itemStack.get(DataComponentTypes.FOOD);
+                if (foodComponent != null) {
+                    lockout.foodTypesEaten.putIfAbsent(team, new LinkedHashSet<>());
+                    lockout.foodTypesEaten.get(team).add(itemStack.getItem());
+
+                    LinkedHashSet<Item> eatenFoods = lockout.foodTypesEaten.get(team);
+                    boolean allEaten = consumeSomeOfTheFoodsGoal.getItems().stream()
+                            .allMatch(eatenFoods::contains);
+
+                    if (allEaten) {
+                        lockout.completeGoal(goal, team);
+                    }
                 }
             }
             if (goal instanceof EatUniqueFoodsGoal eatUniqueFoodsGoal) {
