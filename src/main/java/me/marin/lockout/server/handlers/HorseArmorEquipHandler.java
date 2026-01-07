@@ -35,9 +35,9 @@ public class HorseArmorEquipHandler implements UseEntityCallback {
 
             if(horse.isTame()) {
                 if (isSpecificHorseArmor(heldStack)) {
-                // Use getHorseInventory() or correct mapping name
-                Inventory horseInventory = ((AbstractHorseEntityAccessor) horse).getItems(); 
-                    if (horseInventory.getStack(2).isEmpty()) { 
+                    // Use getBodyArmor() to check if horse already has armor
+                    ItemStack currentArmor = horse.getBodyArmor();
+                    if (currentArmor.isEmpty()) { 
                         // Call the logic method within this same class
                         if (player instanceof ServerPlayerEntity) {
                             checkAndCompleteHorseArmorGoal((ServerPlayerEntity) player, heldStack);

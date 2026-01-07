@@ -1,3 +1,5 @@
+## Lockout v0.10.8
+- Various Bugfixes
 ## Lockout v0.10.7
 - Added New Goals:
 	- Eat All Soups

@@ -26,6 +26,7 @@
     "server.GlowInkSacItemMixin",
     "server.GoatHornItemMixin",
     "server.GrindstoneScreenHandlerOutputSlotMixin",
+    "server.HorseScreenHandlerAccessor",
     "server.HorseScreenHandlerMixin",
     "server.ItemFrameEntityMixin",
     "server.ItemMixin",
