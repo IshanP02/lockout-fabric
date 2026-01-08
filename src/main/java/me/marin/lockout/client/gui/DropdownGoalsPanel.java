@@ -13,6 +13,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -106,7 +107,22 @@ public class DropdownGoalsPanel extends ClickableWidget {
             context.drawTexture(RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 8.0F, 8.0F, 16, 16, 8, 8, 64, 64);
             // Draw the overlay (hat layer)
             context.drawTexture(RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 40.0F, 8.0F, 16, 16, 8, 8, 64, 64);
+            
+            // Get the player's team and draw the flag
+            net.minecraft.scoreboard.Team team = player.getScoreboardTeam();
+            if (team != null && team.getColor() != null) {
+                Identifier flagTexture = getFlagTexture(team.getColor());
+                if (flagTexture != null) {
+                    // Draw flag in top left corner (8x8 pixels)
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, flagTexture, x - 6, y - 3, 0, 0, 12, 12, 12, 12);
+                }
+            }
         }
+    }
+    
+    private static Identifier getFlagTexture(Formatting teamColor) {
+        String colorName = teamColor.asString().toLowerCase();
+        return Identifier.of(Constants.NAMESPACE, "textures/custom/flags/" + colorName + "_flag.png");
     }
     
     @Override
