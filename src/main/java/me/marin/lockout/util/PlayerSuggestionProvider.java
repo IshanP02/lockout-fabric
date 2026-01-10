@@ -12,6 +12,12 @@ import java.util.concurrent.CompletableFuture;
 public class PlayerSuggestionProvider implements SuggestionProvider<ServerCommandSource> {
     @Override
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(context.getSource().getPlayerNames(), builder);
+        String remaining = builder.getRemaining();
+        int lastSpace = remaining.lastIndexOf(' ');
+        
+        // Create a builder offset to start from after the last space
+        SuggestionsBuilder newBuilder = builder.createOffset(builder.getStart() + lastSpace + 1);
+        
+        return CommandSource.suggestMatching(context.getSource().getPlayerNames(), newBuilder);
     }
 }

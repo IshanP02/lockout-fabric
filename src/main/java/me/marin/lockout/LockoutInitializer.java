@@ -225,8 +225,8 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // SimulatePickBans command
                 var simulatePickBansRoot = CommandManager.literal("SimulatePickBans").requires(PERMISSIONS).build();
-                var team1Arg = CommandManager.argument("team1", StringArgumentType.word()).build();
-                var team2Arg = CommandManager.argument("team2", StringArgumentType.word()).executes(context -> {
+                var team1Arg = CommandManager.argument("team1", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).build();
+                var team2Arg = CommandManager.argument("team2", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).executes(context -> {
                     String team1Name = StringArgumentType.getString(context, "team1");
                     String team2Name = StringArgumentType.getString(context, "team2");
                     

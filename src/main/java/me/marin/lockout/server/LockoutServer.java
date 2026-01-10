@@ -803,45 +803,47 @@ public class LockoutServer {
         PlayerManager playerManager = server.getPlayerManager();
 
         try {
-            Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "player names");
-            List<GameProfile> playerProfiles = new ArrayList<>(profiles);
+            argument = context.getArgument("player names", String.class);
+            String[] playerNames = argument.split(" +");
             
             if (isBlackout) {
-                if (playerProfiles.isEmpty()) {
+                if (playerNames.length == 0) {
                     context.getSource().sendError(Text.literal("Not enough players listed."));
                     return 0;
                 }
 
-                List<String> playerNames = new ArrayList<>();
-                for (GameProfile profile : playerProfiles) {
-                    ServerPlayerEntity player = playerManager.getPlayer(profile.getId());
+                List<String> validPlayerNames = new ArrayList<>();
+                for (String playerName : playerNames) {
+                    ServerPlayerEntity player = playerManager.getPlayer(playerName);
                     if (player == null) {
-                        context.getSource().sendError(Text.literal("Player " + profile.getName() + " is not online."));
+                        context.getSource().sendError(Text.literal("Player " + playerName + " is not online."));
                         return 0;
                     }
-                    playerNames.add(player.getName().getString());
+                    validPlayerNames.add(player.getName().getString());
                 }
-                teams.add(new LockoutTeamServer(playerNames, Formatting.byColorIndex(Lockout.COLOR_ORDERS[0]), server));
+                teams.add(new LockoutTeamServer(validPlayerNames, Formatting.byColorIndex(Lockout.COLOR_ORDERS[0]), server));
+                return 1;
 
             } else {
-                if (playerProfiles.size() < 2) {
+                if (playerNames.length < 2) {
                     context.getSource().sendError(Text.literal("Not enough players listed. You need at least 2 players."));
                     return 0;
                 }
-                if (playerProfiles.size() > 16) {
+                if (playerNames.length > 16) {
                     context.getSource().sendError(Text.literal("Too many players listed."));
                     return 0;
                 }
 
-                for (int i = 0; i < playerProfiles.size(); i++) {
-                    GameProfile profile = playerProfiles.get(i);
-                    ServerPlayerEntity player = playerManager.getPlayer(profile.getId());
+                for (int i = 0; i < playerNames.length; i++) {
+                    String playerName = playerNames[i];
+                    ServerPlayerEntity player = playerManager.getPlayer(playerName);
                     if (player == null) {
-                        context.getSource().sendError(Text.literal("Player " + profile.getName() + " is not online."));
+                        context.getSource().sendError(Text.literal("Player " + playerName + " is not online."));
                         return 0;
                     }
                     teams.add(new LockoutTeamServer(List.of(player.getName().getString()), Formatting.byColorIndex(Lockout.COLOR_ORDERS[i]), server));
                 }
+                return 1;
             }
 
         } catch (Exception ignored) {}
