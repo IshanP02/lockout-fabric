@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SaddledComponent;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
@@ -94,6 +95,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                                 hasCarrotOnAStick = true;
                             }
                             allow = hasCarrotOnAStick;
+                        }
+                        if (player.getVehicle() instanceof AbstractHorseEntity horse) {
+                            allow = false;
+                            allow = horse.isTame() && horse.isControlledByPlayer();
                         }
                         if (allow) {
                             lockout.completeGoal(goal, player);
