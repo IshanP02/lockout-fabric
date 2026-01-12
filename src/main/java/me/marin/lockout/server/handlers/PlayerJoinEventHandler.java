@@ -48,6 +48,14 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
             ServerPlayNetworking.send(player, new SetBoardTypePayload(LockoutServer.boardType, LockoutServer.boardTypeExcludedGoals));
         }
         
+        // Sync locate data to the joining player
+        if (!LockoutServer.BIOME_LOCATE_DATA.isEmpty() || !LockoutServer.STRUCTURE_LOCATE_DATA.isEmpty()) {
+            ServerPlayNetworking.send(player, new me.marin.lockout.network.SyncLocateDataPayload(
+                new java.util.HashMap<>(LockoutServer.BIOME_LOCATE_DATA),
+                new java.util.HashMap<>(LockoutServer.STRUCTURE_LOCATE_DATA)
+            ));
+        }
+        
         // If there's an active pick/ban session, sync it to the joining player
         if (LockoutServer.activePickBanSession != null) {
             PickBanSession session = LockoutServer.activePickBanSession;

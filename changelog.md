@@ -1,4 +1,6 @@
 ## Lockout v0.10.8
+- Added autocomplete for lockout commands
+- Various Visual Improvements
 - Various Bugfixes
 ## Lockout v0.10.7
 - Added New Goals:

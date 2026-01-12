@@ -561,16 +561,71 @@ public class GoalListScreen extends Screen {
             int textWidth = this.textRenderer.getWidth(bannerText);
             int textHeight = this.textRenderer.fontHeight;
             int bannerX = (width - textWidth) / 2;
-            int bannerY = 24;
+            int bannerY = 20;
             int padding = 4;
             
-            // Semi-transparent dark background
-            context.fill(bannerX - padding, bannerY - padding, 
-                        bannerX + textWidth + padding, bannerY + textHeight + padding, 
+            // Adjust background height to match face size (16px exactly)
+            int faceSize = 16;
+            int backgroundHeight = faceSize + 4;
+            int backgroundY = bannerY - padding - 2; // Move up 2px to align with face border
+            
+            // Semi-transparent dark background (16px tall to match face)
+            context.fill(bannerX - padding, backgroundY, 
+                        bannerX + textWidth + padding, backgroundY + backgroundHeight, 
                         0xAA000000);
             
-            // Draw the text using the same method as the working round text
-            context.drawText(this.textRenderer, bannerText, bannerX, bannerY, teamColor, true);
+            // Center text vertically within the adjusted background, 1px lower
+            int textY = backgroundY + (backgroundHeight - textHeight) / 2 + 1;
+            context.drawText(this.textRenderer, bannerText, bannerX, textY, teamColor, true);
+            
+            // Render team player faces on either side of the banner
+            if (client.world != null && client.world.getScoreboard() != null) {
+                net.minecraft.scoreboard.Team team1 = client.world.getScoreboard().getTeam(activeSessionState.team1Name());
+                net.minecraft.scoreboard.Team team2 = client.world.getScoreboard().getTeam(activeSessionState.team2Name());
+                
+                int faceSpacing = 2;
+                int leftEndpoint = bannerX - padding;
+                int rightEndpoint = bannerX + textWidth + padding;
+                int yOffset = backgroundY + 2; // Add 2px to account for the border
+                
+                // Get team colors
+                int team1Color = 0xFFFFFFFF;
+                if (team1 != null && team1.getColor() != null && team1.getColor().getColorValue() != null) {
+                    int colorValue = team1.getColor().getColorValue();
+                    team1Color = 0xFF000000 | colorValue;
+                    if ((team1Color & 0x00FFFFFF) == 0) {
+                        team1Color = 0xFFFFFFFF;
+                    }
+                }
+                
+                int team2Color = 0xFFFFFFFF;
+                if (team2 != null && team2.getColor() != null && team2.getColor().getColorValue() != null) {
+                    int colorValue = team2.getColor().getColorValue();
+                    team2Color = 0xFF000000 | colorValue;
+                    if ((team2Color & 0x00FFFFFF) == 0) {
+                        team2Color = 0xFFFFFFFF;
+                    }
+                }
+                
+                // Render Team 1 faces on the left side (right-to-left)
+                if (team1 != null && !team1.getPlayerList().isEmpty()) {
+                    int xPos = leftEndpoint - faceSpacing;
+                    for (String playerName : team1.getPlayerList()) {
+                        xPos -= faceSize;
+                        renderPlayerFace(context, playerName, xPos, yOffset, team1Color);
+                        xPos -= faceSpacing;
+                    }
+                }
+                
+                // Render Team 2 faces on the right side (left-to-right)
+                if (team2 != null && !team2.getPlayerList().isEmpty()) {
+                    int xPos = rightEndpoint + faceSpacing;
+                    for (String playerName : team2.getPlayerList()) {
+                        renderPlayerFace(context, playerName, xPos, yOffset, team2Color);
+                        xPos += faceSize + faceSpacing;
+                    }
+                }
+            }
         }
         
         // Render pick/ban session info if active
@@ -738,6 +793,32 @@ public class GoalListScreen extends Screen {
         
         // Refresh the GUI
         this.clearAndInit();
+    }
+    
+    /**
+     * Render a player's face texture with a colored border
+     */
+    private void renderPlayerFace(DrawContext context, String playerName, int x, int y, int borderColor) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.world == null) return;
+        
+        // Try to find the player in the current world
+        var player = client.world.getPlayers().stream()
+            .filter(p -> p.getName().getString().equals(playerName))
+            .findFirst()
+            .orElse(null);
+        
+        if (player != null) {
+            // Draw 2px border around the face
+            int borderWidth = 2;
+            context.fill(x - borderWidth, y - borderWidth, x + 16 + borderWidth, y + 16 + borderWidth, borderColor);
+            
+            // Draw the player's head (16x16 from their skin texture)
+            var skinTexture = client.getSkinProvider().getSkinTextures(player.getGameProfile());
+            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 8.0F, 8.0F, 16, 16, 8, 8, 64, 64);
+            // Draw the overlay (hat layer)
+            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 40.0F, 8.0F, 16, 16, 8, 8, 64, 64);
+        }
     }
 
 }

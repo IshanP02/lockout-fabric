@@ -214,6 +214,18 @@ public class LockoutClient implements ClientModInitializer {
                 }
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.SyncLocateDataPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                // Update ClientLocateUtil with server-provided locate data
+                ClientLocateUtil.setServerLocateData(payload.biomeLocateData(), payload.structureLocateData());
+                
+                // If PickBan GUI is open, refresh it to show newly available goals
+                if (client.currentScreen instanceof GoalListScreen screen) {
+                    screen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+                }
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(StartPickBanSessionPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             client.execute(() -> {
