@@ -212,13 +212,26 @@ public class GoalListScreen extends Screen {
                     int pendingPickCount = GoalGroup.PENDING_PICKS.getGoals().size();
                     int pendingBanCount = GoalGroup.PENDING_BANS.getGoals().size();
                     int limit = activeSessionState.selectionLimit();
+                    int currentRound = activeSessionState.currentRound();
                     
-                    // Check if counts match the limit
-                    if (pendingPickCount != limit || pendingBanCount != limit) {
-                        String errorMsg = "You must select exactly " + limit + " pick(s) and " + limit + " ban(s). ";
-                        errorMsg += "Current: " + pendingPickCount + "/" + limit + " picks, " + pendingBanCount + "/" + limit + " bans.";
-                        client.player.sendMessage(Text.literal(errorMsg).withColor(0xFF5555), false);
-                        return;
+                    // Check if counts match the limit based on round type
+                    boolean isBanRound = currentRound % 2 == 1;
+                    if (isBanRound) {
+                        // Ban round: only check bans
+                        if (pendingBanCount != limit) {
+                            String errorMsg = "You must select exactly " + limit + " ban(s). ";
+                            errorMsg += "Current: " + pendingBanCount + "/" + limit + " bans.";
+                            client.player.sendMessage(Text.literal(errorMsg).withColor(0xFF5555), false);
+                            return;
+                        }
+                    } else {
+                        // Pick round: only check picks
+                        if (pendingPickCount != limit) {
+                            String errorMsg = "You must select exactly " + limit + " pick(s). ";
+                            errorMsg += "Current: " + pendingPickCount + "/" + limit + " picks.";
+                            client.player.sendMessage(Text.literal(errorMsg).withColor(0xFF5555), false);
+                            return;
+                        }
                     }
                     
                     // Build goal-to-player map for pending picks and bans
@@ -255,6 +268,18 @@ public class GoalListScreen extends Screen {
     }
 
     private void toggleGoalInPicks(String goalId) {
+        // Block picks during ban rounds (odd rounds)
+        if (activeSessionState != null) {
+            int currentRound = activeSessionState.currentRound();
+            if (currentRound % 2 == 1) { // Ban round
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("You can only BAN goals during this round! Right-click to ban.").withColor(0xFF5555),
+                    false
+                );
+                return;
+            }
+        }
+        
         // Block interaction if goal is excluded by board type
         if (LockoutClient.currentExcludedGoals.contains(goalId)) {
             MinecraftClient.getInstance().player.sendMessage(
@@ -333,6 +358,18 @@ public class GoalListScreen extends Screen {
     }
 
     private void toggleGoalInBans(String goalId) {
+        // Block bans during pick rounds (even rounds)
+        if (activeSessionState != null) {
+            int currentRound = activeSessionState.currentRound();
+            if (currentRound % 2 == 0) { // Pick round
+                MinecraftClient.getInstance().player.sendMessage(
+                    Text.literal("You can only PICK goals during this round! Left-click to pick.").withColor(0xFF5555),
+                    false
+                );
+                return;
+            }
+        }
+        
         // Block interaction if goal is excluded by board type
         if (LockoutClient.currentExcludedGoals.contains(goalId)) {
             MinecraftClient.getInstance().player.sendMessage(
