@@ -1,3 +1,5 @@
+## Lockout v0.10.9
+- Changed how Pick/Bans work. Now there are designated BAN rounds and PICK rounds
 ## Lockout v0.10.8
 - Added autocomplete for lockout commands
 - Various Visual Improvements
