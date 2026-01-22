@@ -255,6 +255,18 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             }
             
             if (button == 0) { // Left click: toggle pick
+                // Block picks during ban rounds (odd rounds)
+                if (session != null) {
+                    int currentRound = session.currentRound();
+                    if (currentRound % 2 == 1) { // Ban round
+                        MinecraftClient.getInstance().player.sendMessage(
+                            Text.literal("You can only BAN goals during this round! Right-click to ban.").withColor(0xFF5555),
+                            false
+                        );
+                        return true;
+                    }
+                }
+                
                 // Check if at pick limit during session
                 if (session != null && !picks.contains(goalId)) {
                     if (picks.size() >= session.selectionLimit()) {
@@ -274,6 +286,18 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
                     MinecraftClient.getInstance().player.sendMessage(Text.literal("Added to Picks!"), false);
                 }
             } else if (button == 1) { // Right click: toggle ban
+                // Block bans during pick rounds (even rounds)
+                if (session != null) {
+                    int currentRound = session.currentRound();
+                    if (currentRound % 2 == 0) { // Pick round
+                        MinecraftClient.getInstance().player.sendMessage(
+                            Text.literal("You can only PICK goals during this round! Left-click to pick.").withColor(0xFF5555),
+                            false
+                        );
+                        return true;
+                    }
+                }
+                
                 // Check if at ban limit during session
                 if (session != null && !bans.contains(goalId)) {
                     if (bans.size() >= session.selectionLimit()) {

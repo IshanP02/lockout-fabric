@@ -75,6 +75,20 @@ public class PickBanSession {
     }
     
     /**
+     * Check if the current round is a ban round (odd rounds)
+     */
+    public boolean isBanRound() {
+        return currentRound % 2 == 1;
+    }
+    
+    /**
+     * Check if the current round is a pick round (even rounds)
+     */
+    public boolean isPickRound() {
+        return currentRound % 2 == 0;
+    }
+    
+    /**
      * Check if a goal can be picked (not already picked by either team)
      */
     public boolean canPickGoal(String goalId) {
@@ -92,6 +106,8 @@ public class PickBanSession {
      * Check if more picks can be added
      */
     public boolean canAddMorePicks() {
+        // Can't add picks during ban rounds
+        if (isBanRound()) return false;
         return pendingPicks.size() < selectionLimit;
     }
     
@@ -99,6 +115,8 @@ public class PickBanSession {
      * Check if more bans can be added
      */
     public boolean canAddMoreBans() {
+        // Can't add bans during pick rounds
+        if (isPickRound()) return false;
         return pendingBans.size() < selectionLimit;
     }
     
@@ -106,8 +124,13 @@ public class PickBanSession {
      * Check if current team has selected enough picks/bans to lock
      */
     public boolean canLockSelections() {
-        return pendingPicks.size() == selectionLimit && 
-               pendingBans.size() == selectionLimit;
+        if (isBanRound()) {
+            // Ban rounds: only check bans
+            return pendingBans.size() == selectionLimit;
+        } else {
+            // Pick rounds: only check picks
+            return pendingPicks.size() == selectionLimit;
+        }
     }
     
     /**
@@ -214,16 +237,34 @@ public class PickBanSession {
     }
     
     /**
-     * Move to next turn/round
+     * Move to next turn/round (snake draft style)
+     * Round 1: T1 → T2, Round 2: T2 → T1, Round 3: T1 → T2, etc.
      */
     private void advanceTurn() {
-        if (isTeam1Turn) {
-            // Team 1 just finished, now Team 2's turn
-            isTeam1Turn = false;
+        boolean isOddRound = (currentRound % 2 == 1);
+        
+        if (isOddRound) {
+            // Odd round: T1 → T2
+            if (isTeam1Turn) {
+                // Team 1 just finished, now Team 2's turn (same round)
+                isTeam1Turn = false;
+            } else {
+                // Team 2 just finished, round complete
+                currentRound++;
+                // Next round is even, so Team 2 goes first
+                isTeam1Turn = false;
+            }
         } else {
-            // Team 2 just finished, move to next round and back to Team 1
-            isTeam1Turn = true;
-            currentRound++;
+            // Even round: T2 → T1
+            if (!isTeam1Turn) {
+                // Team 2 just finished, now Team 1's turn (same round)
+                isTeam1Turn = true;
+            } else {
+                // Team 1 just finished, round complete
+                currentRound++;
+                // Next round is odd, so Team 1 goes first
+                isTeam1Turn = true;
+            }
         }
     }
     

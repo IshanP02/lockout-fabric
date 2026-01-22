@@ -98,10 +98,10 @@ public class LockoutServer {
     public static PickBanSession activePickBanSession = null;
     
     // Default pick/ban limit (can be set before starting a session)
-    public static int defaultPickBanLimit = 2;
+    public static int defaultPickBanLimit = 4;
     
     // Default max rounds (can be set before starting a session)
-    public static int defaultMaxRounds = 3;
+    public static int defaultMaxRounds = 2;
 
     private static boolean isInitialized = false;
 
@@ -341,14 +341,26 @@ public class LockoutServer {
                 System.out.println("DEBUG: Pending picks: " + pendingPicks);
                 System.out.println("DEBUG: Pending bans: " + pendingBans);
                 
-                // Verify they have the right number of selections
+                // Verify they have the right number of selections based on round type
                 int limit = activePickBanSession.getSelectionLimit();
-                if (pendingPicks.size() != limit || pendingBans.size() != limit) {
-                    context.player().sendMessage(
-                        Text.literal("You must select exactly " + limit + " picks and " + limit + " bans before locking."),
-                        false
-                    );
-                    return;
+                if (activePickBanSession.isBanRound()) {
+                    // Ban round: only check bans
+                    if (pendingBans.size() != limit) {
+                        context.player().sendMessage(
+                            Text.literal("You must select exactly " + limit + " bans before locking."),
+                            false
+                        );
+                        return;
+                    }
+                } else {
+                    // Pick round: only check picks
+                    if (pendingPicks.size() != limit) {
+                        context.player().sendMessage(
+                            Text.literal("You must select exactly " + limit + " picks before locking."),
+                            false
+                        );
+                        return;
+                    }
                 }
                 
                 // Clear any existing pending selections and add the new ones

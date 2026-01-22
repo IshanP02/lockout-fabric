@@ -353,9 +353,14 @@ public class LockoutInitializer implements ModInitializer {
                 dispatcher.getRoot().addChild(
                     CommandManager.literal("MaxRounds")
                         .requires(PERMISSIONS)
-                        .then(CommandManager.argument("rounds", IntegerArgumentType.integer(1, 10))
+                        .then(CommandManager.argument("rounds", IntegerArgumentType.integer(2, 10))
                             .executes(context -> {
                                 int rounds = IntegerArgumentType.getInteger(context, "rounds");
+                                
+                                if (rounds % 2 != 0) {
+                                    context.getSource().sendError(Text.literal("Max rounds must be an even number."));
+                                    return 0;
+                                }
                                 
                                 if (LockoutServer.activePickBanSession != null) {
                                     context.getSource().sendError(Text.literal("Cannot change max rounds during an active session."));
