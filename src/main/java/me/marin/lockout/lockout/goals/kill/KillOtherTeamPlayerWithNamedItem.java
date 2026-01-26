@@ -22,7 +22,7 @@ public class KillOtherTeamPlayerWithNamedItem extends Goal implements TexturePro
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/kill_player.png");
+    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/kill_player_with_named_item.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
