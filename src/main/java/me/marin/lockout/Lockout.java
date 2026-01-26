@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -22,6 +23,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import oshi.util.tuples.Pair;
+
+import net.minecraft.entity.damage.DamageType;
 
 import java.util.*;
 
@@ -44,11 +47,25 @@ public class Lockout {
     public final Map<LockoutTeam, Integer> mobsKilled = new HashMap<>();
 
     public final Map<UUID, Long> pumpkinWearTime = new HashMap<>();
+    public final Map<UUID, Long> appliedEffectsTime = new HashMap<>();
     public final Map<UUID, Integer> distanceSprinted = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
+    public final Map<UUID, Integer> playerAdvancements = new HashMap<>();
 
+    public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
+    public final Map<UUID, Integer> distanceSwam = new HashMap<>();
+    public final Map<UUID, Set<EntityType<?>>> leashedEntities = new HashMap<>();
+    public final Map<LockoutTeam, Set<Identifier>> biomesVisited = new HashMap<>();
+    public final Map<LockoutTeam, Integer> damageByUniqueSources = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> damageTypesTaken = new HashMap<>();
+    public final Map<UUID, Integer> distanceByBoat = new HashMap<>();
+    public final Map<UUID, Integer> creeperKills = new LinkedHashMap<>();
+
+    public UUID mostCreeperKillsPlayer;
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
+    public UUID mostAdvancementsPlayer;
+    public int mostAdvancements;
 
     @Getter
     private final LockoutBoard board;
@@ -109,12 +126,15 @@ public class Lockout {
 
         LockoutTeamServer team = (LockoutTeamServer) getPlayerTeam(playerId);
 
-        completeGoal(goal, team, team.getPlayerName(playerId) + " completed " + goal.getGoalName() + ".");
+        goal.setCompletedMessage(team.getPlayerName(playerId));
+        completeGoal(goal, team,
+                team.getPlayerName(playerId) + " completed " + goal.getGoalName() + ".", team.getPlayerName(playerId));
     }
     public void completeGoal(Goal goal, LockoutTeam team) {
-        completeGoal(goal, team, team.getDisplayName() + " completed " + goal.getGoalName() + ".");
+        completeGoal(goal, team,
+                team.getDisplayName() + " completed " + goal.getGoalName() + ".", "");
     }
-    public void completeGoal(Goal goal, LockoutTeam team, String message) {
+    public void completeGoal(Goal goal, LockoutTeam team, String message, String goalMessage) {
         if (goal.isCompleted()) return;
         if (!hasStarted()) return;
 
@@ -133,7 +153,7 @@ public class Lockout {
             spectator.sendMessage(Text.literal(message));
         }
 
-        sendGoalCompletedPacket(goal, team);
+        sendGoalCompletedPacket(goal, team, goalMessage);
         evaluateWinnerAndEndGame(team);
     }
 
@@ -167,7 +187,7 @@ public class Lockout {
             spectator.sendMessage(Text.literal(message));
         }
 
-        sendGoalCompletedPacket(goal, winnerTeam);
+        sendGoalCompletedPacket(goal, winnerTeam, "");
         evaluateWinnerAndEndGame(winnerTeam);
     }
 
@@ -182,18 +202,18 @@ public class Lockout {
         if (!goal.isCompleted()) return;
 
         goal.getCompletedTeam().takePoint();
-        goal.setCompleted(false, null);
+        goal.setCompleted(false, null, "");
 
         if (sendPacket) {
-            var payload = new CompleteTaskPayload(goal.getId(), -1);
+            var payload = new CompleteTaskPayload(goal.getId(), -1, "");
             for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(serverPlayer, payload);
             }
         }
     }
 
-    private void sendGoalCompletedPacket(Goal goal, LockoutTeam team) {
-        var payload = new CompleteTaskPayload(goal.getId(), teams.indexOf(team));
+    private void sendGoalCompletedPacket(Goal goal, LockoutTeam team, String completionMessage) {
+        var payload = new CompleteTaskPayload(goal.getId(), teams.indexOf(team), completionMessage);
         for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
             ServerPlayNetworking.send(serverPlayer, payload);
         }
@@ -296,8 +316,6 @@ public class Lockout {
         isRunning = running;
     }
 
-
-
     private static String getWinnerTeamsString(List<? extends LockoutTeam> teams) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < teams.size(); i++) {
@@ -358,4 +376,33 @@ public class Lockout {
         }
     }
 
+    public void recalculateCreeperKillsGoal(Goal goal) {
+        List<UUID> mostKillsPlayers = new ArrayList<>();
+        int mostKills = 0;
+
+        for (UUID uuid : creeperKills.keySet()) {
+            if (creeperKills.get(uuid) == mostKills) {
+                mostKillsPlayers.add(uuid);
+                continue;
+            }
+            if (creeperKills.get(uuid) > mostKills) {
+                mostKillsPlayers.clear();
+                mostKillsPlayers.add(uuid);
+                mostKills = creeperKills.get(uuid);
+            }
+        }
+
+        if (mostKills == 0) {
+            if (this.mostCreeperKillsPlayer != null) {
+                this.mostCreeperKillsPlayer = null;
+                clearGoalCompletion(goal, true);
+            }
+            return;
+        }
+
+        if (!mostKillsPlayers.contains(mostCreeperKillsPlayer)) {
+            this.mostCreeperKillsPlayer = mostKillsPlayers.get(0);
+            updateGoalCompletion(goal, mostKillsPlayers.get(0));
+        }
+    }
 }

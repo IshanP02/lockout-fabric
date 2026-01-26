@@ -4,12 +4,18 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import me.marin.lockout.lockout.DefaultGoalRegister;
 import me.marin.lockout.network.CustomBoardPayload;
+import me.marin.lockout.network.EndPickBanSessionPayload;
 import me.marin.lockout.network.Networking;
+import me.marin.lockout.network.UpdatePickBanSessionPayload;
+import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.server.LockoutServer;
+import me.marin.lockout.util.PlayerSuggestionProvider;
+import me.marin.lockout.util.TeamSuggestionProvider;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.command.argument.GameProfileArgumentType;
@@ -25,14 +31,20 @@ import net.minecraft.loot.function.SetPotionLootFunction;
 import net.minecraft.loot.provider.number.UniformLootNumberProvider;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import me.marin.lockout.generator.GoalGroup;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import static me.marin.lockout.Constants.MAX_BOARD_SIZE;
+import static me.marin.lockout.Constants.MIN_BOARD_SIZE;
 import static me.marin.lockout.Constants.NAMESPACE;
 
 public class LockoutInitializer implements ModInitializer {
@@ -56,13 +68,17 @@ public class LockoutInitializer implements ModInitializer {
                     var commandNode = CommandManager.literal("lockout").requires(PERMISSIONS).build();
                     var teamsNode = CommandManager.literal("teams").build();
                     var playersNode = CommandManager.literal("players").build();
+                    var randomNode = CommandManager.literal("random").executes(LockoutServer::lockoutRandomCommandLogic).build();
+                    var teamCountNode = CommandManager.argument("team count", IntegerArgumentType.integer(2, 16)).executes(LockoutServer::lockoutRandomCommandLogic).build();
                     //TODO make custom argument types
-                    var teamListNode = CommandManager.argument("team names", StringArgumentType.greedyString()).executes(LockoutServer::lockoutCommandLogic).build();
-                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).executes(LockoutServer::lockoutCommandLogic).build();
+                    var teamListNode = CommandManager.argument("team names", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
+                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
 
                     dispatcher.getRoot().addChild(commandNode);
                     commandNode.addChild(teamsNode);
                     commandNode.addChild(playersNode);
+                    commandNode.addChild(randomNode);
+                    randomNode.addChild(teamCountNode);
                     teamsNode.addChild(teamListNode);
                     playersNode.addChild(playerListNode);
                 }
@@ -74,9 +90,8 @@ public class LockoutInitializer implements ModInitializer {
                     var teamNode = CommandManager.literal("team").build();
                     var playersNode = CommandManager.literal("players").build();
                     //TODO make custom argument types
-                    var teamNameNode = CommandManager.argument("team name", StringArgumentType.greedyString()).executes(LockoutServer::blackoutCommandLogic).build();
-                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).executes(LockoutServer::blackoutCommandLogic).build();
-
+                    var teamNameNode = CommandManager.argument("team name", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
+                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
                     dispatcher.getRoot().addChild(commandNode);
                     commandNode.addChild(teamNode);
                     commandNode.addChild(playersNode);
@@ -131,10 +146,234 @@ public class LockoutInitializer implements ModInitializer {
                 // SetBoardSize command
 
                 var setBoardTimeRoot = CommandManager.literal("SetBoardSize").requires(PERMISSIONS).build();
-                var size = CommandManager.argument("board size", IntegerArgumentType.integer(3, 7)).executes(LockoutServer::setBoardSize).build();
+                var size = CommandManager.argument("board size", IntegerArgumentType.integer(MIN_BOARD_SIZE, MAX_BOARD_SIZE)).executes(LockoutServer::setBoardSize).build();
 
                 dispatcher.getRoot().addChild(setBoardTimeRoot);
                 setBoardTimeRoot.addChild(size);
+            }
+
+            {
+                // RemovePicks command
+                dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
+                    // Remove goal-to-player mappings for picks before clearing
+                    for (String goalId : GoalGroup.PICKS.getGoals()) {
+                        GoalGroup.setGoalPlayer(goalId, null);
+                    }
+                    GoalGroup.PICKS.getGoals().clear();
+                    LockoutServer.SERVER_PICKS.clear();
+                    context.getSource().sendMessage(Text.literal("Removed picks."));
+                    
+                    // Broadcast update to all players on server
+                    if (context.getSource().getServer() != null) {
+                        // Build remaining goal-to-player map (only bans remain)
+                        java.util.Map<String, String> goalToPlayerMap = new java.util.HashMap<>();
+                        for (String goalId : LockoutServer.SERVER_BANS) {
+                            String playerName = GoalGroup.getGoalPlayer(goalId);
+                            if (playerName != null) {
+                                goalToPlayerMap.put(goalId, playerName);
+                            }
+                        }
+                        
+                        var payload = new UpdatePicksBansPayload(
+                            new java.util.ArrayList<>(LockoutServer.SERVER_PICKS),
+                            new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
+                            goalToPlayerMap
+                        );
+                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                            ServerPlayNetworking.send(player, payload);
+                        }
+                    }
+                    return 1;
+                }).build());
+            }
+
+            {
+                // RemoveBans command
+                dispatcher.getRoot().addChild(CommandManager.literal("RemoveBans").requires(PERMISSIONS).executes((context) -> {
+                    // Remove goal-to-player mappings for bans before clearing
+                    for (String goalId : GoalGroup.BANS.getGoals()) {
+                        GoalGroup.setGoalPlayer(goalId, null);
+                    }
+                    GoalGroup.BANS.getGoals().clear();
+                    LockoutServer.SERVER_BANS.clear();
+                    context.getSource().sendMessage(Text.literal("Removed bans."));
+                    
+                    // Broadcast update to all players on server
+                    if (context.getSource().getServer() != null) {
+                        // Build remaining goal-to-player map (only picks remain)
+                        java.util.Map<String, String> goalToPlayerMap = new java.util.HashMap<>();
+                        for (String goalId : LockoutServer.SERVER_PICKS) {
+                            String playerName = GoalGroup.getGoalPlayer(goalId);
+                            if (playerName != null) {
+                                goalToPlayerMap.put(goalId, playerName);
+                            }
+                        }
+                        
+                        var payload = new UpdatePicksBansPayload(
+                            new java.util.ArrayList<>(LockoutServer.SERVER_PICKS),
+                            new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
+                            goalToPlayerMap
+                        );
+                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                            ServerPlayNetworking.send(player, payload);
+                        }
+                    }
+                    return 1;
+                }).build());
+            }
+
+            {
+                // SimulatePickBans command
+                var simulatePickBansRoot = CommandManager.literal("SimulatePickBans").requires(PERMISSIONS).build();
+                var team1Arg = CommandManager.argument("team1", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).build();
+                var team2Arg = CommandManager.argument("team2", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).executes(context -> {
+                    String team1Name = StringArgumentType.getString(context, "team1");
+                    String team2Name = StringArgumentType.getString(context, "team2");
+                    
+                    ServerScoreboard scoreboard = context.getSource().getServer().getScoreboard();
+                    Team team1 = scoreboard.getTeam(team1Name);
+                    Team team2 = scoreboard.getTeam(team2Name);
+                    
+                    if (team1 == null) {
+                        context.getSource().sendError(Text.literal("Team " + team1Name + " does not exist."));
+                        return 0;
+                    }
+                    if (team2 == null) {
+                        context.getSource().sendError(Text.literal("Team " + team2Name + " does not exist."));
+                        return 0;
+                    }
+                    if (team1.equals(team2)) {
+                        context.getSource().sendError(Text.literal("Cannot start pick/ban with the same team twice."));
+                        return 0;
+                    }
+                    
+                    return LockoutServer.startPickBanSession(context, team1, team2);
+                }).build();
+
+                dispatcher.getRoot().addChild(simulatePickBansRoot);
+                simulatePickBansRoot.addChild(team1Arg);
+                team1Arg.addChild(team2Arg);
+            }
+
+            {
+                // CancelPickBanSession command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("CancelPickBanSession")
+                        .requires(PERMISSIONS)
+                        .executes(context -> {
+                            if (LockoutServer.activePickBanSession == null) {
+                                context.getSource().sendError(Text.literal("No active pick/ban session to cancel."));
+                                return 0;
+                            }
+                            
+                            // Clear all goal groups on server
+                            GoalGroup.PICKS.getGoals().clear();
+                            GoalGroup.BANS.getGoals().clear();
+                            GoalGroup.PENDING_PICKS.getGoals().clear();
+                            GoalGroup.PENDING_BANS.getGoals().clear();
+                            GoalGroup.clearGoalPlayers();
+                            
+                            // Clear the session
+                            LockoutServer.activePickBanSession = null;
+                            
+                            // Broadcast cancellation to all players
+                            EndPickBanSessionPayload payload = new EndPickBanSessionPayload(
+                                true,
+                                new java.util.HashSet<>(),
+                                new java.util.HashSet<>(),
+                                new java.util.HashMap<>()
+                            );
+                            for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                ServerPlayNetworking.send(player, payload);
+                            }
+                            
+                            context.getSource().sendMessage(Text.literal("Pick/ban session cancelled."));
+                            return 1;
+                        })
+                        .build()
+                );
+            }
+
+            {
+                // PickBanSelectionLimit command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("PickBanSelectionLimit")
+                        .requires(PERMISSIONS)
+                        .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 5))
+                            .executes(context -> {
+                                int limit = IntegerArgumentType.getInteger(context, "limit");
+                                
+                                if (LockoutServer.activePickBanSession == null) {
+                                    // If no active session, store the limit for the next session
+                                    LockoutServer.defaultPickBanLimit = limit;
+                                    context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit + " for the next session."));
+                                    return 1;
+                                }
+                                
+                                // Can only change limit before any rounds are locked
+                                if (LockoutServer.activePickBanSession.getCurrentRound() > 1) {
+                                    context.getSource().sendError(Text.literal("Cannot change selection limit after round 1 has started."));
+                                    return 0;
+                                }
+                                
+                                LockoutServer.activePickBanSession.setSelectionLimit(limit);
+                                
+                                // Use goal-to-player map from the session
+                                java.util.Map<String, String> goalToPlayerMap = LockoutServer.activePickBanSession.getGoalToPlayerMap();
+                                
+                                // Broadcast the new limit to all players
+                                UpdatePickBanSessionPayload payload = new UpdatePickBanSessionPayload(
+                                    LockoutServer.activePickBanSession.getCurrentRound(),
+                                    LockoutServer.activePickBanSession.isTeam1Turn(),
+                                    LockoutServer.activePickBanSession.getTeam1Name(),
+                                    LockoutServer.activePickBanSession.getTeam2Name(),
+                                    LockoutServer.activePickBanSession.getAllLockedPicks(),
+                                    LockoutServer.activePickBanSession.getAllLockedBans(),
+                                    LockoutServer.activePickBanSession.getPendingPicks(),
+                                    LockoutServer.activePickBanSession.getPendingBans(),
+                                    LockoutServer.activePickBanSession.getSelectionLimit(),
+                                    goalToPlayerMap,
+                                    LockoutServer.activePickBanSession.getMaxRounds()
+                                );
+                                
+                                for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                    ServerPlayNetworking.send(player, payload);
+                                }
+                                
+                                context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit));
+                                return 1;
+                            })
+                        )
+                        .build()
+                );
+            }
+
+            {
+                // MaxRounds command
+                dispatcher.getRoot().addChild(
+                    CommandManager.literal("MaxRounds")
+                        .requires(PERMISSIONS)
+                        .then(CommandManager.argument("rounds", IntegerArgumentType.integer(2, 10))
+                            .executes(context -> {
+                                int rounds = IntegerArgumentType.getInteger(context, "rounds");
+                                
+                                if (rounds % 2 != 0) {
+                                    context.getSource().sendError(Text.literal("Max rounds must be an even number."));
+                                    return 0;
+                                }
+                                
+                                if (LockoutServer.activePickBanSession != null) {
+                                    context.getSource().sendError(Text.literal("Cannot change max rounds during an active session."));
+                                    return 0;
+                                }
+                                
+                                LockoutServer.defaultMaxRounds = rounds;
+                                context.getSource().sendMessage(Text.literal("Max rounds set to " + rounds + " for the next session."));
+                                return 1;
+                            })
+                        )
+                        .build()
+                );
             }
 
         });

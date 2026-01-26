@@ -2,21 +2,28 @@ package me.marin.lockout.server.handlers;
 
 import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutRunnable;
+import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.misc.EmptyHungerBarGoal;
 import me.marin.lockout.lockout.goals.misc.ReachBedrockGoal;
 import me.marin.lockout.lockout.goals.misc.ReachHeightLimitGoal;
 import me.marin.lockout.lockout.goals.misc.ReachNetherRoofGoal;
 import me.marin.lockout.lockout.goals.opponent.OpponentTouchesWaterGoal;
+import me.marin.lockout.lockout.goals.wear_armor.WearCarvedPumpkinFor5MinutesGoal;
+import me.marin.lockout.lockout.interfaces.HaveEffectsAppliedForXMinutesGoal;
 import me.marin.lockout.lockout.interfaces.ObtainItemsGoal;
 import me.marin.lockout.lockout.interfaces.OpponentObtainsItemGoal;
 import me.marin.lockout.lockout.interfaces.RideEntityGoal;
+import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
+import net.minecraft.entity.EquipmentSlot;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SaddledComponent;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
@@ -25,6 +32,7 @@ import net.minecraft.server.world.ServerWorld;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.UUID;
 
 import static me.marin.lockout.server.LockoutServer.gameStartRunnables;
 import static me.marin.lockout.server.LockoutServer.lockout;
@@ -54,10 +62,18 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                 lockout.recalculateXPGoal(goal);
             }
 
+            if (goal instanceof HaveMostCreeperKillsGoal) {
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    int creeperKills = player.getStatHandler().getStat(net.minecraft.stat.Stats.KILLED.getOrCreateStat(net.minecraft.entity.EntityType.CREEPER));
+                    lockout.creeperKills.put(player.getUuid(), creeperKills);
+                }
+                lockout.recalculateCreeperKillsGoal(goal);
+            }
+
             if (goal.isCompleted()) continue;
 
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                if (goal instanceof ObtainItemsGoal obtainItemsGoal) {
+                if (goal instanceof ObtainItemsGoal obtainItemsGoal && !(goal instanceof WearCarvedPumpkinFor5MinutesGoal)) {
                     if (obtainItemsGoal.satisfiedBy(player.getInventory())) {
                         if (goal instanceof OpponentObtainsItemGoal opponentObtainsItemGoal) {
                             lockout.complete1v1Goal(goal, player, false, opponentObtainsItemGoal.getMessage(player));
@@ -79,6 +95,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                                 hasCarrotOnAStick = true;
                             }
                             allow = hasCarrotOnAStick;
+                        }
+                        if (player.getVehicle() instanceof AbstractHorseEntity horse) {
+                            allow = false;
+                            allow = horse.isTame() && horse.isControlledByPlayer();
                         }
                         if (allow) {
                             lockout.completeGoal(goal, player);
@@ -108,6 +128,88 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                 if (goal instanceof OpponentTouchesWaterGoal) {
                     if (Objects.equals(player.getWorld().getBlockState(player.getBlockPos()).getBlock(), Blocks.WATER)) {
                         lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " touched water.");
+                    }
+                }
+            }
+
+            // Handle HaveEffectsAppliedForXMinutesGoal once per team
+            if (goal instanceof HaveEffectsAppliedForXMinutesGoal haveEffectsGoal) {
+                for (LockoutTeamServer team : lockout.getTeams().stream()
+                        .filter(t -> t instanceof LockoutTeamServer)
+                        .map(t -> (LockoutTeamServer) t)
+                        .toList()) {
+                    
+                    // Count how many team members currently have status effects
+                    int playersWithEffects = 0;
+                    for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                        if (team.getPlayers().contains(player.getUuid()) && !player.getStatusEffects().isEmpty()) {
+                            playersWithEffects++;
+                        }
+                    }
+
+                    // Increment time for each team member based on how many have effects
+                    if (playersWithEffects > 0) {
+                        for (UUID uuid : team.getPlayers()) {
+                            var map = lockout.appliedEffectsTime;
+                            long appliedTime = map.getOrDefault(uuid, 0L);
+                            
+                            appliedTime += playersWithEffects;
+                            map.put(uuid, appliedTime);
+
+                            if (appliedTime >= (20 * 60 * haveEffectsGoal.getMinutes())) {
+                                // Complete for the team instead of individual player
+                                lockout.completeGoal(goal, team);
+                                break; // Only need to complete once for the team
+                            }
+                        }
+
+                        // Send tooltip update once per second
+                        if (lockout.getTicks() % 20 == 0) {
+                            team.sendTooltipUpdate(haveEffectsGoal, true);
+                        }
+                    }
+                }
+            }
+
+            // Handle WearCarvedPumpkinFor5MinutesGoal once per team
+            if (goal instanceof WearCarvedPumpkinFor5MinutesGoal pumpkinGoal) {
+                for (LockoutTeamServer team : lockout.getTeams().stream()
+                        .filter(t -> t instanceof LockoutTeamServer)
+                        .map(t -> (LockoutTeamServer) t)
+                        .toList()) {
+                    
+                    // Count how many team members currently wearing pumpkins
+                    int playersWearingPumpkin = 0;
+                    for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                        if (team.getPlayers().contains(player.getUuid())) {
+                            ItemStack helmet = ((PlayerInventoryAccessor) player.getInventory()).getEquipment().get(EquipmentSlot.HEAD);
+                            if (helmet != null && helmet.getItem() == Items.CARVED_PUMPKIN) {
+                                playersWearingPumpkin++;
+                            }
+                        }
+                    }
+
+                    // Increment time for each team member based on how many are wearing pumpkins
+                    if (playersWearingPumpkin > 0) {
+                        for (UUID uuid : team.getPlayers()) {
+                            var map = lockout.pumpkinWearTime;
+                            long wornTime = map.getOrDefault(uuid, 0L);
+                            
+                            wornTime += playersWearingPumpkin;
+                            map.put(uuid, wornTime);
+
+                            if (wornTime >= (20 * 60 * 5)) {
+                                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+                                if (player != null) {
+                                    lockout.completeGoal(goal, player);
+                                }
+                            }
+                        }
+
+                        // Send tooltip update once per second
+                        if (lockout.getTicks() % 20 == 0) {
+                            team.sendTooltipUpdate(pumpkinGoal, true);
+                        }
                     }
                 }
             }

@@ -2,13 +2,19 @@ package me.marin.lockout.mixin.server;
 
 import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
+import me.marin.lockout.lockout.goals.workstation.LockMapUsingCartographyTableGoal;
 import me.marin.lockout.lockout.goals.workstation.UseLoomGoal;
 import me.marin.lockout.lockout.goals.workstation.UseStonecutterGoal;
 import me.marin.lockout.server.LockoutServer;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.map.MapState;
 import net.minecraft.screen.*;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,6 +45,24 @@ public class SlotMixin {
                 if (player.currentScreenHandler instanceof LoomScreenHandler loomScreenHandler) {
                     if ((Object) this == loomScreenHandler.getOutputSlot()) {
                         lockout.completeGoal(goal, player);
+                    }
+                }
+            }
+
+            if (goal instanceof LockMapUsingCartographyTableGoal) {
+                // Check if the taken item is a filled map
+                if (stack.getItem() == Items.FILLED_MAP) {
+                    // Get the map ID from the item
+                    MapIdComponent mapIdComponent = stack.get(DataComponentTypes.MAP_ID);
+                    if (mapIdComponent != null) {
+                        // Get the MapState from the server
+                        ServerWorld serverWorld = (ServerWorld) player.getWorld();
+                        MapState mapState = serverWorld.getMapState(mapIdComponent);
+                        
+                        // Check if the map is locked
+                        if (mapState != null && mapState.locked) {
+                            lockout.completeGoal(goal, player);
+                        }
                     }
                 }
             }

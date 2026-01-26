@@ -29,15 +29,56 @@ public class BoardGenerator {
         this.structures = structures;
     }
 
-    public LockoutBoard generateBoard(int size) {
-        Collections.shuffle(registeredGoals);
+    public LockoutBoard generateBoard(int size, String boardTypeName, List<String> excludedGoals) {
+        // Prepare a mutable list of available goals and remove banned goals
+        List<String> availableGoals = new ArrayList<>(registeredGoals);
+        
+        // Combine BANS and PENDING_BANS for board generation
+        List<String> banned = new ArrayList<>();
+        banned.addAll(GoalGroup.BANS.getGoals());
+        banned.addAll(GoalGroup.PENDING_BANS.getGoals());
+        
+        if (!banned.isEmpty()) {
+            availableGoals.removeAll(banned);
+        }
+
+        Collections.shuffle(availableGoals);
 
         List<Pair<String, String>> goals = new ArrayList<>();
         List<String> goalTypes = new ArrayList<>();
 
-        ListIterator<String> it = registeredGoals.listIterator();
+        // Combine PICKS and PENDING_PICKS for board generation
+        List<String> picks = new ArrayList<>();
+        picks.addAll(GoalGroup.PICKS.getGoals());
+        picks.addAll(GoalGroup.PENDING_PICKS.getGoals());
+        
+        if (!picks.isEmpty()) {
+            for (String pick : picks) {
+                if (goals.size() >= size * size) break;
+                // Only add if registered and not already added, and not banned
+                if (!registeredGoals.contains(pick)) continue;
+                if (banned != null && banned.contains(pick)) continue;
+                if (goalTypes.contains(pick)) continue;
+
+                Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(pick);
+                String data = gen.map(g -> g.generateData(attainableDyes)).orElse(GoalDataConstants.DATA_NONE);
+                goals.add(new Pair<>(pick, data));
+                goalTypes.add(pick);
+
+                // Ensure we don't pick it again from the pool
+                availableGoals.remove(pick);
+            }
+        }
+
+        // Fill remaining slots from the available goals, respecting requirements
+        ListIterator<String> it = availableGoals.listIterator();
         while (goals.size() < size * size && it.hasNext()) {
             String goal = it.next();
+
+            // Check if the goal should be excluded by the board type
+            if (excludedGoals != null && excludedGoals.contains(goal)) {
+                continue;
+            }
 
             if (!GoalGroup.canAdd(goal, goalTypes)) {
                 continue;
@@ -64,7 +105,7 @@ public class BoardGenerator {
         }
 
         if (goals.size() < size * size) {
-            return generateBoard(size);
+            return generateBoard(size, boardTypeName, excludedGoals);
         }
 
         // Shuffle the board again. Some goals will always be after some other goals (GoalGroup#requirePredecessor),

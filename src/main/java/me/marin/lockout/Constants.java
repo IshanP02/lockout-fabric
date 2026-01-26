@@ -6,8 +6,8 @@ public class Constants {
 
     public static final String NAMESPACE = "lockout";
 
-    public static final int MIN_BOARD_SIZE = 3;
-    public static final int MAX_BOARD_SIZE = 7;
+    public static final int MIN_BOARD_SIZE = 1;
+    public static final int MAX_BOARD_SIZE = 12;
 
     public static final Identifier LOCKOUT_GOALS_TEAMS_PACKET = Identifier.of(NAMESPACE, "lockout_goals_teams");
     public static final Identifier START_LOCKOUT_PACKET = Identifier.of(NAMESPACE, "start_lockout");
@@ -18,6 +18,17 @@ public class Constants {
     public static final Identifier LOCKOUT_VERSION_PACKET = Identifier.of(NAMESPACE, "lockout_version");
 
     public static final Identifier CUSTOM_BOARD_PACKET = Identifier.of(NAMESPACE, "set_custom_board");
+    public static final Identifier UPDATE_PICKS_BANS_PACKET = Identifier.of(NAMESPACE, "update_picks_bans");
+    public static final Identifier BROADCAST_PICK_BAN_PACKET = Identifier.of(NAMESPACE, "broadcast_pick_ban");
+    public static final Identifier SYNC_PICK_BAN_LIMIT_PACKET = Identifier.of(NAMESPACE, "sync_pick_ban_limit");
+    public static final Identifier SET_BOARD_TYPE_PACKET = Identifier.of(NAMESPACE, "set_board_type");
+    public static final Identifier UPLOAD_BOARD_TYPE_PACKET = Identifier.of(NAMESPACE, "upload_board_type");
+    public static final Identifier ANNOUNCE_GOAL_FOCUS_PACKET = Identifier.of(NAMESPACE, "announce_goal_focus");
+    
+    public static final Identifier START_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "start_pick_ban_session");
+    public static final Identifier UPDATE_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "update_pick_ban_session");
+    public static final Identifier LOCK_PICK_BAN_SELECTIONS_PACKET = Identifier.of(NAMESPACE, "lock_pick_ban_selections");
+    public static final Identifier END_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "end_pick_ban_session");
 
     public static final Identifier BOARD_SCREEN_ID = Identifier.of(NAMESPACE, "board");
 

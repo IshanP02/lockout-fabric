@@ -23,7 +23,8 @@ public class Obtain4UniqueSaplingsGoal extends ObtainSomeOfTheItemsGoal {
             Items.DARK_OAK_SAPLING,
             Items.JUNGLE_SAPLING,
             Items.SPRUCE_SAPLING,
-            Items.MANGROVE_PROPAGULE
+            Items.MANGROVE_PROPAGULE,
+            Items.PALE_OAK_SAPLING
     );
 
     public Obtain4UniqueSaplingsGoal(String id, String data) {
