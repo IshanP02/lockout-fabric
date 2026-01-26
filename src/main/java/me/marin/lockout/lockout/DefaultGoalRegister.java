@@ -298,6 +298,8 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.ENRAGE_ZOMBIFIED_PIGLIN, AngerZombifiedPiglinGoal.class);
         INSTANCE.register(GoalType.KILL_OTHER_PLAYER, KillOtherTeamPlayer.class,
                         GoalRequirements.TEAMS_GOAL);
+        INSTANCE.register(GoalType.KILL_OTHER_PLAYER_WITH_NAMED_ITEM, KillOtherTeamPlayerWithNamedItem.class,
+                GoalRequirements.TEAMS_GOAL);
         INSTANCE.register(GoalType.MINE_CRAFTER, MineCrafterGoal.class);
         INSTANCE.register(GoalType.MINE_DIAMOND_ORE, MineDiamondOreGoal.class);
         INSTANCE.register(GoalType.MINE_EMERALD_ORE, MineEmeraldOreGoal.class, new GoalRequirements.Builder()

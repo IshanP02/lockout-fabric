@@ -205,6 +205,7 @@ public class GoalType {
     public static final String WEAR_UNIQUE_COLORED_LEATHER_ARMOR = "WEAR_UNIQUE_COLORED_LEATHER_ARMOR";
     public static final String WEAR_4_UNIQUE_ARMOR_PIECES = "WEAR_4_UNIQUE_ARMOR_PIECES";
     public static final String KILL_OTHER_PLAYER = "KILL_OTHER_PLAYER";
+    public static final String KILL_OTHER_PLAYER_WITH_NAMED_ITEM = "KILL_OTHER_PLAYER_WITH_NAMED_ITEM";
     public static final String TAKE_200_DAMAGE = "TAKE_200_DAMAGE";
     public static final String OPPONENT_OBTAINS_CRAFTING_TABLE = "OPPONENT_OBTAINS_CRAFTING_TABLE";
     public static final String OPPONENT_OBTAINS_OBSIDIAN = "OPPONENT_OBTAINS_OBSIDIAN";

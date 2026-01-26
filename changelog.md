@@ -1,3 +1,6 @@
+## Lockout v0.10.10
+- Added New Goals:
+  - Kill Player with Named Item
 ## Lockout v0.10.9
 - Changed how Pick/Bans work. Now there are designated BAN rounds and PICK rounds
 ## Lockout v0.10.8
