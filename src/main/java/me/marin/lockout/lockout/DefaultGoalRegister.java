@@ -3,6 +3,7 @@ package me.marin.lockout.lockout;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalDataGenerator;
 import me.marin.lockout.generator.GoalRequirements;
+import me.marin.lockout.lockout.goals.attach_lead.*;
 import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
