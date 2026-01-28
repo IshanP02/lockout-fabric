@@ -285,6 +285,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class);
         INSTANCE.register(GoalType.KILL_GHAST, KillGhastGoal.class);
         INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class);
+        INSTANCE.register(GoalType.KILL_PARCHED, KillParchedGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(DESERT))
+                        .build()
+                );
         INSTANCE.register(GoalType.KILL_SILVERFISH, KillSilverfishGoal.class);
         INSTANCE.register(GoalType.KILL_SLIME, KillSlimeGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(SWAMP))

@@ -310,5 +310,6 @@ public class GoalType {
     public static final String EAT_ALL_SOUPS = "EAT_ALL_SOUPS";
     public static final String GET_MOB_KABOB_ADVANCEMENT = "GET_MOB_KABOB_ADVANCEMENT";
     public static final String FILL_SHELF_WITH_SHELVES = "FILL_SHELF_WITH_SHELVES";
+    public static final String KILL_PARCHED = "KILL_PARCHED";
 
 }
