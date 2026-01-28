@@ -1,3 +1,13 @@
+## Lockout v0.10.11
+- Added new Goals:
+	- Kill Parched
+	- Obtain Gilded Blackstone
+- Replaced Goal: "Obtain 5 Unique Stone Types" with "Obtain 6 Unique Brick Blocks" (less vague)
+- Locator Bar now shows Player Heads and a color border for what team they are on
+- Updated "Break Any Tool" to include Copper Tools/All Spear Variants
+- Updated "Break Any Armor" to include Copper Armor
+- Fixed Various GUI bugs
+- Fixed a bug where Sound Effects would not play when pinging a goal
 ## Lockout v0.10.10
 - Ported to 1.21.11
 - Added new Goals:
