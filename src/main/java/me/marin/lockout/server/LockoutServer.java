@@ -45,6 +45,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.AdvancementCommand;
+import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.LocateCommand;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -64,6 +65,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.permission.LeveledPermissionPredicate;
 
 import java.util.*;
+
 import static me.marin.lockout.Constants.PLACEHOLDER_PERM_STRING;
 
 public class LockoutServer {
@@ -107,12 +109,13 @@ public class LockoutServer {
 
     private static boolean isInitialized = false;
 
-    public static Map<ServerPlayerEntity, Integer> waitingForVersionPacketPlayersMap = new HashMap<>();
+    public static Map<UUID, Long> waitingForVersionPacketPlayersMap = new HashMap<>();
 
     public static void initializeServer() {
         lockout = null;
         compassHandler = null;
         gameStartRunnables.clear();
+        waitingForVersionPacketPlayersMap.clear();
 
         // Ideally, rejoining a world gets detected here, and this data doesn't get wiped
         BIOME_LOCATE_DATA.clear();
@@ -136,6 +139,28 @@ public class LockoutServer {
 
         ServerTickEvents.END_SERVER_TICK.register(new EndServerTickEventHandler());
 
+        // Add timeout handler for version packet checking
+        ServerTickEvents.END_SERVER_TICK.register((server) -> {
+            long currentTime = System.currentTimeMillis();
+            long timeoutMs = 5000; // 5 second timeout
+            
+            // Check for players who haven't responded within timeout
+            waitingForVersionPacketPlayersMap.entrySet().removeIf(entry -> {
+                UUID playerUuid = entry.getKey();
+                long joinTime = entry.getValue();
+                
+                if (currentTime - joinTime > timeoutMs) {
+                    // Timeout expired, kick player
+                    ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerUuid);
+                    if (player != null) {
+                        player.networkHandler.disconnect(Text.of("Missing Lockout mod.\nServer is using Lockout v" + LockoutInitializer.MOD_VERSION.getFriendlyString() + "."));
+                    }
+                    return true; // Remove from map
+                }
+                return false; // Keep in map
+            });
+        });
+
         ServerLivingEntityEvents.AFTER_DEATH.register(new AfterDeathEventHandler());
 
         UseBlockCallback.EVENT.register(new UseBlockEventHandler());
@@ -144,16 +169,20 @@ public class LockoutServer {
 
         ServerLifecycleEvents.SERVER_STARTED.register(new ServerStartedEventHandler());
 
+        ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+            isInitialized = false;
+        });
+
         UseEntityCallback.EVENT.register(new HorseArmorEquipHandler());
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, minecraftServer) -> {
-            waitingForVersionPacketPlayersMap.remove(handler.getPlayer());
+            waitingForVersionPacketPlayersMap.remove(handler.getPlayer().getUuid());
         });
 
         ServerPlayNetworking.registerGlobalReceiver(LockoutVersionPayload.ID, (payload, context) -> {
             // Client has Lockout mod, compare versions, then kick or initialize
             ServerPlayerEntity player = context.player();
-            waitingForVersionPacketPlayersMap.remove(player);
+            waitingForVersionPacketPlayersMap.remove(player.getUuid());
 
             String version = payload.version();
             if (!version.equals(LockoutInitializer.MOD_VERSION.getFriendlyString())) {
@@ -322,7 +351,17 @@ public class LockoutServer {
                     Team team = teamPlayer.getScoreboardTeam();
                     if (team != null && team.getName().equals(playerTeam.getName())) {
                         teamPlayer.sendMessage(message, false);
-                        teamPlayer.playSound(net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), 1.0f, pitch);
+                        // Play sound directly to the player (not positional)
+                        teamPlayer.getEntityWorld().playSound(
+                            null, // No source player (global sound)
+                            teamPlayer.getX(),
+                            teamPlayer.getY(),
+                            teamPlayer.getZ(),
+                            net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(),
+                            net.minecraft.sound.SoundCategory.MASTER,
+                            1.0f,
+                            pitch
+                        );
                     }
                 }
             });
@@ -814,12 +853,103 @@ public class LockoutServer {
                         ServerPlayNetworking.send(player, StartLockoutPayload.INSTANCE);
                         if (allLockoutPlayers.contains(player.getUuid())) {
                             player.changeGameMode(GameMode.SURVIVAL);
+
+                            // Update waypoint color to match team color with variation for team members
+                            LockoutTeam playerTeam = lockout.getPlayerTeam(player.getUuid());
+                            if (playerTeam != null) {
+                            // Find player index within their team
+                            updatePlayerWaypointColor(player, playerTeam.getColor());                                
+                            }
+
                         }
                     }
                     server.getPlayerManager().broadcast(Text.literal(lockout.getModeName() + " has begun."), false);
                 }).runTaskAfter(20L * lockoutStartTime);
             }
         }
+    }
+
+
+    public static void updatePlayerWaypointColor(ServerPlayerEntity player, Formatting teamColor) {
+        try {
+            Integer colorValue = teamColor.getColorValue();
+            if (colorValue == null) {
+                return; // Skip if color has no RGB value
+            }
+
+            // Create slight color variation for team members
+            String hexColor = String.format("%06X", colorValue & 0xFFFFFF);
+            
+            String command = String.format("waypoint modify %s color hex %s", player.getName().getString(), hexColor);
+
+            // Create command source with appropriate permissions and silent execution
+            ServerCommandSource commandSource = new ServerCommandSource(
+                CommandOutput.DUMMY, // Use dummy output to suppress chat messages
+                player.getEntityPos(),
+                player.getRotationClient(),
+                player.getEntityWorld(),
+                LeveledPermissionPredicate.OWNERS, // Permission level 4 (op level)
+                player.getName().getString(),
+                Text.empty(),
+                server,
+                player
+            );
+
+            // Parse and execute the command
+            var parseResults = server.getCommandManager().getDispatcher().parse(command, commandSource);
+            server.getCommandManager().execute(parseResults, command);
+        } catch (Exception e) {
+            // Silently ignore errors to avoid disrupting game start
+            // Waypoint modification is not critical for game functionality            // Waypoint modification is not critical for game functionality
+        }
+    }
+
+    /**
+     * Creates a slight color variation for team members
+     * @param baseColor The base team color
+     * @param playerIndex The index of the player within their team
+     * @return Modified color with slight variation
+     */
+    private static int createColorVariation(int baseColor, int playerIndex) {
+        if (playerIndex == 0) {
+            return baseColor; // First player gets the original team color
+        }
+
+        // Extract RGB components
+        int r = (baseColor >> 16) & 0xFF;
+        int g = (baseColor >> 8) & 0xFF;
+        int b = baseColor & 0xFF;
+
+        // Create variation based on player index
+        // Use different multipliers for each component to create noticeable but subtle differences
+        double variation = 0.15; // 15% variation
+        int variationAmount = (int) (variation * 255);
+
+        // Apply different variations based on player index
+        switch (playerIndex % 4) {
+            case 1: // Slightly brighter
+                r = Math.min(255, r + variationAmount);
+                g = Math.min(255, g + variationAmount);
+                b = Math.min(255, b + variationAmount);
+                break;
+            case 2: // Slightly darker
+                r = Math.max(0, r - variationAmount);
+                g = Math.max(0, g - variationAmount);
+                b = Math.max(0, b - variationAmount);
+                break;
+            case 3: // Slightly more saturated (boost dominant color)
+                int maxComponent = Math.max(Math.max(r, g), b);
+                if (maxComponent == r) {
+                    r = Math.min(255, r + variationAmount);
+                } else if (maxComponent == g) {
+                    g = Math.min(255, g + variationAmount);
+                } else {
+                    b = Math.min(255, b + variationAmount);
+                }
+                break;
+        }
+
+        return (r << 16) | (g << 8) | b;
     }
 
     private static int parseArgumentsIntoTeams(List<LockoutTeamServer> teams, CommandContext<ServerCommandSource> context, boolean isBlackout) {

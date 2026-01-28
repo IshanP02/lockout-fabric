@@ -56,7 +56,8 @@
     "client.toasts.AdvancementToastMixin",
     "client.toasts.RecipeToastMixin",
     "client.toasts.SystemToastMixin",
-    "client.toasts.TutorialToastMixin"
+    "client.toasts.TutorialToastMixin",
+    "client.LocatorBarMixin"
   ],
   "injectors": {
     "defaultRequire": 1

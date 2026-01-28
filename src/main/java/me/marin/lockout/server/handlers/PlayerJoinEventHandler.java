@@ -15,6 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import java.util.UUID;
 
 import static me.marin.lockout.server.LockoutServer.waitingForVersionPacketPlayersMap;
 
@@ -23,32 +24,16 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
     public void onPlayReady(ServerPlayNetworkHandler handler, PacketSender packetSender, MinecraftServer minecraftServer) {
         // Check if the client has the correct mod version:
         // 1. Send the Lockout version packet
-        // 2. Follow it with a Minecraft ping packet (id is hash of 'username + version' string)
-        // 3. Wait for the packets.
-        // 4. If ping response is received before the version response, they don't have the mod
-        // 5. Otherwise, compare the versions, and kick them if needed.
+        // 2. Store timestamp in waiting map
+        // 3. If version response arrives within timeout, validate version
+        // 4. If timeout expires, kick player for missing mod
 
         ServerPlayerEntity player = handler.getPlayer();
-        int id = (player.getName().getString() + LockoutInitializer.MOD_VERSION.getFriendlyString()).hashCode();
 
         // Send version packet first
         ServerPlayNetworking.send(player, new LockoutVersionPayload(LockoutInitializer.MOD_VERSION.getFriendlyString()));
         
-        // Delay the ping by a few ticks to ensure the client processes the version payload first
-        // This prevents the vanilla pong from arriving before the custom payload response
-        new Thread(() -> {
-            try {
-                Thread.sleep(100); // 100ms delay (~2 ticks)
-                minecraftServer.execute(() -> {
-                    if (player.networkHandler != null && player.networkHandler.isConnectionOpen()) {
-                        player.networkHandler.sendPacket(new CommonPingS2CPacket(id));
-                        waitingForVersionPacketPlayersMap.put(player, id);
-                    }
-                });
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-        }).start();
+        waitingForVersionPacketPlayersMap.put(player.getUuid(), System.currentTimeMillis());
         
         // Always sync server-side picks/bans to the joining player (even if empty, to clear client-side data)
         ServerPlayNetworking.send(player, new UpdatePicksBansPayload(

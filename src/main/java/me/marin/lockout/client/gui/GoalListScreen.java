@@ -7,6 +7,7 @@ import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.Identifier;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.input.KeyInput;
@@ -855,21 +856,36 @@ public class GoalListScreen extends Screen {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
         
-        // Try to find the player in the current world
+        // First try to find the player in the world (for players nearby)
         var player = client.world.getPlayers().stream()
             .filter(p -> p.getName().getString().equals(playerName))
             .findFirst()
             .orElse(null);
         
-        if (player != null) {
+        SkinTextures skinTextures = null;
+        
+        if (player != null && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
+            // Player is in world, use their skin directly
+            skinTextures = clientPlayer.getSkin();
+        } else if (client.getNetworkHandler() != null) {
+            // Player not in world, try to get from player list (Tab list)
+            var playerListEntry = client.getNetworkHandler().getPlayerList().stream()
+                    .filter(entry -> entry.getProfile().name().equals(playerName))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (playerListEntry != null) {
+                skinTextures = playerListEntry.getSkinTextures();
+            }
+        }
+        
+        if (skinTextures != null) {
             // Draw 2px border around the face
             int borderWidth = 2;
             context.fill(x - borderWidth, y - borderWidth, x + 16 + borderWidth, y + 16 + borderWidth, borderColor);
             
             // Use PlayerSkinDrawer for accurate 2D player face rendering
-            if (player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
-                net.minecraft.client.gui.PlayerSkinDrawer.draw(context, clientPlayer.getSkin(), x, y, 16);
-            }
+            net.minecraft.client.gui.PlayerSkinDrawer.draw(context, skinTextures, x, y, 16);
         }
     }
 
