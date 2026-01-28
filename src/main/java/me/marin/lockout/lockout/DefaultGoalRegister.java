@@ -372,7 +372,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SAPLINGS, Obtain4UniqueSaplingsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SEEDS, Obtain4UniqueSeedsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_PRESSURE_PLATES, Obtain5UniquePressurePlatesGoal.class);
-        INSTANCE.register(GoalType.OBTAIN_5_UNIQUE_STONE_TYPES, Obtain5UniqueStoneGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_6_UNIQUE_BRICK_TYPES, Obtain6UniqueBricksGoal.class);
         INSTANCE.register(GoalType.OBTAIN_6_UNIQUE_BUCKETS, Obtain6UniqueBucketsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_6_UNIQUE_FLOWERS, Obtain6UniqueFlowersGoal.class);
         INSTANCE.register(GoalType.OBTAIN_7_UNIQUE_WORKSTATIONS, Obtain7WorkstationsGoal.class);
