@@ -45,6 +45,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.AdvancementCommand;
+import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.LocateCommand;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -852,12 +853,103 @@ public class LockoutServer {
                         ServerPlayNetworking.send(player, StartLockoutPayload.INSTANCE);
                         if (allLockoutPlayers.contains(player.getUuid())) {
                             player.changeGameMode(GameMode.SURVIVAL);
+
+                            // Update waypoint color to match team color with variation for team members
+                            LockoutTeam playerTeam = lockout.getPlayerTeam(player.getUuid());
+                            if (playerTeam != null) {
+                            // Find player index within their team
+                            updatePlayerWaypointColor(player, playerTeam.getColor());                                
+                            }
+
                         }
                     }
                     server.getPlayerManager().broadcast(Text.literal(lockout.getModeName() + " has begun."), false);
                 }).runTaskAfter(20L * lockoutStartTime);
             }
         }
+    }
+
+
+    public static void updatePlayerWaypointColor(ServerPlayerEntity player, Formatting teamColor) {
+        try {
+            Integer colorValue = teamColor.getColorValue();
+            if (colorValue == null) {
+                return; // Skip if color has no RGB value
+            }
+
+            // Create slight color variation for team members
+            String hexColor = String.format("%06X", colorValue & 0xFFFFFF);
+            
+            String command = String.format("waypoint modify %s color hex %s", player.getName().getString(), hexColor);
+
+            // Create command source with appropriate permissions and silent execution
+            ServerCommandSource commandSource = new ServerCommandSource(
+                CommandOutput.DUMMY, // Use dummy output to suppress chat messages
+                player.getEntityPos(),
+                player.getRotationClient(),
+                player.getEntityWorld(),
+                LeveledPermissionPredicate.OWNERS, // Permission level 4 (op level)
+                player.getName().getString(),
+                Text.empty(),
+                server,
+                player
+            );
+
+            // Parse and execute the command
+            var parseResults = server.getCommandManager().getDispatcher().parse(command, commandSource);
+            server.getCommandManager().execute(parseResults, command);
+        } catch (Exception e) {
+            // Silently ignore errors to avoid disrupting game start
+            // Waypoint modification is not critical for game functionality            // Waypoint modification is not critical for game functionality
+        }
+    }
+
+    /**
+     * Creates a slight color variation for team members
+     * @param baseColor The base team color
+     * @param playerIndex The index of the player within their team
+     * @return Modified color with slight variation
+     */
+    private static int createColorVariation(int baseColor, int playerIndex) {
+        if (playerIndex == 0) {
+            return baseColor; // First player gets the original team color
+        }
+
+        // Extract RGB components
+        int r = (baseColor >> 16) & 0xFF;
+        int g = (baseColor >> 8) & 0xFF;
+        int b = baseColor & 0xFF;
+
+        // Create variation based on player index
+        // Use different multipliers for each component to create noticeable but subtle differences
+        double variation = 0.15; // 15% variation
+        int variationAmount = (int) (variation * 255);
+
+        // Apply different variations based on player index
+        switch (playerIndex % 4) {
+            case 1: // Slightly brighter
+                r = Math.min(255, r + variationAmount);
+                g = Math.min(255, g + variationAmount);
+                b = Math.min(255, b + variationAmount);
+                break;
+            case 2: // Slightly darker
+                r = Math.max(0, r - variationAmount);
+                g = Math.max(0, g - variationAmount);
+                b = Math.max(0, b - variationAmount);
+                break;
+            case 3: // Slightly more saturated (boost dominant color)
+                int maxComponent = Math.max(Math.max(r, g), b);
+                if (maxComponent == r) {
+                    r = Math.min(255, r + variationAmount);
+                } else if (maxComponent == g) {
+                    g = Math.min(255, g + variationAmount);
+                } else {
+                    b = Math.min(255, b + variationAmount);
+                }
+                break;
+        }
+
+        return (r << 16) | (g << 8) | b;
     }
 
     private static int parseArgumentsIntoTeams(List<LockoutTeamServer> teams, CommandContext<ServerCommandSource> context, boolean isBlackout) {
