@@ -130,13 +130,14 @@ public class DropdownGoalsPanel extends ClickableWidget {
                 .orElse(null);
 
         SkinTextures skinTextures = null;
+        net.minecraft.client.network.PlayerListEntry playerListEntry = null;
         
         if (player != null && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
             // Player is in world, use their skin directly
             skinTextures = clientPlayer.getSkin();
         } else if (client.getNetworkHandler() != null) {
             // Player not in world, try to get from player list (Tab list)
-            var playerListEntry = client.getNetworkHandler().getPlayerList().stream()
+            playerListEntry = client.getNetworkHandler().getPlayerList().stream()
                     .filter(entry -> entry.getProfile().name().equals(playerName))
                     .findFirst()
                     .orElse(null);
@@ -155,8 +156,16 @@ public class DropdownGoalsPanel extends ClickableWidget {
 
         // Team flag (from local cache if present)
         Identifier flagTexture = flagCache.get(playerName);
-        if (flagTexture == null && player != null) {
-            Team team = player.getScoreboardTeam();
+        if (flagTexture == null) {
+            Team team = null;
+            if (player != null) {
+                team = player.getScoreboardTeam();
+            } else if (playerListEntry != null && client.world != null) {
+                // Get team from scoreboard using player name
+                var scoreboard = client.world.getScoreboard();
+                team = scoreboard.getScoreHolderTeam(playerName);
+            }
+            
             if (team != null && team.getColor() != null) {
                 flagTexture = getFlagTexture(team.getColor());
             }
