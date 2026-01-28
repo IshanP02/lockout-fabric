@@ -22,6 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.client.gui.PlayerSkinDrawer;
+import net.minecraft.entity.player.SkinTextures;
 import org.apache.commons.lang3.text.WordUtils;
 
 import java.awt.*;
@@ -122,22 +123,39 @@ public class DropdownGoalsPanel extends ClickableWidget {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
 
+        // First try to find the player in the world (for players nearby)
         var player = client.world.getPlayers().stream()
                 .filter(p -> p.getName().getString().equals(playerName))
                 .findFirst()
                 .orElse(null);
 
-        if (player == null) return;
-        if (!(player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer)) return;
+        SkinTextures skinTextures = null;
+        
+        if (player != null && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
+            // Player is in world, use their skin directly
+            skinTextures = clientPlayer.getSkin();
+        } else if (client.getNetworkHandler() != null) {
+            // Player not in world, try to get from player list (Tab list)
+            var playerListEntry = client.getNetworkHandler().getPlayerList().stream()
+                    .filter(entry -> entry.getProfile().name().equals(playerName))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (playerListEntry != null) {
+                skinTextures = playerListEntry.getSkinTextures();
+            }
+        }
+
+        if (skinTextures == null) return;
 
         int size = 16;
         
         // Use Minecraft's PlayerSkinDrawer to render the face and hat overlay
-        net.minecraft.client.gui.PlayerSkinDrawer.draw(context, clientPlayer.getSkin(), x, y, size);
+        PlayerSkinDrawer.draw(context, skinTextures, x, y, size);
 
         // Team flag (from local cache if present)
         Identifier flagTexture = flagCache.get(playerName);
-        if (flagTexture == null) {
+        if (flagTexture == null && player != null) {
             Team team = player.getScoreboardTeam();
             if (team != null && team.getColor() != null) {
                 flagTexture = getFlagTexture(team.getColor());
