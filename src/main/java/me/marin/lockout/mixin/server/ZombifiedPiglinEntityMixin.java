@@ -1,11 +1,14 @@
 package me.marin.lockout.mixin.server;
-
+import me.marin.lockout.lockout.goals.misc.AngerZombifiedPiglinGoal;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.misc.AngerZombifiedPiglinGoal;
-import me.marin.lockout.server.LockoutServer;
+import net.minecraft.entity.mob.ZombifiedPiglinEntity;import me.marin.lockout.server.LockoutServer;
+import net.minecraft.entity.LazyEntityReference;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ZombifiedPiglinEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,13 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+       
 @Mixin(ZombifiedPiglinEntity.class)
 public class ZombifiedPiglinEntityMixin {
 
     @Inject(method = "setAngryAt", at = @At("HEAD"))
-    public void setAngryAt(UUID angryAt, CallbackInfo ci) {
+    public void setAngryAt(@Nullable LazyEntityReference<LivingEntity> angryAt, CallbackInfo ci) {
         ZombifiedPiglinEntity pigman = (ZombifiedPiglinEntity) (Object) this;
-        if (pigman.getWorld().isClient) return;
+        if (pigman.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) {
@@ -28,12 +32,14 @@ public class ZombifiedPiglinEntityMixin {
 
         ServerPlayerEntity player;
         try {
-            player = pigman.getServer().getPlayerManager().getPlayer(angryAt);
-            if (player == null) {
-                return;
+            LivingEntity target = angryAt.getEntityByClass(pigman.getEntityWorld(), LivingEntity.class);
+            if (target instanceof ServerPlayerEntity serverPlayer) {
+                 player = serverPlayer;
+            } else {
+                 return;
             }
-        } catch (Exception ignored) {
-            // angryAt UUID does not belong to a player, ignore
+        } catch (Exception e) {
+            e.printStackTrace();
             return;
         }
 
@@ -46,5 +52,4 @@ public class ZombifiedPiglinEntityMixin {
             return;
         }
     }
-
 }

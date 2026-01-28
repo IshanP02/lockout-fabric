@@ -29,7 +29,7 @@ public class FoodComponentMixin {
     @Inject(method = "onConsume", at = @At("HEAD"))
     public void onConsume(World world, LivingEntity user, ItemStack itemStack, ConsumableComponent consumable, CallbackInfo ci) {
 
-        if (world.isClient) return;
+        if (world.isClient()) return;
 
         if (!(user instanceof PlayerEntity player)) return;
 

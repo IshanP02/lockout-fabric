@@ -9,10 +9,12 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ScrollableWidget;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -22,6 +24,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import me.marin.lockout.Lockout;
 import me.marin.lockout.LocateData;
 import me.marin.lockout.client.LockoutClient;
 import me.marin.lockout.generator.GoalRequirements;
@@ -58,6 +61,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             registeredGoals.putIfAbsent(id, new GoalEntry(id));
         }
         visibleEntries = buildEntriesWithHeaders(new ArrayList<>(registeredGoals.values()));
+        
         searchUpdated(initialSearch != null ? initialSearch : "");
     }
 
@@ -112,19 +116,23 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         hovered = this.isMouseOver(mouseX, mouseY) ? this.getEntryAtPosition(mouseX, mouseY) : null;
 
         context.enableScissor(this.left - 1, this.top, this.right + 1, getY() + getHeight());
+        
 
         int y = 4;
         int idx = 0;
         for (Entry entry : visibleEntries) {
             int entryHeight = entry.getHeight();
-            entry.render(context, idx++, getY() + y - (int)getScrollY() - 3, getX() + MARGIN_X, rowWidth - 4, entryHeight, mouseX, mouseY, Objects.equals(entry, hovered), delta);
+            int entryY = getY() + y - (int)getScrollY() - 3;
+            
+            // (debug overlays removed)
+            entry.render(context, idx++, entryY, Objects.equals(entry, hovered), delta);
             y += entryHeight;
         }
 
         // (Buttons removed, nothing to draw here)
 
         context.disableScissor();
-        this.drawScrollbar(context);
+        this.drawScrollbar(context, mouseX, mouseY);
     }
 
     protected final Entry getEntryAtPosition(double x, double y) {
@@ -161,10 +169,13 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
 
     public void searchUpdated(String search) {
         setScrollY(0);
+        
         List<GoalEntry> filteredGoals = new ArrayList<>(registeredGoals.values()).stream()
             .filter(goalEntry -> goalEntry.displayName.toLowerCase().contains(search.toLowerCase()))
             .collect(Collectors.toList());
         visibleEntries = buildEntriesWithHeaders(filteredGoals);
+        String sample = filteredGoals.stream().limit(5).map(g -> g.displayName).collect(Collectors.joining(", "));
+        
     }
     
     /**
@@ -192,10 +203,14 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             registeredGoals.putIfAbsent(id, new GoalEntry(id));
         }
         visibleEntries = buildEntriesWithHeaders(new ArrayList<>(registeredGoals.values()));
+        
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubleClick) {
+        int button = click.button();
+        double mouseX = click.x();
+        double mouseY = click.y();
         if (hovered instanceof GoalEntry hoveredGoal && enablePickBan) {
             String goalId = hoveredGoal.goal.getId();
             
@@ -208,15 +223,14 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
                 return true; // Block the click
             }
             
-            // Check if there's an active pick/ban session
             me.marin.lockout.network.UpdatePickBanSessionPayload session = me.marin.lockout.client.ClientPickBanSessionHolder.getActiveSession();
-            
+
             // During a session, use PENDING lists for temporary selections; otherwise use PICKS/BANS
-            List<String> picks = session != null 
-                ? me.marin.lockout.generator.GoalGroup.PENDING_PICKS.getGoals() 
+            List<String> picks = session != null
+                ? me.marin.lockout.generator.GoalGroup.PENDING_PICKS.getGoals()
                 : me.marin.lockout.generator.GoalGroup.PICKS.getGoals();
-            List<String> bans = session != null 
-                ? me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals() 
+            List<String> bans = session != null
+                ? me.marin.lockout.generator.GoalGroup.PENDING_BANS.getGoals()
                 : me.marin.lockout.generator.GoalGroup.BANS.getGoals();
             
             // Check if goal is locked in PICKS or BANS (all locked goals from all teams)
@@ -317,16 +331,16 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
                     MinecraftClient.getInstance().player.sendMessage(Text.literal("Added to Bans!"), false);
                 }
             }
-            MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             return true;
         }
         if (hovered instanceof GoalEntry hoveredGoal2 && !enablePickBan) {
             BoardBuilderData.INSTANCE.setGoal(hoveredGoal2.goal);
-            MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             return true;
         }
-        var bl = checkScrollbarDragged(mouseX, mouseY, button);
-        return super.mouseClicked(mouseX, mouseY, button) || bl;
+        var bl = checkScrollbarDragged(click);
+        return super.mouseClicked(click, doubleClick) || bl;
     }
 
     // Helper to get the Y position for the buttons for the selected goal
@@ -402,7 +416,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         }
         
         @Override
-        public abstract void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta);
+        public abstract void render(DrawContext context, int index, int y, boolean hovered, float tickDelta);
     }
     
     public final class HeaderEntry extends Entry {
@@ -418,18 +432,21 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         }
         
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int index, int y, boolean hovered, float tickDelta) {
+            int x = BoardBuilderSearchWidget.this.left;
+            int entryWidth = rowWidth - 4;
+            int entryHeight = getHeight();
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-            
+
             // Draw a subtle background
             context.fill(x - 1, y, x + entryWidth + 2, y + entryHeight, 0x66000000);
-            
+
             // Draw category name bold and centered in gold/yellow
             Text boldText = Text.literal(categoryName);
             int textWidth = textRenderer.getWidth(boldText);
             int centerX = x + (entryWidth / 2) - (textWidth / 2);
-            context.drawTextWithShadow(textRenderer, boldText, centerX, y + 4, 0xFFFFAA00);
-            
+            context.drawText(textRenderer, boldText, centerX, y + 4, 0xFFFFAA00, true);
+
             // Draw a line underneath
             context.fill(x, y + entryHeight - 1, x + entryWidth, y + entryHeight, 0xFFFFAA00);
         }
@@ -462,7 +479,10 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int index, int y, boolean hovered, float tickDelta) {
+            int x = BoardBuilderSearchWidget.this.left;
+            int entryWidth = rowWidth - 4;
+            int entryHeight = getHeight();
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
             // Check if goal is locked (in PICKS or BANS, but not PENDING)
@@ -488,17 +508,20 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
             }
 
             goal.render(context, textRenderer, x, y);
-            context.drawTextWithShadow(textRenderer, displayName, x + 18, y + 5, Color.WHITE.getRGB());
+            context.drawText(textRenderer, displayName, x + 18, y + 5, Color.WHITE.getRGB(), true);
             
             // Gray out locked goals or board type excluded goals (only in pick/ban GUI)
             if (enablePickBan && (isLocked || isExcluded)) {
                 context.fill(x - 1, y, x + entryWidth + 2, y + entryHeight - 1, 0x88000000); // semi-transparent black overlay
             }
             
-            // Only show hover border if goal is not excluded
-            if (hovered && !isExcluded) {
-                context.drawBorder(x - 1, y - 1, entryWidth + 2, entryHeight, Color.LIGHT_GRAY.getRGB());
-            }
+                // Only show hover border if goal is not excluded
+                if (hovered && !isExcluded) {
+                    context.fill(x - 2, y - 2, x + entryWidth + 3, y - 1, Color.LIGHT_GRAY.getRGB());
+                    context.fill(x - 2, y + entryHeight, x + entryWidth + 3, y + entryHeight + 1, Color.LIGHT_GRAY.getRGB());
+                    context.fill(x - 2, y - 1, x - 1, y + entryHeight, Color.LIGHT_GRAY.getRGB());
+                    context.fill(x + entryWidth + 2, y - 1, x + entryWidth + 3, y + entryHeight, Color.LIGHT_GRAY.getRGB());
+                }
         }
     }
 

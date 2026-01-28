@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ObtainWoodenToolsGoal extends ObtainAllItemsGoal {
 
-    private static final List<Item> ITEMS = List.of(Items.WOODEN_AXE, Items.WOODEN_HOE, Items.WOODEN_PICKAXE, Items.WOODEN_SWORD, Items.WOODEN_SHOVEL);
+    private static final List<Item> ITEMS = List.of(Items.WOODEN_AXE, Items.WOODEN_HOE, Items.WOODEN_PICKAXE, Items.WOODEN_SWORD, Items.WOODEN_SHOVEL, Items.WOODEN_SPEAR);
 
     public ObtainWoodenToolsGoal(String id, String data) {
         super(id, data);

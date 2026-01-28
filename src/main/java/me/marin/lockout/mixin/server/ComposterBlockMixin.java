@@ -20,7 +20,7 @@ public class ComposterBlockMixin {
 
     @Inject(method = "emptyFullComposter", at = @At("RETURN"))
     private static void emptyFullComposterMixin(Entity user, BlockState state, World world, BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
-        if (user.getWorld().isClient) return;
+        if (user.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!(user instanceof PlayerEntity player)) return;

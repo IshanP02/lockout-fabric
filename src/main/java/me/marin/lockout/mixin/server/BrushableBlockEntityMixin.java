@@ -21,7 +21,7 @@ public class BrushableBlockEntityMixin {
     public void finishBrushing(ServerWorld world, LivingEntity brusher, ItemStack brush, CallbackInfo ci) {
         if (brusher instanceof PlayerEntity player)
         {
-            if (player.getWorld().isClient) return;
+            if (player.getEntityWorld().isClient()) return;
             Lockout lockout = LockoutServer.lockout;
             if (!Lockout.isLockoutRunning(lockout)) return;
 

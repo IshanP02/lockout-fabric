@@ -22,7 +22,7 @@ public class LivingEntityMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!(source.getAttacker() instanceof PlayerEntity player) || !cir.getReturnValue()) return;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         if (!lockout.isLockoutPlayer(player.getUuid())) return;
         LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());

@@ -31,10 +31,24 @@ public class PlayerJoinEventHandler implements ServerPlayConnectionEvents.Join {
         ServerPlayerEntity player = handler.getPlayer();
         int id = (player.getName().getString() + LockoutInitializer.MOD_VERSION.getFriendlyString()).hashCode();
 
+        // Send version packet first
         ServerPlayNetworking.send(player, new LockoutVersionPayload(LockoutInitializer.MOD_VERSION.getFriendlyString()));
-        player.networkHandler.sendPacket(new CommonPingS2CPacket(id));
-
-        waitingForVersionPacketPlayersMap.put(player, id);
+        
+        // Delay the ping by a few ticks to ensure the client processes the version payload first
+        // This prevents the vanilla pong from arriving before the custom payload response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100); // 100ms delay (~2 ticks)
+                minecraftServer.execute(() -> {
+                    if (player.networkHandler != null && player.networkHandler.isConnectionOpen()) {
+                        player.networkHandler.sendPacket(new CommonPingS2CPacket(id));
+                        waitingForVersionPacketPlayersMap.put(player, id);
+                    }
+                });
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+        }).start();
         
         // Always sync server-side picks/bans to the joining player (even if empty, to clear client-side data)
         ServerPlayNetworking.send(player, new UpdatePicksBansPayload(

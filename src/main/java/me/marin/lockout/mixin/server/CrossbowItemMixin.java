@@ -22,7 +22,7 @@ public class CrossbowItemMixin {
 
     @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/CrossbowItem;shootAll(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;FFLnet/minecraft/entity/LivingEntity;)V"))
     public void onShoot(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<ActionResult> cir, @Local ChargedProjectilesComponent chargedProjectilesComponent) {
-        if (world.isClient) return;
+        if (world.isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;

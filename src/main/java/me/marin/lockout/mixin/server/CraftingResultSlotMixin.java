@@ -36,7 +36,7 @@ public class CraftingResultSlotMixin {
 
     @Inject(method = "onCrafted(Lnet/minecraft/item/ItemStack;)V", at = @At("HEAD"))
     public void onCraft(ItemStack stack, CallbackInfo ci) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
@@ -56,7 +56,7 @@ public class CraftingResultSlotMixin {
             if (goal == null) continue;
 
             if (goal instanceof HaveMostUniqueCraftsGoal) {
-                player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE.value(), SoundCategory.BLOCKS, 2, 2);
+                player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE.value(), 2f, 2f);
                 if (crafts.size() % 5 == 0) {
                     player.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have crafted " + crafts.size() + " unique items."), false);
                 }

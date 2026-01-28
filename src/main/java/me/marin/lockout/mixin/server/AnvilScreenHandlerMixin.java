@@ -17,7 +17,7 @@ public class AnvilScreenHandlerMixin {
 
     @Inject(method = "onTakeOutput", at = @At("TAIL"))
     public void onTakeOutputMixin(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

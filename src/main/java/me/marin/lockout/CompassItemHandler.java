@@ -13,9 +13,12 @@ import java.util.*;
 public class CompassItemHandler {
 
     public static boolean isCompass(ItemStack item) {
-        return item != null &&
-                item.getItem() == Items.COMPASS &&
-                Optional.ofNullable(item.get(DataComponentTypes.CUSTOM_DATA)).map(customData -> customData.contains("PlayerTracker")).orElse(false);
+        if (item == null) return false;
+        if (item.getItem() != Items.COMPASS) return false;
+        var customData = item.get(DataComponentTypes.CUSTOM_DATA);
+        if (customData == null) return false;
+        // New NbtComponent API differs across mappings; use string inspection as a stable fallback
+        return customData.toString().contains("PlayerTracker");
     }
 
     public final List<UUID> players = new ArrayList<>();

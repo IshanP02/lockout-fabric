@@ -7,7 +7,6 @@ import me.marin.lockout.server.LockoutServer;
 import me.marin.lockout.server.handlers.HorseArmorEquipHandler;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.MapIdComponent;
-import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -15,6 +14,7 @@ import net.minecraft.item.map.MapState;
 import net.minecraft.screen.CartographyTableScreenHandler;
 import net.minecraft.screen.HorseScreenHandler;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -26,81 +26,136 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ScreenHandler.class)
 public abstract class ScreenHandlerMixin {
 
+    // Snapshot of horse armor slot before click
+    private ItemStack lockout$prevHorseArmorStack = ItemStack.EMPTY;
+
+    /* ---------------- Capture BEFORE click ---------------- */
+
     @Inject(method = "onSlotClick", at = @At("HEAD"))
-    private void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player, CallbackInfo ci) {
-        if (player.getWorld().isClient) return;
+    private void lockout$onSlotClickHead(
+            int slotIndex,
+            int button,
+            SlotActionType actionType,
+            PlayerEntity player,
+            CallbackInfo ci
+    ) {
+        if (!(player instanceof ServerPlayerEntity)) return;
 
-        // Only cartography tables
-        if (!(player.currentScreenHandler instanceof CartographyTableScreenHandler)) {
-            return;
+        ScreenHandler handler = player.currentScreenHandler;
+        if (handler instanceof HorseScreenHandler horseHandler) {
+            // Horse armor slot is ALWAYS index 1
+            Slot horseArmorSlot = horseHandler.getSlot(1);
+            if (horseArmorSlot != null) {
+                lockout$prevHorseArmorStack = horseArmorSlot.getStack().copy();
+            }
         }
-
-        // Output slot
-        if (slotIndex != 2) return;
-
-        // Normal click or shift-click
-        if (actionType != SlotActionType.PICKUP && actionType != SlotActionType.QUICK_MOVE) {
-            return;
-        }
-
-        // Schedule check for next tick (map is locked AFTER click handling)
-        player.getServer().execute(() -> checkForLockedMap(player));
     }
 
-    @Inject(
-        method = "onSlotClick",
-        at = @At("TAIL")
-    )
-    private void lockout$onSlotClick(
-        int slotIndex,
-        int button,
-        SlotActionType actionType,
-        PlayerEntity player,
-        CallbackInfo ci
+    /* ---------------- Process AFTER click ---------------- */
+
+    @Inject(method = "onSlotClick", at = @At("RETURN"))
+    private void lockout$onSlotClickReturn(
+            int slotIndex,
+            int button,
+            SlotActionType actionType,
+            PlayerEntity player,
+            CallbackInfo ci
     ) {
+        if (player.getEntityWorld().isClient()) return;
         if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
-        
-        ScreenHandler self = (ScreenHandler) (Object) this;
 
-        if (!(self instanceof HorseScreenHandler horseHandler)) return;
+        ScreenHandler handler = player.currentScreenHandler;
+        if (handler == null) return;
 
-        if (slotIndex != 1) return;
+        // --- Cartography table ---
+        if (handler instanceof CartographyTableScreenHandler) {
+            handleCartographyClick(player, slotIndex, actionType);
+        }
 
-        // Use the accessor to get the entity field
-        AbstractHorseEntity horse = ((HorseScreenHandlerAccessor) horseHandler).getEntity();
-        if (!horse.isTame()) return;
+        // --- Horse armor ---
+        else if (handler instanceof HorseScreenHandler horseHandler) {
+            handleHorseArmorPlacement(serverPlayer, horseHandler, actionType);
+        }
+    }
 
-        ItemStack armor = horse.getBodyArmor();
-        if (armor.isEmpty()) return;
+    /* ---------------- Horse armor logic ---------------- */
 
-        // Use the existing HorseArmorEquipHandler to check and complete the goal
-        HorseArmorEquipHandler.checkAndCompleteHorseArmorGoal(serverPlayer, armor);
+   private void handleHorseArmorPlacement(
+        ServerPlayerEntity player,
+        HorseScreenHandler handler,
+        SlotActionType actionType
+) {
+    // Ignore creative-only and nonsense actions
+    if (actionType == SlotActionType.CLONE) {
+        lockout$prevHorseArmorStack = ItemStack.EMPTY;
+        return;
+    }
+
+    // Horse armor slot is index 1
+    Slot horseArmorSlot = handler.getSlot(1);
+    if (horseArmorSlot == null) {
+        lockout$prevHorseArmorStack = ItemStack.EMPTY;
+        return;
+    }
+
+    ItemStack currentStack = horseArmorSlot.getStack();
+
+    boolean beforeWasArmor = isHorseArmor(lockout$prevHorseArmorStack);
+    boolean afterIsArmor = isHorseArmor(currentStack);
+
+    // New placement
+    if (!beforeWasArmor && afterIsArmor) {
+        HorseArmorEquipHandler.checkAndCompleteHorseArmorGoal(player, currentStack);
+    }
+
+    // Replacement (INCLUDING dyed leather → dyed leather)
+    else if (beforeWasArmor && afterIsArmor
+            && !ItemStack.areEqual(lockout$prevHorseArmorStack, currentStack)) {
+        HorseArmorEquipHandler.checkAndCompleteHorseArmorGoal(player, currentStack);
+    }
+
+    // ❌ Removal is ignored automatically
+
+    lockout$prevHorseArmorStack = ItemStack.EMPTY;
+}
+
+    private boolean isHorseArmor(ItemStack stack) {
+        return stack != null && (
+                stack.getItem() == Items.LEATHER_HORSE_ARMOR ||
+                stack.getItem() == Items.IRON_HORSE_ARMOR ||
+                stack.getItem() == Items.GOLDEN_HORSE_ARMOR ||
+                stack.getItem() == Items.DIAMOND_HORSE_ARMOR
+        );
+    }
+
+    /* ---------------- Cartography table ---------------- */
+
+    private void handleCartographyClick(PlayerEntity player, int slotIndex, SlotActionType actionType) {
+        if (slotIndex != 2) return;
+        if (actionType != SlotActionType.PICKUP && actionType != SlotActionType.QUICK_MOVE) return;
+
+        player.getEntityWorld().getServer().execute(() -> checkForLockedMap(player));
     }
 
     private static void checkForLockedMap(PlayerEntity player) {
-        if (player.getWorld().isClient) return;
-        
+        if (player.getEntityWorld().isClient()) return;
+
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        ServerWorld world = (ServerWorld) player.getWorld();
+        ServerWorld world = (ServerWorld) player.getEntityWorld();
 
-        // Scan player inventory for a locked map
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack stack = player.getInventory().getStack(i);
             if (stack.getItem() != Items.FILLED_MAP) continue;
 
-            MapIdComponent mapIdComponent = stack.get(DataComponentTypes.MAP_ID);
-            if (mapIdComponent == null) continue;
+            MapIdComponent id = stack.get(DataComponentTypes.MAP_ID);
+            if (id == null) continue;
 
-            MapState mapState = world.getMapState(mapIdComponent);
-            if (mapState != null && mapState.locked) {
-                // Found a locked map - complete the goal
+            MapState state = world.getMapState(id);
+            if (state != null && state.locked) {
                 for (Goal goal : lockout.getBoard().getGoals()) {
-                    if (goal == null) continue;
-                    if (goal.isCompleted()) continue;
-
-                    if (goal instanceof LockMapUsingCartographyTableGoal) {
+                    if (goal instanceof LockMapUsingCartographyTableGoal && !goal.isCompleted()) {
                         lockout.completeGoal(goal, player);
                         return;
                     }
@@ -108,5 +163,4 @@ public abstract class ScreenHandlerMixin {
             }
         }
     }
-
 }

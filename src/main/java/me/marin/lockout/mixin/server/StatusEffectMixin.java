@@ -21,7 +21,7 @@ public class StatusEffectMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!(entity instanceof PlayerEntity player)) return;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;

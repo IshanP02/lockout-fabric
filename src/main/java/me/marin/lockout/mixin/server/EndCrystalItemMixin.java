@@ -17,7 +17,7 @@ public class EndCrystalItemMixin {
 
     @Inject(method = "useOnBlock", at = @At("RETURN"))
     public void onUseOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
-        if (context.getWorld().isClient) return;
+        if (context.getWorld().isClient()) return;
         if (cir.getReturnValue() != ActionResult.SUCCESS) return;
 
         Lockout lockout = LockoutServer.lockout;

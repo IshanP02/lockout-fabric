@@ -35,6 +35,7 @@ import me.marin.lockout.lockout.goals.obtain.*;
 import me.marin.lockout.lockout.goals.opponent.*;
 import me.marin.lockout.lockout.goals.ride.RideHorseGoal;
 import me.marin.lockout.lockout.goals.ride.RideMinecartGoal;
+import me.marin.lockout.lockout.goals.ride.RideNautilusGoal;
 import me.marin.lockout.lockout.goals.ride.RidePigGoal;
 import me.marin.lockout.lockout.goals.status_effect.*;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get3StatusEffectsGoal;
@@ -67,6 +68,7 @@ public class DefaultGoalRegister {
     public static void registerGoals() {
         INSTANCE.register(GoalType.OBTAIN_WOODEN_TOOLS, ObtainWoodenToolsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_STONE_TOOLS, ObtainStoneToolsGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_COPPER_TOOLS, ObtainCopperToolsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_IRON_TOOLS, ObtainIronToolsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_GOLDEN_TOOLS, ObtainGoldenToolsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_DIAMOND_TOOLS, ObtainDiamondToolsGoal.class);
@@ -78,6 +80,7 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.BREAK_ANY_TOOL, BreakAnyToolGoal.class);
         INSTANCE.register(GoalType.WEAR_LEATHER_ARMOR, WearLeatherArmorGoal.class);
+        INSTANCE.register(GoalType.WEAR_COPPER_ARMOR, WearCopperArmorGoal.class);
         INSTANCE.register(GoalType.WEAR_IRON_ARMOR, WearIronArmorGoal.class);
         INSTANCE.register(GoalType.WEAR_GOLDEN_ARMOR, WearGoldenArmorGoal.class);
         INSTANCE.register(GoalType.WEAR_DIAMOND_ARMOR, WearDiamondArmorGoal.class);
@@ -120,6 +123,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
+        INSTANCE.register(GoalType.RIDE_NAUTILUS, RideNautilusGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(BADLANDS, ERODED_BADLANDS, WOODED_BADLANDS))
+                        .build()
+                );
         INSTANCE.register(GoalType.VISIT_10_UNIQUE_BIOMES, Visit10UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_15_UNIQUE_BIOMES, Visit15UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_20_UNIQUE_BIOMES, Visit20UniqueBiomesGoal.class);
@@ -476,6 +483,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_HIRED_HELP_ADVANCEMENT, GetHiredHelpAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_NOT_QUITE_NINE_LIVES_ADVANCEMENT, GetNotQuiteNineLivesAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_OH_SHINY_ADVANCEMENT, GetOhShinyAdvancementGoal.class);
+        INSTANCE.register(GoalType.GET_MOB_KABOB_ADVANCEMENT, GetMobKabobAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_SNIPER_DUEL_ADVANCEMENT, GetSniperDuelAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_STAY_HYDRATED_ADVANCEMENT, GetStayHydratedAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_THIS_BOAT_HAS_LEGS_ADVANCEMENT, GetThisBoatHasLegsAdvancementGoal.class);
@@ -518,11 +526,13 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.DEAL_400_DAMAGE, Deal400DamageGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_8_UNIQUE_SOURCES, DamagedBy8UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_12_UNIQUE_SOURCES, DamagedBy12UniqueSourcesGoal.class);
+        INSTANCE.register(GoalType.CONSTRUCT_COPPER_GOLEM, ConstructCopperGolemGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
         INSTANCE.register(GoalType.FILL_BUNDLE_WITH_BUNDLES, FillBundleWithBundlesGoal.class);
         INSTANCE.register(GoalType.FILL_CAMPFIRE, FillCampfireWithFoodGoal.class);
         INSTANCE.register(GoalType.FILL_CHISELED_BOOKSHELF, FillChiseledBookshelfGoal.class);
         INSTANCE.register(GoalType.FILL_INVENTORY_UNIQUE_ITEMS, FillInventoryWithUniqueItemsGoal.class);
+        INSTANCE.register(GoalType.FILL_SHELF_WITH_SHELVES, FillShelfWithShelvesGoal.class);
         INSTANCE.register(GoalType.ITEM_FRAME_IN_ITEM_FRAME, ItemFrameInItemFrameGoal.class);
         INSTANCE.register(GoalType.LIGHT_CANDLE, LightCandleGoal.class);
         INSTANCE.register(GoalType.PLACE_END_CRYSTAL, PlaceEndCrystalGoal.class);

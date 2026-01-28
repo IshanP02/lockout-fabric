@@ -38,18 +38,20 @@ import net.minecraft.server.command.ServerCommandSource;
 import me.marin.lockout.generator.GoalGroup;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.command.permission.LeveledPermissionPredicate;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static me.marin.lockout.Constants.MAX_BOARD_SIZE;
-import static me.marin.lockout.Constants.MIN_BOARD_SIZE;
-import static me.marin.lockout.Constants.NAMESPACE;
+import static me.marin.lockout.Constants.*;
 
 public class LockoutInitializer implements ModInitializer {
 
-    private static final Predicate<ServerCommandSource> PERMISSIONS = (ssc) -> ssc.hasPermissionLevel(2) || ssc.getServer().isSingleplayer();
+    // Permission checks: mappings changed; allow temporarily and restrict in-game if needed.
+    private static final Predicate<ServerCommandSource> PERMISSIONS = (ssc) ->
+    ssc.getServer() != null && (Permissions.check(ssc, PLACEHOLDER_PERM_STRING, LeveledPermissionPredicate.GAMEMASTERS.getLevel()) || ssc.getServer().isSingleplayer());
 
     public static Version MOD_VERSION;
 

@@ -12,11 +12,13 @@ public class GoalType {
     public static final String OBTAIN_WOODEN_TOOLS = "OBTAIN_WOODEN_TOOLS";
     public static final String OBTAIN_IRON_TOOLS = "OBTAIN_IRON_TOOLS";
     public static final String OBTAIN_STONE_TOOLS = "OBTAIN_STONE_TOOLS";
+    public static final String OBTAIN_COPPER_TOOLS = "OBTAIN_COPPER_TOOLS";
     public static final String OBTAIN_GOLDEN_TOOLS = "OBTAIN_GOLDEN_TOOLS";
     public static final String OBTAIN_DIAMOND_TOOLS = "OBTAIN_DIAMOND_TOOLS";
     public static final String FILL_ARMOR_STAND = "FILL_ARMOR_STAND";
     public static final String WEAR_CARVED_PUMPKIN_FOR_5_MINUTES = "WEAR_CARVED_PUMPKIN_FOR_5_MINUTES";
     public static final String WEAR_GOLDEN_ARMOR = "WEAR_GOLDEN_ARMOR";
+    public static final String WEAR_COPPER_ARMOR = "WEAR_COPPER_ARMOR";
     public static final String WEAR_LEATHER_ARMOR = "WEAR_LEATHER_ARMOR";
     public static final String WEAR_IRON_ARMOR = "WEAR_IRON_ARMOR";
     public static final String WEAR_DIAMOND_ARMOR = "WEAR_DIAMOND_ARMOR";
@@ -174,6 +176,7 @@ public class GoalType {
     public static final String REACH_EXP_LEVEL_30 = "REACH_EXP_LEVEL_30";
     public static final String RIDE_HORSE = "RIDE_HORSE";
     public static final String RIDE_PIG = "RIDE_PIG";
+    public static final String RIDE_NAUTILUS = "RIDE_NAUTILUS";
     public static final String RIDE_MINECART = "RIDE_MINECART";
     public static final String USE_STONECUTTER = "USE_STONECUTTER";
     public static final String USE_ANVIL = "USE_ANVIL";
@@ -231,6 +234,7 @@ public class GoalType {
     public static final String ITEM_FRAME_IN_ITEM_FRAME = "ITEM_FRAME_IN_ITEM_FRAME";
     public static final String FILL_CAMPFIRE = "FILL_CAMPFIRE";
     public static final String PUT_FLOWER_IN_POT = "PUT_FLOWER_IN_POT";
+    public static final String CONSTRUCT_COPPER_GOLEM = "CONSTRUCT_COPPER_GOLEM";
     public static final String KILL_ALL_RAID_MOBS = "KILL_ALL_RAID_MOBS";
     public static final String FILL_CHISELED_BOOKSHELF = "FILL_CHISELED_BOOKSHELF";
     public static final String USE_BRUSH_ON_SUSPICIOUS_BLOCK = "USE_BRUSH_ON_SUSPICIOUS_BLOCK";
@@ -304,5 +308,7 @@ public class GoalType {
     public static final String OBTAIN_3_UNIQUE_MUSIC_DISCS = "OBTAIN_3_UNIQUE_MUSIC_DISCS";
     public static final String HAVE_MORE_CREEPER_KILLS = "HAVE_MOST_CREEPER_KILLS";
     public static final String EAT_ALL_SOUPS = "EAT_ALL_SOUPS";
+    public static final String GET_MOB_KABOB_ADVANCEMENT = "GET_MOB_KABOB_ADVANCEMENT";
+    public static final String FILL_SHELF_WITH_SHELVES = "FILL_SHELF_WITH_SHELVES";
 
 }

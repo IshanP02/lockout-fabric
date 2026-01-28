@@ -40,9 +40,12 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubleClick) {
+        int button = click.button();
+        double mouseX = click.x();
+        double mouseY = click.y();
         if (lastDrawContext == null) {
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(click, doubleClick);
         }
         
         Goal clickedGoal = Utility.getBoardHoveredGoal(lastDrawContext, (int) mouseX, (int) mouseY);
@@ -62,7 +65,7 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
             }
         }
         
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubleClick);
     }
 
     @Override

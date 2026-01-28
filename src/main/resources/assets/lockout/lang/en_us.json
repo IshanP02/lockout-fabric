@@ -1,4 +1,5 @@
 {
   "key.lockout.open_board": "Open Board",
-  "category.lockout.keybinds": "Lockout"
+  "key.lockout.open_goal_list": "Open Pick/Ban List",
+  "key.category.lockout.keybinds": "Lockout"
 }

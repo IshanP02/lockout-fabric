@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ObtainIronToolsGoal extends ObtainAllItemsGoal {
 
-    private static final List<Item> ITEMS = List.of(Items.IRON_AXE, Items.IRON_HOE, Items.IRON_PICKAXE, Items.IRON_SWORD, Items.IRON_SHOVEL);
+    private static final List<Item> ITEMS = List.of(Items.IRON_AXE, Items.IRON_HOE, Items.IRON_PICKAXE, Items.IRON_SWORD, Items.IRON_SHOVEL, Items.IRON_SPEAR);
 
     public ObtainIronToolsGoal(String id, String data) {
         super(id, data);

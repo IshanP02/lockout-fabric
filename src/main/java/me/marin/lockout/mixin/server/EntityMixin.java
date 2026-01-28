@@ -19,7 +19,7 @@ public class EntityMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!((Entity) (Object) this instanceof PlayerEntity player) || !onFire) return;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;

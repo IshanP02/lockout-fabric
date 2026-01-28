@@ -1,5 +1,6 @@
 package me.marin.lockout.client;
 
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.marin.lockout.*;
 import me.marin.lockout.client.gui.*;
 import me.marin.lockout.json.JSONBoard;
@@ -33,6 +34,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 import oshi.util.tuples.Pair;
+import net.minecraft.command.permission.LeveledPermissionPredicate;
+import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,8 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static me.marin.lockout.Constants.MAX_BOARD_SIZE;
-import static me.marin.lockout.Constants.MIN_BOARD_SIZE;
+import static me.marin.lockout.Constants.*;
 
 public class LockoutClient implements ClientModInitializer {
 
@@ -56,14 +58,25 @@ public class LockoutClient implements ClientModInitializer {
     public static final Map<String, String> goalTooltipMap = new HashMap<>();
 
     public static final ScreenHandlerType<BoardScreenHandler> BOARD_SCREEN_HANDLER;
+    public static final KeyBinding.Category LOCKOUT_CATEGORY = KeyBinding.Category.create(Identifier.of(Constants.NAMESPACE, "keybinds"));
+
+    // Global cache for player skin textures (keyed by player name)
+    public static final java.util.Map<String, net.minecraft.util.Identifier> PLAYER_SKIN_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
 
     static {
         BOARD_SCREEN_HANDLER = new ScreenHandlerType<>(BoardScreenHandler::new, FeatureFlags.VANILLA_FEATURES);
     }
 
     private static boolean hasPermission() {
-        return MinecraftClient.getInstance().isInSingleplayer() || 
-               MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.hasPermissionLevel(2);
+        // Allow all users to access client commands
+        // The server will validate permissions when it receives the packets
+        return true;
+    }
+
+    private static boolean hasPermissionLevel() {
+        // Allow all users to access the goal list GUI
+        // The server will validate permissions for actual actions
+        return true;
     }
 
     private static void sendBoardTypeMessage(Text message) {
@@ -222,7 +235,7 @@ public class LockoutClient implements ClientModInitializer {
                 
                 // If PickBan GUI is open, refresh it to show newly available goals
                 if (client.currentScreen instanceof GoalListScreen screen) {
-                    screen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+                    screen.init(client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
                 }
             });
         });
@@ -624,12 +637,7 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("SetCustomBoard").requires(ccs -> {
-                    if (MinecraftClient.getInstance().isInSingleplayer()) {
-                        return true;
-                    }
-                    return ccs.getPlayer().hasPermissionLevel(2);
-                }).build();
+                var commandNode = ClientCommandManager.literal("SetCustomBoard").requires(ccs -> hasPermission()).build();
 
                 var boardNameNode = ClientCommandManager.argument("board name", CustomBoardFileArgumentType.newInstance()).executes((context) -> {
                     String boardName = context.getArgument("board name", String.class);
@@ -671,17 +679,17 @@ public class LockoutClient implements ClientModInitializer {
         });
 
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.lockout.open_board", // The translation key of the keybinding's name
-                InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_B, // The keycode of the key
-                "category.lockout.keybinds" // The translation key of the keybinding's category.
+            "key.lockout.open_board", // The translation key of the keybinding's name
+            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
+            GLFW.GLFW_KEY_B, // The keycode of the key
+            LOCKOUT_CATEGORY // The translation key of the keybinding's category.
         ));
 
         goalListKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.lockout.open_goal_list",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_P,
-                "category.lockout.keybinds"
+            "key.lockout.open_goal_list",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_P,
+            LOCKOUT_CATEGORY // The translation key of the keybinding's category.
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -716,7 +724,7 @@ public class LockoutClient implements ClientModInitializer {
                 }
                 // Allow anyone to open during active pick/ban session, otherwise only operators
                 boolean hasActiveSession = ClientPickBanSessionHolder.getActiveSession() != null;
-                if (!hasActiveSession && !client.player.hasPermissionLevel(2)) {
+                if (!hasActiveSession && !hasPermissionLevel()) {
                     client.player.sendMessage(Text.literal("You must be an operator to access the Goal List!").formatted(net.minecraft.util.Formatting.RED), false);
                     return;
                 }

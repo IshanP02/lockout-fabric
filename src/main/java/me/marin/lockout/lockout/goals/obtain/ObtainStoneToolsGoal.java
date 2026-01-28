@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ObtainStoneToolsGoal extends ObtainAllItemsGoal {
 
-    private static final List<Item> ITEMS = List.of(Items.STONE_AXE, Items.STONE_HOE, Items.STONE_PICKAXE, Items.STONE_SWORD, Items.STONE_SHOVEL);
+    private static final List<Item> ITEMS = List.of(Items.STONE_AXE, Items.STONE_HOE, Items.STONE_PICKAXE, Items.STONE_SWORD, Items.STONE_SHOVEL, Items.STONE_SPEAR);
 
     public ObtainStoneToolsGoal(String id, String data) {
         super(id, data);

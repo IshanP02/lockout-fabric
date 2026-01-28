@@ -52,7 +52,7 @@ public abstract class PlayerMixin {
         if (!Lockout.isLockoutRunning(lockout)) return;
 
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
@@ -79,7 +79,7 @@ public abstract class PlayerMixin {
     public void onStartMatch(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
-        if (world.isClient) return;
+        if (world.isClient()) return;
         if (!lockout.hasStarted()) {
             cir.setReturnValue(false);
         }
@@ -92,7 +92,7 @@ public abstract class PlayerMixin {
         if (!cir.getReturnValue()) return;
 
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         if (!lockout.isLockoutPlayer(player.getUuid())) return;
         LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
@@ -160,7 +160,7 @@ public abstract class PlayerMixin {
     @Inject(method = "incrementStat(Lnet/minecraft/util/Identifier;)V", at = @At("HEAD"))
     public void onIncrementStat(Identifier stat, CallbackInfo ci) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
@@ -183,7 +183,7 @@ public abstract class PlayerMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
@@ -249,7 +249,7 @@ public abstract class PlayerMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
@@ -268,7 +268,7 @@ public abstract class PlayerMixin {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         float f = attacker.getWeaponDisableBlockingForSeconds();
 
@@ -286,7 +286,7 @@ public abstract class PlayerMixin {
     @Inject(method = "incrementStat(Lnet/minecraft/stat/Stat;)V", at = @At("HEAD"))
     private void onIncrementStat(Stat<?> stat, CallbackInfo ci) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
 
         Lockout lockout = LockoutServer.lockout;

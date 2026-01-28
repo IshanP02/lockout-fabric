@@ -72,6 +72,11 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
             }
             long end = System.currentTimeMillis();
             Lockout.log("Located " + BIOME_LOCATE_DATA.size() + " biomes and " + STRUCTURE_LOCATE_DATA.size() + " structures in " + String.format("%.2f", ((end-start)/1000.0)) + "s!");
+
+            // Freeze ticks until lockout/blackout game starts
+            var freezeCommand = "tick freeze";
+            var parseResults = server.getCommandManager().getDispatcher().parse(freezeCommand, server.getCommandSource());
+            server.getCommandManager().execute(parseResults, freezeCommand);
             
             // Send locate data to all connected clients
             me.marin.lockout.network.SyncLocateDataPayload payload = new me.marin.lockout.network.SyncLocateDataPayload(

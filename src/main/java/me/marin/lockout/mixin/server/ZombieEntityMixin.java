@@ -1,6 +1,7 @@
 package me.marin.lockout.mixin.server;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.Difficulty;
@@ -17,13 +18,13 @@ public class ZombieEntityMixin {
     private Difficulty before;
 
     @Inject(method = "onKilledOther", at = @At("HEAD"))
-    public void setDifficulty(ServerWorld world, LivingEntity other, CallbackInfoReturnable<Boolean> cir) {
+    public void setDifficulty(ServerWorld world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         before = world.getDifficulty();
         world.getServer().setDifficulty(Difficulty.HARD, true);
     }
 
     @Inject(method = "onKilledOther", at = @At("RETURN"))
-    public void restoreDifficulty(ServerWorld world, LivingEntity other, CallbackInfoReturnable<Boolean> cir) {
+    public void restoreDifficulty(ServerWorld world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         world.getServer().setDifficulty(before, true);
     }
 
