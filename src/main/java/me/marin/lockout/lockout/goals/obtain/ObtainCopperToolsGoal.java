@@ -6,11 +6,11 @@ import net.minecraft.item.Items;
 
 import java.util.List;
 
-public class ObtainDiamondToolsGoal extends ObtainAllItemsGoal {
+public class ObtainCopperToolsGoal extends ObtainAllItemsGoal {
 
-    private static final List<Item> ITEMS = List.of(Items.DIAMOND_AXE, Items.DIAMOND_HOE, Items.DIAMOND_PICKAXE, Items.DIAMOND_SWORD, Items.DIAMOND_SHOVEL, Items.DIAMOND_SPEAR);
+    private static final List<Item> ITEMS = List.of(Items.COPPER_AXE, Items.COPPER_HOE, Items.COPPER_PICKAXE, Items.COPPER_SWORD, Items.COPPER_SHOVEL, Items.COPPER_SPEAR);
 
-    public ObtainDiamondToolsGoal(String id, String data) {
+    public ObtainCopperToolsGoal(String id, String data) {
         super(id, data);
     }
 
@@ -21,7 +21,8 @@ public class ObtainDiamondToolsGoal extends ObtainAllItemsGoal {
 
     @Override
     public String getGoalName() {
-        return "Obtain all Diamond Tools";
+        return "Obtain all Copper Tools";
     }
 
 }
+

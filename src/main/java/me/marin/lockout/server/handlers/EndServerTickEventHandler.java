@@ -86,7 +86,7 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                 if (goal instanceof RideEntityGoal rideEntityGoal && player.hasVehicle()) {
                     EntityType<?> vehicle = player.getVehicle().getType();
 
-                    if (Objects.equals(vehicle, rideEntityGoal.getEntityType())) {
+                    if (Objects.equals(vehicle, rideEntityGoal.getEntityType()) || (rideEntityGoal.getEntityType() == EntityType.NAUTILUS && vehicle == EntityType.ZOMBIE_NAUTILUS)) {
                         boolean allow = true;
                         if (Objects.equals(vehicle, EntityType.PIG)) {
                             boolean hasCarrotOnAStick = false;

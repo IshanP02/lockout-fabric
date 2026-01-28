@@ -139,6 +139,8 @@ public class LockoutServer {
         ServerLivingEntityEvents.AFTER_DEATH.register(new AfterDeathEventHandler());
 
         UseBlockCallback.EVENT.register(new UseBlockEventHandler());
+        
+        UseBlockCallback.EVENT.register(new CopperGolemConstructionHandler());
 
         ServerLifecycleEvents.SERVER_STARTED.register(new ServerStartedEventHandler());
 

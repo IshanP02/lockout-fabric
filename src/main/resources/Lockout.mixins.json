@@ -37,6 +37,8 @@
     "server.RaidMixin",
     "server.ScreenHandlerMixin",
     "server.ServerPlayerEntityMixin",
+    "server.ServerWorldMixin",
+    "server.ShelfBlockMixin",
     "server.SlotMixin",
     "server.SmithingScreenHandlerMixin",
     "server.StatusEffectMixin",

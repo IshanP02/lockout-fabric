@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ObtainAllTorchesGoal extends ObtainAllItemsGoal {
 
-    private static final List<Item> ITEMS = List.of(Items.TORCH, Items.REDSTONE_TORCH, Items.SOUL_TORCH);
+    private static final List<Item> ITEMS = List.of(Items.TORCH, Items.REDSTONE_TORCH, Items.SOUL_TORCH, Items.COPPER_TORCH);
 
     public ObtainAllTorchesGoal(String id, String data) {
         super(id, data);
