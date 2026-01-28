@@ -350,7 +350,17 @@ public class LockoutServer {
                     Team team = teamPlayer.getScoreboardTeam();
                     if (team != null && team.getName().equals(playerTeam.getName())) {
                         teamPlayer.sendMessage(message, false);
-                        teamPlayer.playSound(net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), 1.0f, pitch);
+                        // Play sound directly to the player (not positional)
+                        teamPlayer.getEntityWorld().playSound(
+                            null, // No source player (global sound)
+                            teamPlayer.getX(),
+                            teamPlayer.getY(),
+                            teamPlayer.getZ(),
+                            net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(),
+                            net.minecraft.sound.SoundCategory.MASTER,
+                            1.0f,
+                            pitch
+                        );
                     }
                 }
             });
