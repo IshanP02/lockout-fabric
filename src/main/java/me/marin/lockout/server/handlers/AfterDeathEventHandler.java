@@ -69,7 +69,7 @@ public class AfterDeathEventHandler implements ServerLivingEntityEvents.AfterDea
                     if (killMobGoal.getEntity().equals(entity.getType())) {
                         boolean allow = true;
                         if (goal instanceof KillSnowGolemInNetherGoal)  {
-                            allow = killer.getWorld().getRegistryKey() == ServerWorld.NETHER;
+                            allow = killer.getEntityWorld().getRegistryKey() == ServerWorld.NETHER;
                         }
                         if (goal instanceof KillBreezeWithWindChargeGoal) {
                             allow = source.isOf(DamageTypes.WIND_CHARGE);

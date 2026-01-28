@@ -29,7 +29,7 @@ public interface LeashableMixin {
         Entity entity = (Entity) (Object) this;
 
         // Server-only
-        if (entity.getWorld().isClient()) return;
+        if (entity.getEntityWorld().isClient()) return;
 
         // Only player-held leashes
         if (!(leashHolder instanceof PlayerEntity player)) return;
@@ -70,7 +70,7 @@ public interface LeashableMixin {
         Entity entity = (Entity) (Object) this;
 
         // Server-only
-        if (entity.getWorld().isClient()) return;
+        if (entity.getEntityWorld().isClient()) return;
 
         if (!(entity instanceof Leashable leashable)) return;
         Entity leashHolder = leashable.getLeashHolder();

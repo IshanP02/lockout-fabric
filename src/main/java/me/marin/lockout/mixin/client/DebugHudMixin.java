@@ -41,9 +41,7 @@ public abstract class DebugHudMixin {
     @Shadow
     private ChunkPos pos;
 
-    @Final
-    @Shadow
-    private static Map<Heightmap.Type, String> HEIGHT_MAP_TYPES;
+    // HEIGHT_MAP_TYPES removed — not present in 1.21+ DebugHud
 
     @Shadow
     private void drawText(DrawContext context, List<String> text, boolean left) {}
@@ -56,9 +54,29 @@ public abstract class DebugHudMixin {
         throw new AbstractMethodError("Shadow");
     }
 
-    @Shadow
-    private static String getBiomeString(RegistryEntry<Biome> biome) {
-        throw new AbstractMethodError("Shadow");
+    // Removed @Shadow getBiomeString — not present in current DebugHud mappings.
+    @Unique
+    private static String getBiomeStringLocal(RegistryEntry<Biome> biome) {
+        if (biome == null) return "unknown";
+        try {
+            // Prefer readable id if available
+            try {
+                java.lang.reflect.Method rk = biome.getClass().getMethod("registryKey");
+                Object key = rk.invoke(biome);
+                if (key != null) {
+                    try {
+                        java.lang.reflect.Method val = key.getClass().getMethod("getValue");
+                        Object id = val.invoke(key);
+                        if (id != null) return id.toString();
+                    } catch (NoSuchMethodException ignored) {}
+                }
+            } catch (NoSuchMethodException ignored) {}
+
+            // Fallback to biome value's toString
+            return String.valueOf(biome.value());
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 
     @Shadow
@@ -70,11 +88,22 @@ public abstract class DebugHudMixin {
     @Unique
     private final DebugHud INSTANCE = (DebugHud) (Object) this;
 
-    @Inject(method = "drawLeftText", at = @At("HEAD"), cancellable = true)
-    public void drawLeftText(DrawContext context, CallbackInfo ci) {
-        List<String> text = new ArrayList<>();
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void lockout$render(DrawContext context, CallbackInfo ci) {
+        drawLockoutDebug(context);
+        ci.cancel();
+    }
+
+    @Unique
+    private void drawLockoutDebug(DrawContext context) {
+        // Defensive guards: render() can be called early where client or camera entity is null.
+        if (this.client == null || this.client.world == null) return;
 
         Entity entity = this.client.getCameraEntity();
+        if (entity == null) return;
+
+        List<String> text = new ArrayList<>();
+
         BlockPos blockPos = entity.getBlockPos();
         Direction direction = entity.getHorizontalFacing();
 
@@ -93,9 +122,11 @@ public abstract class DebugHudMixin {
         }
 
         text.add("Minecraft " + SharedConstants.getGameVersion().name() + " (" + this.client.getGameVersion() + "/" + ClientBrandRetriever.getClientModName() + ("release".equalsIgnoreCase(this.client.getVersionType()) ? "" : "/" + this.client.getVersionType()) + ")");
-        text.add(this.client.fpsDebugString);
-        text.add(this.client.worldRenderer.getChunksDebugString()); // C value
-        text.add(this.client.worldRenderer.getEntitiesDebugString()); // E value
+        text.add("");
+        if (this.client.worldRenderer != null) {
+            text.add(this.client.worldRenderer.getChunksDebugString()); // C value
+            text.add(this.client.worldRenderer.getEntitiesDebugString()); // E value
+        }
         text.add("");
         text.add(String.format(Locale.ROOT, "XYZ: %.3f / %.5f / %.3f", this.client.getCameraEntity().getX(), this.client.getCameraEntity().getY(), this.client.getCameraEntity().getZ()));
         text.add(String.format(Locale.ROOT, "Block: %d %d %d", blockPos.getX(), blockPos.getY(), blockPos.getZ()));
@@ -108,20 +139,25 @@ public abstract class DebugHudMixin {
         } else {
             WorldChunk wc = this.getChunk();
             StringBuilder sb = new StringBuilder("SH");
-            for (Heightmap.Type typex : Heightmap.Type.values()) {
-                if (typex.isStoredServerSide()) {
-                    sb.append(" ").append(HEIGHT_MAP_TYPES.get(typex)).append(": ");
-                    if (wc != null) {
-                        sb.append(wc.sampleHeightmap(typex, blockPos.getX(), blockPos.getZ()));
-                    } else {
-                        sb.append("??");
-                    }
+
+            for (Heightmap.Type type : Heightmap.Type.values()) {
+                if (!type.isStoredServerSide()) continue;
+
+                sb.append(" ")
+                  .append(type.name())
+                  .append(": ");
+
+                if (wc != null) {
+                    sb.append(wc.sampleHeightmap(type, blockPos.getX(), blockPos.getZ()));
+                } else {
+                    sb.append("??");
                 }
             }
+
             text.add(sb.toString());
 
             RegistryEntry<Biome> var27 = this.client.world.getBiome(blockPos);
-            text.add("Biome: " + getBiomeString(var27));
+            text.add("Biome: " + getBiomeStringLocal(var27));
         }
 
         if (LockoutConfig.getInstance().showNoiseRouterLine) {
@@ -134,32 +170,7 @@ public abstract class DebugHudMixin {
             }
         }
 
-        Map.Entry<Property<?>, Comparable<?>> entry;
-        if (INSTANCE.blockHit.getType() == net.minecraft.util.hit.HitResult.Type.BLOCK) {
-            blockPos = ((BlockHitResult) INSTANCE.blockHit).getBlockPos();
-            BlockState blockState = this.client.world.getBlockState(blockPos);
-            text.add("");
-            text.add(Formatting.UNDERLINE + "Targeted Block: " + blockPos.getX() + ", " + blockPos.getY() + ", " + blockPos.getZ());
-            text.add(String.valueOf(Registries.BLOCK.getId(blockState.getBlock())));
-
-            for (Map.Entry<Property<?>, Comparable<?>> propertyComparableEntry : blockState.getEntries().entrySet()) {
-                entry = propertyComparableEntry;
-                text.add(INSTANCE.propertyToString(entry));
-            }
-        }
-
-        if (INSTANCE.fluidHit.getType() == net.minecraft.util.hit.HitResult.Type.BLOCK) {
-            blockPos = ((BlockHitResult) INSTANCE.fluidHit).getBlockPos();
-            FluidState fluidState = this.client.world.getFluidState(blockPos);
-            text.add("");
-            text.add(Formatting.UNDERLINE + "Targeted Fluid: " + blockPos.getX() + ", " + blockPos.getY() + ", " + blockPos.getZ());
-            text.add(String.valueOf(Registries.FLUID.getId(fluidState.getFluid())));
-
-            for (Map.Entry<Property<?>, Comparable<?>> propertyComparableEntry : fluidState.getEntries().entrySet()) {
-                entry = propertyComparableEntry;
-                text.add(INSTANCE.propertyToString(entry));
-            }
-        }
+        // Targeted block/fluid/property debug info removed for current mappings compatibility.
 
         entity = this.client.targetedEntity;
         if (entity != null) {
@@ -169,12 +180,8 @@ public abstract class DebugHudMixin {
         }
 
         this.drawText(context, text, true);
-        ci.cancel();
     }
 
-    @Inject(method = "drawRightText", at = @At("HEAD"), cancellable = true)
-    public void drawRightText(DrawContext context, CallbackInfo ci) {
-        ci.cancel();
-    }
+    // Removed drawRightText injection; render() is used instead for 1.21+.
 
 }

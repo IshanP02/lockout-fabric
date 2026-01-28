@@ -111,22 +111,22 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                     }
                 }
                 if (goal instanceof ReachHeightLimitGoal) {
-                    if (player.getY() >= 320 && player.getWorld().getRegistryKey() == ServerWorld.OVERWORLD) {
+                    if (player.getY() >= 320 && player.getEntityWorld().getRegistryKey() == ServerWorld.OVERWORLD) {
                         lockout.completeGoal(goal, player);
                     }
                 }
                 if (goal instanceof ReachNetherRoofGoal) {
-                    if (player.getY() >= 128 && player.getWorld().getRegistryKey() == ServerWorld.NETHER) {
+                    if (player.getY() >= 128 && player.getEntityWorld().getRegistryKey() == ServerWorld.NETHER) {
                         lockout.completeGoal(goal, player);
                     }
                 }
                 if (goal instanceof ReachBedrockGoal) {
-                    if (player.getY() < 10 && Objects.equals(player.getWorld().getBlockState(player.getBlockPos().down()).getBlock(), Blocks.BEDROCK)) {
+                    if (player.getY() < 10 && Objects.equals(player.getEntityWorld().getBlockState(player.getBlockPos().down()).getBlock(), Blocks.BEDROCK)) {
                         lockout.completeGoal(goal, player);
                     }
                 }
                 if (goal instanceof OpponentTouchesWaterGoal) {
-                    if (Objects.equals(player.getWorld().getBlockState(player.getBlockPos()).getBlock(), Blocks.WATER)) {
+                    if (Objects.equals(player.getEntityWorld().getBlockState(player.getBlockPos()).getBlock(), Blocks.WATER)) {
                         lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " touched water.");
                     }
                 }

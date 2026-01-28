@@ -9,6 +9,7 @@ import me.marin.lockout.lockout.texture.CustomTextureRenderer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 
 import java.util.Objects;
 
@@ -58,9 +59,18 @@ public abstract class Goal {
             success = customTextureRenderer.renderTexture(context, x, y, LockoutClient.CURRENT_TICK);
         }
         if (!success) {
-            // TODO: handle null
-            context.drawItem(this.getTextureItemStack(), x, y);
-            context.drawStackOverlay(textRenderer, this.getTextureItemStack(), x, y);
+            // If the icon is a player head, render a flat 2D face (with hat) instead
+            ItemStack textureStack = this.getTextureItemStack();
+            if (textureStack != null && textureStack.getItem() == net.minecraft.item.Items.PLAYER_HEAD) {
+                Identifier defaultSkin = Identifier.of("minecraft", "textures/entity/steve.png");
+                // Draw scaled 16x16 face (face at 8,8 in the skin) and the hat overlay (at 40,8)
+                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, defaultSkin, x, y, 8, 8, 16, 16, 64, 64);
+                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, defaultSkin, x, y, 40, 8, 16, 16, 64, 64);
+            } else {
+                // Fallback: draw the ItemStack normally
+                context.drawItem(textureStack, x, y);
+                context.drawStackOverlay(textRenderer, textureStack, x, y);
+            }
         }
     }
 

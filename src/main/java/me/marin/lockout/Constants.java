@@ -50,4 +50,6 @@ public class Constants {
     public static final String BOARD_POSITION_LEFT = "left";
     public static final String BOARD_POSITION_RIGHT = "right";
 
+    public static final String PLACEHOLDER_PERM_STRING = "lockout-fabric.ignored.placeholder";
+
 }

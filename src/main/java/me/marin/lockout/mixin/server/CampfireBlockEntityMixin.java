@@ -19,7 +19,7 @@ public class CampfireBlockEntityMixin {
 
     @Inject(method = "addItem", at = @At("RETURN"))
     public void addItem(ServerWorld world, LivingEntity entity, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (world.isClient) return;
+        if (world.isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!(entity instanceof PlayerEntity player) || !cir.getReturnValueZ()) return;

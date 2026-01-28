@@ -19,8 +19,10 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.ClickEvent;
+import net.minecraft.client.gui.Click;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
@@ -185,8 +187,7 @@ public class BoardBuilderScreen extends Screen {
                 }
                 if (!isOk) {
                     String s = "Invalid '" + wrongDataGenerator + "'.";
-                    editDataErrorTextWidget = new TextWidget(Text.of(s), textRenderer);
-                    editDataErrorTextWidget.setTextColor(Color.RED.getRGB());
+                    editDataErrorTextWidget = new TextWidget(Text.literal(s).formatted(Formatting.RED), textRenderer);
                     editDataErrorTextWidget.setPosition(x + 75 - textRenderer.getWidth(s) / 2, errorY);
                     this.addDrawableChild(editDataErrorTextWidget);
                     return;
@@ -254,8 +255,7 @@ public class BoardBuilderScreen extends Screen {
     }
 
     private void showError(String message, int x, int y) {
-        saveErrorTextWidget = new TextWidget(Text.of(message), textRenderer);
-        saveErrorTextWidget.setTextColor(Color.RED.getRGB());
+        saveErrorTextWidget = new TextWidget(Text.literal(message).formatted(Formatting.RED), textRenderer);
         saveErrorTextWidget.setPosition(x, y);
         this.addDrawableChild(saveErrorTextWidget);
     }
@@ -268,10 +268,10 @@ public class BoardBuilderScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Draw the board first so child widgets (search, buttons) render on top
+        drawCenterBoard(context, mouseX, mouseY);
         //this.renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
-
-        drawCenterBoard(context, mouseX, mouseY);
 
         titleTextField.setSuggestion(titleTextField.getText().isEmpty() ? "Board Name" : null);
         if (displaySearch) {
@@ -279,22 +279,19 @@ public class BoardBuilderScreen extends Screen {
         }
     }
 
-    private static final int LEFT_MOUSE_BUTTON = 0;
-    private static final int RIGHT_MOUSE_BUTTON = 1;
-
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, (int) mouseX, (int) mouseY);
-        if ((button == LEFT_MOUSE_BUTTON || button == RIGHT_MOUSE_BUTTON) && hoveredIdx.isPresent()) {
+    public boolean mouseClicked(Click click, boolean consumed) {
+        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, (int) click.x(), (int) click.y());
+        if ((click.button() == 0 || click.button() == 1) && hoveredIdx.isPresent()) {
             Goal goal = BoardBuilderData.INSTANCE.getGoals().get(hoveredIdx.get());
-            if (button == RIGHT_MOUSE_BUTTON && goal != null && goal.hasData()) {
+            if (click.button() == 1 && goal != null && goal.hasData()) {
                 openEditData(hoveredIdx.get());
             } else {
                 openSearch(hoveredIdx.get());
             }
             return true;
         } else {
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(click, consumed);
         }
     }
 
@@ -305,7 +302,7 @@ public class BoardBuilderScreen extends Screen {
         BoardBuilderData.INSTANCE.setModifyingIdx(hoveredIdx);
         CENTER_OFFSET = 100;
 
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
         clearAndInit();
     }
 
@@ -329,7 +326,7 @@ public class BoardBuilderScreen extends Screen {
         BoardBuilderData.INSTANCE.setModifyingIdx(hoveredIdx);
         CENTER_OFFSET = 50;
 
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
         clearAndInit();
     }
 
@@ -375,14 +372,7 @@ public class BoardBuilderScreen extends Screen {
                 int idx = j + size * i;
                 Goal goal = BoardBuilderData.INSTANCE.getGoals().get(idx);
                 if (goal != null) {
-                    boolean success = false;
-                    if (goal instanceof CustomTextureRenderer customTextureRenderer) {
-                        success = customTextureRenderer.renderTexture(context, x, y, LockoutClient.CURRENT_TICK);
-                    }
-                    if (!success) {
-                        context.drawItem(goal.getTextureItemStack(), x, y);
-                        context.drawStackOverlay(textRenderer, goal.getTextureItemStack(), x, y);
-                    }
+                    goal.render(context, textRenderer, x, y);
                 }
 
                 if (hoveredIdx.isPresent() && hoveredIdx.get() == idx) {

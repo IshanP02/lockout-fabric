@@ -1,5 +1,8 @@
 package me.marin.lockout.client.gui;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.opengl.GlStateManager;
+
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
@@ -12,11 +15,15 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import me.marin.lockout.client.LockoutClient;
+// skin rendering uses the client's AbstractClientPlayerEntity#getSkinTexture()
+import net.minecraft.scoreboard.Team;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-
+import net.minecraft.client.gui.PlayerSkinDrawer;
 import org.apache.commons.lang3.text.WordUtils;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +35,7 @@ public class DropdownGoalsPanel extends ClickableWidget {
     private final List<String> goals;
     private final String label;
     private final Map<String, CachedGoalEntry> cachedGoals = new HashMap<>();
+    private final Map<String, Identifier> flagCache = new HashMap<>();
     private static final int LABEL_HEIGHT = 22;
     private static final int ITEM_HEIGHT = 18;
     private static final Identifier CHECKMARK_TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/gui/sprites/checkmark.png");
@@ -39,133 +47,147 @@ public class DropdownGoalsPanel extends ClickableWidget {
         this.label = label;
     }
 
+    /**
+     * Notify the panel that a goal was assigned - no longer caches, kept for compatibility.
+     */
+    public void onGoalAssigned(String goalId, String playerName) {
+        // Caching removed - we render directly from the player entity
+        if (playerName == null) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null || client.world == null) return;
+
+        // Cache team flag if available
+        var maybePlayer = client.world.getPlayers().stream()
+                .filter(p -> p.getName().getString().equals(playerName))
+                .findFirst();
+        
+        if (maybePlayer.isPresent()) {
+            Team team = maybePlayer.get().getScoreboardTeam();
+            if (team != null && team.getColor() != null) {
+                Identifier flag = getFlagTexture(team.getColor());
+                if (flag != null) flagCache.put(playerName, flag);
+            }
+        }
+    }
+
     @Override
     public int getHeight() {
-        // Dynamically calculate height based on current goals list size, with 2px bottom padding
         return LABEL_HEIGHT + goals.size() * ITEM_HEIGHT + 1;
     }
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        
-        // Determine background color based on label
-        int backgroundColor = label.contains("Picked") ? 0xFF1a4d1a : 0xFF4d1a1a; // darker green for picks, darker red for bans
-        int borderColor = label.contains("Picked") ? 0xFF55FF55 : 0xFFFF5555; // bright green for picks, bright red for bans
-        
-        // Draw background
+
+        // Colors
+        int backgroundColor = label.contains("Picked") ? 0xFF1a4d1a : 0xFF4d1a1a;
+        int borderColor = label.contains("Picked") ? 0xFF55FF55 : 0xFFFF5555;
+
+        // Background + border
         context.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), backgroundColor);
-        
-        // Draw border
-        context.drawBorder(getX(), getY(), getWidth(), getHeight(), borderColor);
-        
-        // Calculate centered position for icon + text
+        context.fill(getX(), getY(), getX() + getWidth(), getY() + 1, borderColor);
+        context.fill(getX(), getY() + getHeight() - 1, getX() + getWidth(), getY() + getHeight(), borderColor);
+        context.fill(getX(), getY() + 1, getX() + 1, getY() + getHeight() - 1, borderColor);
+        context.fill(getX() + getWidth() - 1, getY() + 1, getX() + getWidth(), getY() + getHeight() - 1, borderColor);
+
+        // Center label + icon
         int textWidth = textRenderer.getWidth(label);
         int iconWidth = 16;
         int spacing = 4;
         int totalWidth = iconWidth + spacing + textWidth;
         int startX = getX() + (getWidth() - totalWidth) / 2;
-        
-        // Draw icon centered
+
         Identifier iconTexture = label.contains("Picked") ? CHECKMARK_TEXTURE : BARRIER_TEXTURE;
         context.drawTexture(RenderPipelines.GUI_TEXTURED, iconTexture, startX, getY() + 3, 0, 0, 16, 16, 16, 16);
-        
-        // Draw label text centered after icon
-        context.drawTextWithShadow(textRenderer, label, startX + iconWidth + spacing, getY() + 6, Color.WHITE.getRGB());
-        
-        // Draw all goals
+        context.drawText(textRenderer, label, startX + iconWidth + spacing, getY() + 6, Color.WHITE.getRGB(), true);
+
         int yOffset = getY() + LABEL_HEIGHT;
+
         for (String goalId : goals) {
-            // Cache goal entry on-demand to handle dynamic goal additions
             CachedGoalEntry cachedEntry = cachedGoals.computeIfAbsent(goalId, CachedGoalEntry::new);
             cachedEntry.goal.render(context, textRenderer, getX() + 6, yOffset + 1);
-            context.drawTextWithShadow(textRenderer, cachedEntry.displayName, getX() + 24, yOffset + 6, Color.WHITE.getRGB());
-            
-            // Draw player head if we know who picked/banned this goal
+            context.drawText(textRenderer, cachedEntry.displayName, getX() + 24, yOffset + 6, Color.WHITE.getRGB(), true);
+
             String playerName = GoalGroup.getGoalPlayer(goalId);
             if (playerName != null) {
                 renderPlayerHead(context, playerName, getX() + getWidth() - 18, yOffset + 1);
             }
-            
+
             yOffset += ITEM_HEIGHT;
         }
     }
-    
+
+
     private void renderPlayerHead(DrawContext context, String playerName, int x, int y) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
-        
-        // Try to find the player in the current world
+
         var player = client.world.getPlayers().stream()
-            .filter(p -> p.getName().getString().equals(playerName))
-            .findFirst()
-            .orElse(null);
+                .filter(p -> p.getName().getString().equals(playerName))
+                .findFirst()
+                .orElse(null);
+
+        if (player == null) return;
+        if (!(player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer)) return;
+
+        int size = 16;
         
-        if (player != null) {
-            // Draw the player's head (16x16 from their skin texture)
-            var skinTexture = client.getSkinProvider().getSkinTextures(player.getGameProfile());
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 8.0F, 8.0F, 16, 16, 8, 8, 64, 64);
-            // Draw the overlay (hat layer)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 40.0F, 8.0F, 16, 16, 8, 8, 64, 64);
-            
-            // Get the player's team and draw the flag
-            net.minecraft.scoreboard.Team team = player.getScoreboardTeam();
+        // Use Minecraft's PlayerSkinDrawer to render the face and hat overlay
+        net.minecraft.client.gui.PlayerSkinDrawer.draw(context, clientPlayer.getSkin(), x, y, size);
+
+        // Team flag (from local cache if present)
+        Identifier flagTexture = flagCache.get(playerName);
+        if (flagTexture == null) {
+            Team team = player.getScoreboardTeam();
             if (team != null && team.getColor() != null) {
-                Identifier flagTexture = getFlagTexture(team.getColor());
-                if (flagTexture != null) {
-                    // Draw flag in top left corner (8x8 pixels)
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, flagTexture, x - 6, y - 3, 0, 0, 12, 12, 12, 12);
-                }
+                flagTexture = getFlagTexture(team.getColor());
             }
         }
-    }
-    
-    private static Identifier getFlagTexture(Formatting teamColor) {
-        String colorName = teamColor.asString().toLowerCase();
-        return Identifier.of(Constants.NAMESPACE, "textures/custom/flags/" + colorName + "_flag.png");
-    }
-    
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        // No click behavior needed - always showing the list
+        if (flagTexture != null) {
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, flagTexture, x - 6, y - 3, 0, 0, 12, 12, 12, 12);
+        }
     }
 
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-        // No narration needed
-    }
-    
-    private static class CachedGoalEntry {
-        final Goal goal;
-        final String displayName;
-        
-        CachedGoalEntry(String goalId) {
-            Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(goalId);
-            String data = gen.map(g -> g.generateData(new ArrayList<>(GoalDataGenerator.ALL_DYES))).orElse(GoalDataConstants.DATA_NONE);
-            this.goal = GoalRegistry.INSTANCE.newGoal(goalId, data);
-            
-            // Use the same display name logic as BoardBuilderSearchWidget
-            String goalName;
-            if (gen.isEmpty()) {
-                goalName = this.goal.getGoalName();
-            } else {
-                goalName = "[*] " + WordUtils.capitalize(goalId.replace("_", " ").toLowerCase(), ' ');
+
+        private static Identifier getFlagTexture(Formatting teamColor) {
+            String colorName = teamColor.asString().toLowerCase();
+            return Identifier.of(Constants.NAMESPACE, "textures/custom/flags/" + colorName + "_flag.png");
+        }
+
+        public void onClick(double mouseX, double mouseY) {
+            // No click behavior needed
+        }
+
+        protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+            // No narration needed
+        }
+
+        private static class CachedGoalEntry {
+            final Goal goal;
+            final String displayName;
+
+            CachedGoalEntry(String goalId) {
+                Optional<GoalDataGenerator> gen = GoalRegistry.INSTANCE.getDataGenerator(goalId);
+                String data = gen.map(g -> g.generateData(new ArrayList<>(GoalDataGenerator.ALL_DYES))).orElse(GoalDataConstants.DATA_NONE);
+                this.goal = GoalRegistry.INSTANCE.newGoal(goalId, data);
+
+                String goalName;
+                if (gen.isEmpty()) {
+                    goalName = this.goal.getGoalName();
+                } else {
+                    goalName = "[*] " + WordUtils.capitalize(goalId.replace("_", " ").toLowerCase(), ' ');
+                }
+
+                this.displayName = truncateGoalName(goalName);
             }
-            
-            // Truncate all goal names longer than 20 characters
-            this.displayName = truncateGoalName(goalName);
+        }
+
+        private static String truncateGoalName(String goalName) {
+            final int MAX_LENGTH = 30;
+            if (goalName.length() > MAX_LENGTH) {
+                int endIndex = Math.min(MAX_LENGTH - 1, goalName.length());
+                return goalName.substring(0, endIndex) + "…";
+            }
+            return goalName;
         }
     }
-    
-    private static String truncateGoalName(String goalName) {
-        // Max characters that fit in the panel (accounting for texture + spacing)
-        // With 200px width, texture (16px) + spacing (8px), leaves ~176px for text
-        // At roughly 8-9 pixels per character, max is around 20 characters
-        final int MAX_LENGTH = 30;
-        if (goalName.length() > MAX_LENGTH) {
-            int endIndex = Math.min(MAX_LENGTH - 1, goalName.length());
-            return goalName.substring(0, endIndex) + "…";
-        }
-        return goalName;
-    }
-}

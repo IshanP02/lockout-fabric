@@ -7,6 +7,10 @@ import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.CharInput;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -18,6 +22,7 @@ import me.marin.lockout.client.ClientLocateUtil;
 import me.marin.lockout.client.ClientPickBanSessionHolder;
 import me.marin.lockout.client.LockoutClient;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.sound.SoundCategory;
 import me.marin.lockout.LocateData;
 import me.marin.lockout.generator.GoalGroup;
 import net.minecraft.registry.RegistryKey;
@@ -314,7 +319,10 @@ public class GoalListScreen extends Screen {
             if (MinecraftClient.getInstance().player != null) {
                 String playerName = MinecraftClient.getInstance().player.getName().getString();
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "unpick"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                // Clear local mapping and notify panel
+                GoalGroup.setGoalPlayer(goalId, null);
+                if (picksPanel != null) picksPanel.onGoalAssigned(goalId, null);
             }
         } else {
             // Check limit during session
@@ -349,8 +357,9 @@ public class GoalListScreen extends Screen {
             if (MinecraftClient.getInstance().player != null) {
                 String playerName = MinecraftClient.getInstance().player.getName().getString();
                 GoalGroup.setGoalPlayer(goalId, playerName);
+                if (picksPanel != null) picksPanel.onGoalAssigned(goalId, playerName);
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "pick"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f));
+                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f));
             }
         }
         sendPicksBansUpdate();
@@ -404,7 +413,10 @@ public class GoalListScreen extends Screen {
             if (MinecraftClient.getInstance().player != null) {
                 String playerName = MinecraftClient.getInstance().player.getName().getString();
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "unban"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                // Clear local mapping and notify panel
+                GoalGroup.setGoalPlayer(goalId, null);
+                if (bansPanel != null) bansPanel.onGoalAssigned(goalId, null);
             }
         } else {
             // Check limit during session
@@ -439,8 +451,9 @@ public class GoalListScreen extends Screen {
             if (MinecraftClient.getInstance().player != null) {
                 String playerName = MinecraftClient.getInstance().player.getName().getString();
                 GoalGroup.setGoalPlayer(goalId, playerName);
+                if (bansPanel != null) bansPanel.onGoalAssigned(goalId, playerName);
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "ban"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.BLOCK_NOTE_BLOCK_BASS, 1.0f));
+                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.BLOCK_NOTE_BLOCK_BASS, 1.0f));
             }
         }
         sendPicksBansUpdate();
@@ -702,7 +715,10 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubleClick) {
+        int button = click.button();
+        double mouseX = click.x();
+        double mouseY = click.y();
         // Check team validation if there's an active session
         if (activeSessionState != null) {
             MinecraftClient mc = MinecraftClient.getInstance();
@@ -712,11 +728,11 @@ public class GoalListScreen extends Screen {
                 
                 net.minecraft.scoreboard.Team playerTeam = mc.player.getScoreboardTeam();
                 if (playerTeam == null) {
-                    return super.mouseClicked(mouseX, mouseY, button); // Only allow button clicks
+                    return super.mouseClicked(click, doubleClick); // Only allow button clicks
                 }
                 
                 if (!playerTeam.getName().equals(activeTeamName)) {
-                    return super.mouseClicked(mouseX, mouseY, button); // Only allow button clicks
+                    return super.mouseClicked(click, doubleClick); // Only allow button clicks
                 }
             }
         }
@@ -733,11 +749,11 @@ public class GoalListScreen extends Screen {
             // If the click is on the scrollbar region, let the widget handle it instead
             int widgetHeight = (height - 80 - SEARCH_HEIGHT - 5);
             int scrollbarStartX = widgetX + widgetWidth - 6; // scrollbar sits on the right edge
-            if (mouseX >= scrollbarStartX && mouseX <= widgetX + widgetWidth && mouseY >= widgetY && mouseY <= widgetY + widgetHeight) {
+                if (mouseX >= scrollbarStartX && mouseX <= widgetX + widgetWidth && mouseY >= widgetY && mouseY <= widgetY + widgetHeight) {
                 if (searchWidget != null) {
-                    if (searchWidget.mouseClicked(mouseX, mouseY, button)) return true;
+                    if (searchWidget.mouseClicked(click, doubleClick)) return true;
                 }
-                return super.mouseClicked(mouseX, mouseY, button);
+                return super.mouseClicked(click, doubleClick);
             }
 
             // Ask the widget which goal (if any) is under the mouse
@@ -755,7 +771,7 @@ public class GoalListScreen extends Screen {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubleClick);
     }
 
     private java.util.List<String> getVisibleGoals() {
@@ -789,35 +805,35 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
         if (searchWidget != null) {
-            if (searchWidget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true;
+            if (searchWidget.mouseDragged(click, deltaX, deltaY)) return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, deltaX, deltaY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         if (searchWidget != null) {
-            if (searchWidget.mouseReleased(mouseX, mouseY, button)) return true;
+            if (searchWidget.mouseReleased(click)) return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (searchTextField != null && searchTextField.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyInput input) {
+        if (searchTextField != null && searchTextField.keyPressed(input)) {
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        if (searchTextField != null && searchTextField.charTyped(chr, modifiers)) {
+    public boolean charTyped(CharInput input) {
+        if (searchTextField != null && searchTextField.charTyped(input)) {
             return true;
         }
-        return super.charTyped(chr, modifiers);
+        return super.charTyped(input);
     }
 
     @Override
@@ -850,11 +866,10 @@ public class GoalListScreen extends Screen {
             int borderWidth = 2;
             context.fill(x - borderWidth, y - borderWidth, x + 16 + borderWidth, y + 16 + borderWidth, borderColor);
             
-            // Draw the player's head (16x16 from their skin texture)
-            var skinTexture = client.getSkinProvider().getSkinTextures(player.getGameProfile());
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 8.0F, 8.0F, 16, 16, 8, 8, 64, 64);
-            // Draw the overlay (hat layer)
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, skinTexture.texture(), x, y, 40.0F, 8.0F, 16, 16, 8, 8, 64, 64);
+            // Use PlayerSkinDrawer for accurate 2D player face rendering
+            if (player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
+                net.minecraft.client.gui.PlayerSkinDrawer.draw(context, clientPlayer.getSkin(), x, y, 16);
+            }
         }
     }
 

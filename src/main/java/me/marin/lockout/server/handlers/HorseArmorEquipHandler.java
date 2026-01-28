@@ -57,33 +57,29 @@ public class HorseArmorEquipHandler implements UseEntityCallback {
     }
 
     public static void checkAndCompleteHorseArmorGoal(ServerPlayerEntity player, ItemStack stack) {
+        Lockout.log("HorseArmorEquipHandler: checkAndCompleteHorseArmorGoal player=" + player.getName().getString() + " item=" + (stack == null ? "EMPTY" : stack.getItem().toString()));
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
-
-        // Ensure the item is leather horse armor
+        // Ensure the item is leather horse armor and dyed
         DyedColorComponent dyedColor = stack.get(DataComponentTypes.DYED_COLOR);
         if (dyedColor == null) {
-            // It's not dyed leather armor, so return
-            return; 
+            Lockout.log("HorseArmorEquipHandler: item not dyed leather armor, skipping");
+            return;
         }
-        
-        DyedColorComponent dyedColorComponent = stack.get(DataComponentTypes.DYED_COLOR);
-        if (dyedColorComponent != null) {
-            int color = dyedColorComponent.rgb(); // This gets the integer color value
-            // Use the color value
-            for (Goal goal : lockout.getBoard().getGoals()) {
-                if (goal == null || goal.isCompleted()) continue;
-                
-                // Check if the goal is the specific unique colored armor goal
-                if (goal instanceof EquipHorseWithUniqueColoredLeatherArmorGoal) {
-                    EquipHorseWithUniqueColoredLeatherArmorGoal armorGoal = (EquipHorseWithUniqueColoredLeatherArmorGoal) goal;
-                    
-                    // Check if the color and item type match the goal's requirements
-                    if (armorGoal.getColorValue() == color && armorGoal.getItemType() == stack.getItem()) {
-                        lockout.completeGoal(goal, player);
-                        // If the goal is found and completed, you can break the loop
-                        break;
-                    }
+
+        int color = dyedColor.rgb(); // integer color value
+        Lockout.log("HorseArmorEquipHandler: dyed color=" + color + " item=" + stack.getItem().toString());
+
+        for (Goal goal : lockout.getBoard().getGoals()) {
+            if (goal == null || goal.isCompleted()) continue;
+
+            if (goal instanceof EquipHorseWithUniqueColoredLeatherArmorGoal) {
+                EquipHorseWithUniqueColoredLeatherArmorGoal armorGoal = (EquipHorseWithUniqueColoredLeatherArmorGoal) goal;
+
+                if (armorGoal.getColorValue() == color && armorGoal.getItemType() == stack.getItem()) {
+                    lockout.completeGoal(goal, player);
+                    Lockout.log("HorseArmorEquipHandler: completed goal=" + goal.getClass().getSimpleName() + " for player=" + player.getName().getString());
+                    break;
                 }
             }
         }

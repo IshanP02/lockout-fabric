@@ -78,10 +78,10 @@ public class ClientLocateUtil {
             var server = client.getServer();
             if (server == null) return map;
 
-            BlockPos currentPos = BlockPos.ofFloored(server.getOverworld().getSpawnPos().toCenterPos());
+            BlockPos currentPos = new BlockPos(0, 64, 0);
             for (RegistryKey<Biome> biome : biomesToCheck) {
                 var pair = server.getOverworld().locateBiome(
-                        biomeRegistryEntry -> biomeRegistryEntry.matchesId(biome.getValue()),
+                        biomeRegistryEntry -> biomeRegistryEntry.matchesKey(biome),
                         currentPos,
                         LockoutServer.LOCATE_SEARCH,
                         32,
@@ -110,7 +110,7 @@ public class ClientLocateUtil {
             var server = client.getServer();
             if (server == null) return map;
 
-            BlockPos currentPos = BlockPos.ofFloored(server.getOverworld().getSpawnPos().toCenterPos());
+            BlockPos currentPos = new BlockPos(0, 64, 0);
             Registry<Structure> registry = server.getOverworld().getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
             for (RegistryKey<Structure> structure : structuresToCheck) {
                 RegistryEntryList<Structure> structureList = RegistryEntryList.of(registry.getOrThrow(structure));

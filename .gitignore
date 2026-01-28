@@ -117,4 +117,14 @@ run/
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 
-build.gradle
+# Gradle bin directory
+bin/
+**/bin/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# .cursor # Ignored directly in .git/info/exclude
+.vscode

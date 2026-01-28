@@ -19,7 +19,7 @@ public class GoatHornItemMixin {
 
     @Inject(method = "use", at = @At(value = "INVOKE", target="Lnet/minecraft/item/GoatHornItem;playSound(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/Instrument;)V", shift = At.Shift.AFTER))
     public void onUse(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (user.getWorld().isClient) return;
+        if (user.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

@@ -25,7 +25,7 @@ public class ArmorStandMixin {
 
     @Inject(method = "interactAt", at = @At("RETURN"))
     public void onInteractAt(PlayerEntity player, Vec3d hitPos, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

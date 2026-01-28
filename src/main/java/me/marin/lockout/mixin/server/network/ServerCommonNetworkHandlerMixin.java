@@ -25,8 +25,11 @@ public abstract class ServerCommonNetworkHandlerMixin {
     @Inject(method = "onPong", at = @At("TAIL"))
     public void onPong(CommonPongC2SPacket packet, CallbackInfo ci) {
         server.execute(() -> {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(getProfile().getId());
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(getProfile().id());
             int id = packet.getParameter();
+
+            // Avoid disconnecting integrated singleplayer clients due to packet ordering races.
+            if (!server.isDedicated()) return;
 
             if (LockoutServer.waitingForVersionPacketPlayersMap.containsKey(player)) {
                 if (LockoutServer.waitingForVersionPacketPlayersMap.get(player) == id) {

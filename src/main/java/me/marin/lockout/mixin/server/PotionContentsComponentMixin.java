@@ -21,7 +21,7 @@ public class PotionContentsComponentMixin {
     @Inject(method = "onConsume", at = @At("HEAD"))
     public void onConsume(World world, LivingEntity user, ItemStack stack, ConsumableComponent consumable, CallbackInfo ci) {
         if (!(user instanceof PlayerEntity player)) return;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         PotionContentsComponent potionContents = (PotionContentsComponent) (Object) this;
 

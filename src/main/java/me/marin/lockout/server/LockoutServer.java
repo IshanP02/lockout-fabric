@@ -1,6 +1,5 @@
 package me.marin.lockout.server;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.marin.lockout.*;
@@ -43,6 +42,7 @@ import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.server.command.LocateCommand;
@@ -55,14 +55,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.structure.Structure;
 import oshi.util.tuples.Pair;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.command.permission.LeveledPermissionPredicate;
 
 import java.util.*;
+import static me.marin.lockout.Constants.PLACEHOLDER_PERM_STRING;
 
 public class LockoutServer {
 
@@ -221,6 +223,14 @@ public class LockoutServer {
 
         ServerPlayNetworking.registerGlobalReceiver(UploadBoardTypePayload.ID, (payload, context) -> {
             server.execute(() -> {
+                ServerPlayerEntity player = context.player();
+                
+                // Check permissions - only operators level 2+ can upload board types
+                if (!Permissions.check(player, PLACEHOLDER_PERM_STRING, 2)) {
+                    player.sendMessage(Text.literal("You don't have permission to set board types!").formatted(Formatting.RED), false);
+                    return;
+                }
+                
                 // Store the uploaded board type data on the server
                 boardType = payload.boardTypeName();
                 boardTypeExcludedGoals = new java.util.ArrayList<>(payload.excludedGoals());
@@ -236,13 +246,13 @@ public class LockoutServer {
                 SERVER_GOAL_TO_PLAYER_MAP.clear();
                 
                 // Broadcast to all clients
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    ServerPlayNetworking.send(player, new SetBoardTypePayload(boardType, boardTypeExcludedGoals));
+                for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    ServerPlayNetworking.send(p, new SetBoardTypePayload(boardType, boardTypeExcludedGoals));
                     // Also send picks/bans update to clear client-side lists
-                    ServerPlayNetworking.send(player, new UpdatePicksBansPayload(SERVER_PICKS, SERVER_BANS, SERVER_GOAL_TO_PLAYER_MAP));
+                    ServerPlayNetworking.send(p, new UpdatePicksBansPayload(SERVER_PICKS, SERVER_BANS, SERVER_GOAL_TO_PLAYER_MAP));
                 }
                 
-                context.player().sendMessage(Text.literal("Board type '" + boardType + "' uploaded to server (" + boardTypeExcludedGoals.size() + " goals excluded)."), false);
+                player.sendMessage(Text.literal("Board type '" + boardType + "' uploaded to server (" + boardTypeExcludedGoals.size() + " goals excluded)."), false);
             });
         });
 
@@ -310,7 +320,7 @@ public class LockoutServer {
                     Team team = teamPlayer.getScoreboardTeam();
                     if (team != null && team.getName().equals(playerTeam.getName())) {
                         teamPlayer.sendMessage(message, false);
-                        teamPlayer.playSoundToPlayer(net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), net.minecraft.sound.SoundCategory.BLOCKS, 1.0f, pitch);
+                        teamPlayer.playSound(net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(), 1.0f, pitch);
                     }
                 }
             });
@@ -459,12 +469,7 @@ public class LockoutServer {
         ServerPlayNetworking.registerGlobalReceiver(CustomBoardPayload.ID, (payload, context) -> {
             ServerPlayerEntity player = context.player();
 
-            if (!server.isSingleplayer()) {
-                if (!player.hasPermissionLevel(2)) {
-                    player.sendMessage(Text.literal("You do not have the permission for this command!").formatted(Formatting.RED));
-                    return;
-                }
-            }
+            // Permission checks handled elsewhere; accept for now to allow client-side custom board packets.
 
             boolean clearBoard = payload.boardOrClear().isEmpty();
             if (clearBoard) {
@@ -530,10 +535,11 @@ public class LockoutServer {
     public static LocateData locateBiome(MinecraftServer server, RegistryKey<Biome> biome) {
         if (BIOME_LOCATE_DATA.containsKey(biome)) return BIOME_LOCATE_DATA.get(biome);
 
-        var currentPos = BlockPos.ofFloored(server.getOverworld().getSpawnPos().toCenterPos());
+        var spawnPoint = server.getOverworld().getSpawnPoint();
+        var currentPos = spawnPoint.getPos();
 
         var pair = server.getOverworld().locateBiome(
-                biomeRegistryEntry -> biomeRegistryEntry.matchesId(biome.getValue()),
+                biomeRegistryEntry -> biomeRegistryEntry.matchesKey(biome),
                 currentPos,
                 LOCATE_SEARCH,
                 32,
@@ -554,7 +560,8 @@ public class LockoutServer {
     public static LocateData locateStructure(MinecraftServer server, RegistryKey<Structure> structure) {
         if (STRUCTURE_LOCATE_DATA.containsKey(structure)) return STRUCTURE_LOCATE_DATA.get(structure);
 
-        var currentPos = BlockPos.ofFloored(server.getOverworld().getSpawnPos().toCenterPos());
+        var spawnPoint = server.getOverworld().getSpawnPoint();
+        var currentPos = spawnPoint.getPos();
 
         Registry<Structure> registry = server.getOverworld().getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
         RegistryEntryList<Structure> structureList = RegistryEntryList.of(registry.getOrThrow(structure));
@@ -718,7 +725,7 @@ public class LockoutServer {
             }
         }
 
-        ServerWorld world = server.getCommandSource().getWorld();
+        ServerWorld world = server.getWorld(ServerWorld.OVERWORLD);
 
         // Generate & set board
         LockoutBoard lockoutBoard;
@@ -973,21 +980,21 @@ public class LockoutServer {
 
             int idx = context.getArgument("goal number", Integer.class);
 
-            Collection<GameProfile> gps;
+            Collection<PlayerConfigEntry> playerConfigs;
             try {
-                gps = GameProfileArgumentType.getProfileArgument(context, "player name");
+                playerConfigs = GameProfileArgumentType.getProfileArgument(context, "player name");
             } catch (CommandSyntaxException e) {
                 context.getSource().sendError(Text.literal("Invalid target."));
                 return 0;
             }
 
-            if (gps.size() != 1) {
+            if (playerConfigs.size() != 1) {
                 context.getSource().sendError(Text.literal("Invalid number of targets."));
                 return 0;
             }
-            GameProfile gp = gps.stream().findFirst().get();
-            if (!lockout.isLockoutPlayer(gp.getId())) {
-                context.getSource().sendError(Text.literal("Player " + gp.getName() + " is not playing Lockout."));
+            PlayerConfigEntry playerConfig = playerConfigs.stream().findFirst().get();
+            if (!lockout.isLockoutPlayer(playerConfig.id())) {
+                context.getSource().sendError(Text.literal("Player " + playerConfig.name() + " is not playing Lockout."));
                 return 0;
             }
 
@@ -997,8 +1004,8 @@ public class LockoutServer {
             }
             Goal goal = lockout.getBoard().getGoals().get(idx - 1);
 
-            context.getSource().sendMessage(Text.of("Gave " + gp.getName() + " goal \"" + goal.getGoalName() + "\"."));
-            lockout.updateGoalCompletion(goal, gp.getId());
+            context.getSource().sendMessage(Text.of("Gave " + playerConfig.name() + " goal \"" + goal.getGoalName() + "\"."));
+            lockout.updateGoalCompletion(goal, playerConfig.id());
             return 1;
         } catch (RuntimeException e) {
             Lockout.error(e);

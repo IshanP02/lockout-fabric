@@ -19,7 +19,7 @@ public class BlockMixin {
 
     @Inject(method = "onBreak", at = @At("HEAD"))
     public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player, CallbackInfoReturnable<BlockState> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

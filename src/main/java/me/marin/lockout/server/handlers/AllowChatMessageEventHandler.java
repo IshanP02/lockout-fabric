@@ -29,7 +29,7 @@ public class AllowChatMessageEventHandler implements ServerMessageEvents.AllowCh
                 if (team == null) {
                     return true;
                 }
-                MinecraftServer server = sender.getServer();
+                MinecraftServer server = sender.getEntityWorld().getServer();
                 PlayerManager pm = server.getPlayerManager();
 
                 team.getPlayerList().stream().filter(p -> pm.getPlayer(p) != null).map(pm::getPlayer).forEach(p ->{

@@ -209,8 +209,7 @@ public class BoardTypeCreatorScreen extends Screen {
         }
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        errorTextWidget = new TextWidget(Text.of(message), textRenderer);
-        errorTextWidget.setTextColor(Color.RED.getRGB());
+        errorTextWidget = new TextWidget(Text.literal(message).formatted(Formatting.RED), textRenderer);
         int centerX = width / 2;
         errorTextWidget.setPosition(centerX - errorTextWidget.getWidth() / 2, height - 55);
         this.addDrawableChild(errorTextWidget);

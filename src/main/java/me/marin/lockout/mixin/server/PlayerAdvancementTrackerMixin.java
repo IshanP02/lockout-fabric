@@ -71,7 +71,7 @@ public abstract class PlayerAdvancementTrackerMixin {
                     int playerAdvancements = lockout.playerAdvancements.get(owner.getUuid());
 
                     // Send client-side feedback to the player
-                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), SoundCategory.BLOCKS, 2, 0.5f);
+                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 2f, 0.5f);
                     if (playerAdvancements % 5 == 0) {
                         owner.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have completed " + playerAdvancements + " advancements."), false);
                     }

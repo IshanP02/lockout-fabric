@@ -15,9 +15,11 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ScrollableWidget;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -171,7 +173,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         }
 
         context.disableScissor();
-        this.drawScrollbar(context);
+        this.drawScrollbar(context, mouseX, mouseY);
     }
 
     protected final GoalEntry getEntryAtPosition(double x, double y) {
@@ -198,20 +200,21 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (hoveredEntry != null && button == 0 && !checkScrollbarDragged(mouseX, mouseY, button)) {
+    public boolean mouseClicked(Click click, boolean doubleClick) {
+        if (hoveredEntry != null && click.button() == 0 && !checkScrollbarDragged(click)) {
             parent.toggleGoalExclusion(hoveredEntry.goalId);
             MinecraftClient.getInstance().getSoundManager().play(
-                PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f)
             );
             return true;
         }
-        var bl = checkScrollbarDragged(mouseX, mouseY, button);
-        return super.mouseClicked(mouseX, mouseY, button) || bl;
+        var bl = checkScrollbarDragged(click);
+        return super.mouseClicked(click, doubleClick) || bl;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+        double mouseY = click.y();
         if (this.scrollbarDragged) {
             int top = this.getY();
             int bottom = top + this.getHeight();
@@ -221,15 +224,15 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
             this.setScrollY(normalizedPos * (double) this.getMaxScrollY());
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, deltaX, deltaY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseReleased(Click click) {
+        if (click.button() == 0) {
             this.scrollbarDragged = false;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override

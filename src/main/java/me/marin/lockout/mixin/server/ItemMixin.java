@@ -21,7 +21,7 @@ public class ItemMixin {
 
     @Inject(method = "use", at = @At("HEAD"))
     public void onUseCompass(World world, PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
@@ -31,7 +31,7 @@ public class ItemMixin {
         if (stack.getItem() != Items.COMPASS) return;
 
         NbtComponent customData = stack.get(DataComponentTypes.CUSTOM_DATA);
-        if (customData != null && customData.contains("PlayerTracker")) {
+        if (customData != null && customData.copyNbt().contains("PlayerTracker")) {
             LockoutServer.compassHandler.cycle(player);
         }
     }

@@ -29,7 +29,7 @@ public class CompassItemMixin {
 
     @Inject(method = "inventoryTick", at = @At("HEAD"), cancellable = true)
     public void onInventoryTick(ItemStack stack, ServerWorld world, Entity entity, @Nullable EquipmentSlot slot, CallbackInfo ci) {
-        if (entity.getWorld().isClient) return;
+        if (world.isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
         if (!(entity instanceof PlayerEntity player)) return;
@@ -43,7 +43,7 @@ public class CompassItemMixin {
         UUID selectedId = LockoutServer.compassHandler.players.get(selectionNum);
         PlayerEntity selectedPlayer = world.getServer().getPlayerManager().getPlayer(selectedId);
         if (selectedPlayer != null) {
-            if (selectedPlayer.getWorld().equals(player.getWorld())) {
+            if (selectedPlayer.getEntityWorld().equals(player.getEntityWorld())) {
                 stack.set(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTrackerComponent(Optional.of(GlobalPos.create(world.getRegistryKey(), selectedPlayer.getBlockPos())), true));
                 ci.cancel();
             }

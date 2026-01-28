@@ -21,7 +21,7 @@ public class ItemFrameEntityMixin {
 
     @Inject(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ItemFrameEntity;setHeldItemStack(Lnet/minecraft/item/ItemStack;)V"))
     public void onAddItem(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         ItemFrameEntity itemFrame = (ItemFrameEntity) (Object) this;
         if (itemFrame instanceof GlowItemFrameEntity) return;
 

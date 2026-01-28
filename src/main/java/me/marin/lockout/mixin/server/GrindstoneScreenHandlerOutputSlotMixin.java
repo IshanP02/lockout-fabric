@@ -17,7 +17,7 @@ public class GrindstoneScreenHandlerOutputSlotMixin {
 
     @Inject(method="onTakeItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V", at = @At("HEAD"))
     public void onTakeItem(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

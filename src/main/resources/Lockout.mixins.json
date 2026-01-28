@@ -26,8 +26,6 @@
     "server.GlowInkSacItemMixin",
     "server.GoatHornItemMixin",
     "server.GrindstoneScreenHandlerOutputSlotMixin",
-    "server.HorseScreenHandlerAccessor",
-    "server.HorseScreenHandlerMixin",
     "server.ItemFrameEntityMixin",
     "server.ItemMixin",
     "server.LeashableMixin",
@@ -49,7 +47,6 @@
     "server.network.ServerCommonNetworkHandlerMixin"
   ],
   "client": [
-    "client.DebugHudMixin",
     "client.InGameHudMixin",
     "client.InputMixin",
     "client.ItemInHandRendererMixin",

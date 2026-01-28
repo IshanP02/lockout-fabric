@@ -21,7 +21,7 @@ public class ServerPlayerEntityMixin {
     @Inject(method = "dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;", at = @At("HEAD"), cancellable = true)
     public void onDropItem(ItemStack stack, boolean throwRandomly, boolean retainOwnership, CallbackInfoReturnable<ItemEntity> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
@@ -39,7 +39,7 @@ public class ServerPlayerEntityMixin {
         if (!Lockout.isLockoutRunning(lockout)) return;
 
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         int i = 0;
         for (ItemStack item : player.getInventory().getMainStacks()) {

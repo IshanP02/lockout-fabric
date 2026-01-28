@@ -23,7 +23,7 @@ public class BundleItemMixin {
 
     @Inject(method = "onClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BundleItem;onContentChanged(Lnet/minecraft/entity/player/PlayerEntity;)V"))
     public void onClicked(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
@@ -33,7 +33,7 @@ public class BundleItemMixin {
 
     @Inject(method = "onStackClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BundleItem;onContentChanged(Lnet/minecraft/entity/player/PlayerEntity;)V"))
     public void onStackClicked(ItemStack stack, Slot slot, ClickType clickType, PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
-        if (player.getWorld().isClient) return;
+        if (player.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
