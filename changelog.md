@@ -1,3 +1,20 @@
+## Lockout v0.10.10
+- Ported to 1.21.11
+- Added new Goals:
+	- Obtain Copper Tools
+	- Wear Copper Armor
+	- Obtian "Mob Kabob" Advancement
+	- Construct Copper Golem
+	- Ride Nautilus
+	- Fill Shelf with Shelves
+- Updated older Goals with New Items:
+	- All Obtain Tools Goals now require Spear
+	- Obtain all Torches now requires Copper Torch
+	- Obtain all Horse Armor now requires Copper and Netherite Horse Armor
+	- Kill 30 Undead Mobs now includes Parched, Camel Husk, and Zombie Nautilus
+- Freezes the tick upon Server Start and unfreezes upon starting a Lockout game (prevents things like honey level from starting early)
+- Added Keybind support for Pick/Ban GUI
+
 ## Lockout v0.10.9
 - Changed how Pick/Bans work. Now there are designated BAN rounds and PICK rounds
 ## Lockout v0.10.8
