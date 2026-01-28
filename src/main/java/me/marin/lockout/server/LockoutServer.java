@@ -794,6 +794,10 @@ public class LockoutServer {
         }
 
         world.setTimeOfDay(0);
+        
+        var unfreezeCommand = "tick unfreeze";
+        var unfreezeParseResults = server.getCommandManager().getDispatcher().parse(unfreezeCommand, server.getCommandSource());
+        server.getCommandManager().execute(unfreezeParseResults, unfreezeCommand);
 
         for (int i = 3; i >= 0; i--) {
             if (i > 0) {
