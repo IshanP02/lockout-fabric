@@ -312,5 +312,6 @@ public class GoalType {
     public static final String FILL_SHELF_WITH_SHELVES = "FILL_SHELF_WITH_SHELVES";
     public static final String KILL_PARCHED = "KILL_PARCHED";
     public static final String OBTAIN_GILDED_BLACKSTONE = "OBTAIN_GILDED_BLACKSTONE";
+    public static final String FILL_DECORATED_POT = "FILL_DECORATED_POT";
 
 }
