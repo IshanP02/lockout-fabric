@@ -249,6 +249,7 @@ public class DefaultGoalRegister {
                         .biomes(List.of(LUKEWARM_OCEAN, WARM_OCEAN, DEEP_LUKEWARM_OCEAN))
                         .build()
                 );
+        INSTANCE.register(GoalType.DIE_TO_TRIDENT, DieToTridentGoal.class);
         INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class,  new GoalRequirements.Builder()
                 .structures(List.of(ANCIENT_CITY))
                 .build()

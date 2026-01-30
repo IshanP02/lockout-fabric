@@ -313,5 +313,6 @@ public class GoalType {
     public static final String KILL_PARCHED = "KILL_PARCHED";
     public static final String OBTAIN_GILDED_BLACKSTONE = "OBTAIN_GILDED_BLACKSTONE";
     public static final String FILL_DECORATED_POT = "FILL_DECORATED_POT";
+    public static final String DIE_TO_TRIDENT = "DIE_TO_TRIDENT";
 
 }
