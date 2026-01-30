@@ -150,6 +150,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.BREED_ARMADILLO, BreedArmadilloGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(SAVANNA, SAVANNA_PLATEAU, BADLANDS, WOODED_BADLANDS))
                         .build());
+        INSTANCE.register(GoalType.BREED_CAMEL, BreedCamelGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(DESERT))
+                        .build()
+                );           
         INSTANCE.register(GoalType.BREED_CHICKEN, BreedChickenGoal.class);
         INSTANCE.register(GoalType.BREED_COW, BreedCowsGoal.class);
         INSTANCE.register(GoalType.BREED_FOX, BreedFoxGoal.class, new GoalRequirements.Builder()
