@@ -10,6 +10,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.slot.CraftingResultSlot;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -56,7 +59,22 @@ public class CraftingResultSlotMixin {
             if (goal == null) continue;
 
             if (goal instanceof HaveMostUniqueCraftsGoal) {
-                player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE.value(), 2f, 2f);
+                // Play sound only to this specific player (client-side)
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE;
+                    serverPlayer.networkHandler.sendPacket(
+                        new PlaySoundS2CPacket(
+                            soundEntry,
+                            SoundCategory.MASTER,
+                            serverPlayer.getX(),
+                            serverPlayer.getY(),
+                            serverPlayer.getZ(),
+                            2f,
+                            2f,
+                            player.getEntityWorld().random.nextLong()
+                        )
+                    );
+                }
                 if (crafts.size() % 5 == 0) {
                     player.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have crafted " + crafts.size() + " unique items."), false);
                 }
