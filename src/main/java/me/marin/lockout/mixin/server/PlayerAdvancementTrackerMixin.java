@@ -16,6 +16,8 @@ import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -71,7 +73,19 @@ public abstract class PlayerAdvancementTrackerMixin {
                     int playerAdvancements = lockout.playerAdvancements.get(owner.getUuid());
 
                     // Send client-side feedback to the player
-                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 2f, 0.5f);
+                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_CHIME;
+                    owner.networkHandler.sendPacket(
+                        new PlaySoundS2CPacket(
+                            soundEntry,
+                            SoundCategory.MASTER,
+                            owner.getX(),
+                            owner.getY(),
+                            owner.getZ(),
+                            2f,
+                            0.5f,
+                            owner.getEntityWorld().random.nextLong()
+                        )
+                    );
                     if (playerAdvancements % 5 == 0) {
                         owner.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have completed " + playerAdvancements + " advancements."), false);
                     }

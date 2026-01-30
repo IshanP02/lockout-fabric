@@ -20,6 +20,7 @@
     "server.ConsumeItemCriterionMixin",
     "server.CraftingResultSlotMixin",
     "server.CrossbowItemMixin",
+    "server.DecoratedPotBlockMixin",
     "server.EndCrystalItemMixin",
     "server.EntityMixin",
     "server.FoodComponentMixin",

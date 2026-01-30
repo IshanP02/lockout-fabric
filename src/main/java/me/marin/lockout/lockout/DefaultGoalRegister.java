@@ -367,6 +367,12 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.USE_SMITHING_TABLE, UseSmithingTableGoal.class);
         INSTANCE.register(GoalType.USE_STONECUTTER, UseStonecutterGoal.class);
         INSTANCE.register(GoalType.FILL_ARMOR_STAND, FillArmorStandGoal.class);
+        INSTANCE.register(GoalType.FILL_BUNDLE_WITH_BUNDLES, FillBundleWithBundlesGoal.class);
+        INSTANCE.register(GoalType.FILL_CAMPFIRE, FillCampfireWithFoodGoal.class);
+        INSTANCE.register(GoalType.FILL_CHISELED_BOOKSHELF, FillChiseledBookshelfGoal.class);
+        INSTANCE.register(GoalType.FILL_DECORATED_POT, FillDecoratedPotGoal.class);
+        INSTANCE.register(GoalType.FILL_INVENTORY_UNIQUE_ITEMS, FillInventoryWithUniqueItemsGoal.class);
+        INSTANCE.register(GoalType.FILL_SHELF_WITH_SHELVES, FillShelfWithShelvesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_MUSIC_DISCS, Obtain3UniqueMusicDiscsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SAPLINGS, Obtain4UniqueSaplingsGoal.class);
@@ -533,11 +539,6 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.DAMAGED_BY_12_UNIQUE_SOURCES, DamagedBy12UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.CONSTRUCT_COPPER_GOLEM, ConstructCopperGolemGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
-        INSTANCE.register(GoalType.FILL_BUNDLE_WITH_BUNDLES, FillBundleWithBundlesGoal.class);
-        INSTANCE.register(GoalType.FILL_CAMPFIRE, FillCampfireWithFoodGoal.class);
-        INSTANCE.register(GoalType.FILL_CHISELED_BOOKSHELF, FillChiseledBookshelfGoal.class);
-        INSTANCE.register(GoalType.FILL_INVENTORY_UNIQUE_ITEMS, FillInventoryWithUniqueItemsGoal.class);
-        INSTANCE.register(GoalType.FILL_SHELF_WITH_SHELVES, FillShelfWithShelvesGoal.class);
         INSTANCE.register(GoalType.ITEM_FRAME_IN_ITEM_FRAME, ItemFrameInItemFrameGoal.class);
         INSTANCE.register(GoalType.LIGHT_CANDLE, LightCandleGoal.class);
         INSTANCE.register(GoalType.PLACE_END_CRYSTAL, PlaceEndCrystalGoal.class);
