@@ -156,7 +156,7 @@ public abstract class PlayerMixin {
                 // Check for completion using dynamic amount
                 int requiredAmount = damagedGoal.getAmount();
                 if (lockout.damageByUniqueSources.get(team) >= requiredAmount) {
-                    lockout.complete1v1Goal(damagedGoal, team, true, player.getName().getString() + " took damage from " + requiredAmount + " Unique Sources.");
+                    lockout.completeGoal(damagedGoal, team);
                 }
             }
 

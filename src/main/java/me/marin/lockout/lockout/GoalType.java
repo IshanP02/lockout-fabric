@@ -261,6 +261,7 @@ public class GoalType {
     public static final String OPPONENT_HIT_BY_ARROW = "OPPONENT_HIT_BY_ARROW";
     public static final String DAMAGED_BY_8_UNIQUE_SOURCES = "DAMAGED_BY_8_UNIQUE_SOURCES";
     public static final String DAMAGED_BY_12_UNIQUE_SOURCES = "DAMAGED_BY_12_UNIQUE_SOURCES";
+    public static final String DAMAGED_BY_15_UNIQUE_SOURCES = "DAMAGED_BY_15_UNIQUE_SOURCES";
     public static final String BREW_FIRE_RESISTANCE_POTION = "BREW_FIRE_RESISTANCE_POTION";
     public static final String OBTAIN_3_UNIQUE_BANNER_PATTERNS = "OBTAIN_3_UNIQUE_BANNER_PATTERNS";
     public static final String OBTAIN_ALL_TORCHES = "OBTAIN_ALL_TORCHES";
