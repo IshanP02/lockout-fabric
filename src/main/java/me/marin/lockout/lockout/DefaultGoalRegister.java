@@ -23,6 +23,7 @@ import me.marin.lockout.lockout.goals.experience.ReachXPLevel30Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueCraftsGoal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueSmeltsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.kill.*;
 import me.marin.lockout.lockout.goals.kill.unique.Kill10UniqueHostileMobsGoal;
@@ -486,6 +487,7 @@ public class DefaultGoalRegister {
                         GoalRequirements.TEAMS_GOAL);
         INSTANCE.register(GoalType.HAVE_MORE_CREEPER_KILLS, HaveMostCreeperKillsGoal.class);
         INSTANCE.register(GoalType.HAVE_MORE_UNIQUE_CRAFTS, HaveMostUniqueCraftsGoal.class);
+        INSTANCE.register(GoalType.HAVE_MORE_UNIQUE_SMELTS, HaveMostUniqueSmeltsGoal.class);
         INSTANCE.register(GoalType.HAVE_MOST_ADVANCEMENTS, HaveMostAdvancementsGoal.class);
         INSTANCE.register(GoalType.GET_10_ADVANCEMENTS, Get10UniqueAdvancementsGoal.class);
         INSTANCE.register(GoalType.GET_20_ADVANCEMENTS, Get20UniqueAdvancementsGoal.class);

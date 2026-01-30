@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "server.AbstractHorseEntityAccessor",
+    "server.AbstractFurnaceBlockEntityMixin",
     "server.AnvilScreenHandlerMixin",
     "server.ArmorStandMixin",
     "server.BlockMixin",

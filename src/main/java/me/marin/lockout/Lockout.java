@@ -50,6 +50,7 @@ public class Lockout {
     public final Map<UUID, Long> appliedEffectsTime = new HashMap<>();
     public final Map<UUID, Integer> distanceSprinted = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
+    public final Map<UUID, Set<Item>> uniqueSmelts = new HashMap<>();
     public final Map<UUID, Integer> playerAdvancements = new HashMap<>();
 
     public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
@@ -64,6 +65,8 @@ public class Lockout {
     public UUID mostCreeperKillsPlayer;
     public UUID mostUniqueCraftsPlayer;
     public int mostUniqueCrafts;
+    public UUID mostUniqueSmeltsPlayer;
+    public int mostUniqueSmelts;
     public UUID mostAdvancementsPlayer;
     public int mostAdvancements;
 
