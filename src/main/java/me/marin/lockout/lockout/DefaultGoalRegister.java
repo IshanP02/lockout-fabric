@@ -375,6 +375,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.FILL_DECORATED_POT, FillDecoratedPotGoal.class);
         INSTANCE.register(GoalType.FILL_INVENTORY_UNIQUE_ITEMS, FillInventoryWithUniqueItemsGoal.class);
         INSTANCE.register(GoalType.FILL_SHELF_WITH_SHELVES, FillShelfWithShelvesGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_2_UNIQUE_ARMOR_TRIMS, Obtain2UniqueArmorTrimsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_MUSIC_DISCS, Obtain3UniqueMusicDiscsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SAPLINGS, Obtain4UniqueSaplingsGoal.class);
