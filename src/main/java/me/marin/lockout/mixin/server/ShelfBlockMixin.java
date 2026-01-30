@@ -35,71 +35,36 @@ public class ShelfBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        System.out.println("DEBUG: ShelfBlockMixin triggered");
-        
-        if (world.isClient()) {
-            System.out.println("DEBUG: Client side, returning");
-            return;
-        }
-        
-        System.out.println("DEBUG: Server side");
+        if (world.isClient()) return;
         
         Lockout lockout = LockoutServer.lockout;
-        if (!Lockout.isLockoutRunning(lockout)) {
-            System.out.println("DEBUG: Lockout not running");
-            return;
-        }
-        
-        System.out.println("DEBUG: Lockout is running");
+        if (!Lockout.isLockoutRunning(lockout)) return;
 
         BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (!(blockEntity instanceof ShelfBlockEntity shelf)) {
-            System.out.println("DEBUG: Not a ShelfBlockEntity, type: " + (blockEntity != null ? blockEntity.getClass().getName() : "null"));
-            return;
-        }
+        if (!(blockEntity instanceof ShelfBlockEntity shelf)) return;
         
-        System.out.println("DEBUG: Is ShelfBlockEntity");
-        
-        if (!cir.getReturnValue().isAccepted()) {
-            System.out.println("DEBUG: Action result not accepted: " + cir.getReturnValue());
-            return;
-        }
-        
-        System.out.println("DEBUG: Action result is accepted");
+        if (!cir.getReturnValue().isAccepted()) return;
 
         // Check if all 3 slots are filled with shelves (any wood variant)
         int shelfCount = 0;
         for (int i = 0; i < shelf.size(); i++) {
             ItemStack slotStack = shelf.getStack(i);
-            System.out.println("DEBUG: Slot " + i + " - isEmpty: " + slotStack.isEmpty() + ", isShelf: " + (slotStack.isEmpty() ? "N/A" : isShelf(slotStack)) + ", item: " + (slotStack.isEmpty() ? "empty" : slotStack.getItem()));
             if (!slotStack.isEmpty() && isShelf(slotStack)) {
                 shelfCount++;
             }
         }
-        
-        System.out.println("DEBUG: Shelf count: " + shelfCount + "/" + shelf.size());
 
-        if (shelfCount < 3) {
-            System.out.println("DEBUG: Not enough shelves, need 3");
-            return;
-        }
-        
-        System.out.println("DEBUG: All 3 slots filled with shelves!");
-
-        System.out.println("DEBUG: All 3 slots filled with shelves!");
+        if (shelfCount < 3) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
             if (goal.isCompleted()) continue;
 
             if (goal instanceof FillShelfWithShelvesGoal) {
-                System.out.println("DEBUG: Completing FillShelfWithShelvesGoal for player " + player.getName().getString());
                 lockout.completeGoal(goal, player);
                 return;
             }
         }
-        
-        System.out.println("DEBUG: No FillShelfWithShelvesGoal found in goals");
     }
 
     private boolean isShelf(ItemStack stack) {

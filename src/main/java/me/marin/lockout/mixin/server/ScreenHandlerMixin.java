@@ -114,8 +114,6 @@ public abstract class ScreenHandlerMixin {
         HorseArmorEquipHandler.checkAndCompleteHorseArmorGoal(player, currentStack);
     }
 
-    // ❌ Removal is ignored automatically
-
     lockout$prevHorseArmorStack = ItemStack.EMPTY;
 }
 
