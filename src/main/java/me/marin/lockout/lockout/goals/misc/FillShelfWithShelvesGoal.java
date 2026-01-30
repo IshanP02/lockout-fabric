@@ -1,13 +1,12 @@
 package me.marin.lockout.lockout.goals.misc;
 
+import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.item.Item;
+import me.marin.lockout.lockout.texture.TextureProvider;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
 
-public class FillShelfWithShelvesGoal extends Goal {
-
-    private static final Item ITEM = Items.OAK_SHELF;
+public class FillShelfWithShelvesGoal extends Goal implements TextureProvider {
 
     public FillShelfWithShelvesGoal(String id, String data) {
         super(id, data);
@@ -20,7 +19,13 @@ public class FillShelfWithShelvesGoal extends Goal {
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return null;
+    }
+
+    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/fill_shelf.png");
+    @Override
+    public Identifier getTextureIdentifier() {
+        return TEXTURE;
     }
 
 }
