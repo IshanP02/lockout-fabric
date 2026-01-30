@@ -316,5 +316,6 @@ public class GoalType {
     public static final String FILL_DECORATED_POT = "FILL_DECORATED_POT";
     public static final String DIE_TO_TRIDENT = "DIE_TO_TRIDENT";
     public static final String OBTAIN_2_UNIQUE_ARMOR_TRIMS = "OBTAIN_2_UNIQUE_ARMOR_TRIMS";
+    public static final String OPPONENT_HIT_BY_WIND_CHARGE = "OPPONENT_HIT_BY_WIND_CHARGE";
 
 }

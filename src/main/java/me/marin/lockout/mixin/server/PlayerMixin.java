@@ -20,6 +20,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.entity.projectile.thrown.EggEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
 import net.minecraft.item.Item;
@@ -66,8 +67,8 @@ public abstract class PlayerMixin {
                 }
             }
             if (goal instanceof OpponentHitByEggGoal) {
-                if (entity instanceof EggEntity snowballEntity) {
-                    if (snowballEntity.getOwner() instanceof PlayerEntity shooter && !Objects.equals(player, shooter)) {
+                if (entity instanceof EggEntity eggEntity) {
+                    if (eggEntity.getOwner() instanceof PlayerEntity shooter && !Objects.equals(player, shooter)) {
                         lockout.complete1v1Goal(goal, shooter, true, shooter.getName().getString() + " hit " + player.getName().getString() + " with an Egg.");
                     }
                 }
@@ -113,6 +114,11 @@ public abstract class PlayerMixin {
             if (goal instanceof OpponentHitByArrowGoal) {
                 if (source.isOf(DamageTypes.ARROW)) {
                     lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " got hit by Arrow.");
+                }
+            }
+            if (goal instanceof OpponentHitByWindChargeGoal) {
+                if (source.isOf(DamageTypes.WIND_CHARGE)) {
+                    lockout.complete1v1Goal(goal, player, false, player.getName().getString() + " got hit by Wind Charge.");
                 }
             }
             if (goal instanceof OpponentTakesFallDamageGoal) {

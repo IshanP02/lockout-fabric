@@ -338,10 +338,13 @@ public class DefaultGoalRegister {
                         GoalRequirements.TO2_ONLY_GOAL);
         INSTANCE.register(GoalType.OPPONENT_EATS_FOOD, OpponentEatsFoodGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
-        INSTANCE.register(GoalType.OPPONENT_HIT_BY_ARROW, OpponentHitByArrowGoal.class);
+        INSTANCE.register(GoalType.OPPONENT_HIT_BY_ARROW, OpponentHitByArrowGoal.class,
+                        GoalRequirements.TO2_ONLY_GOAL);
         INSTANCE.register(GoalType.OPPONENT_HIT_BY_EGG, OpponentHitByEggGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
         INSTANCE.register(GoalType.OPPONENT_HIT_BY_SNOWBALL, OpponentHitBySnowballGoal.class,
+                        GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
+        INSTANCE.register(GoalType.OPPONENT_HIT_BY_WIND_CHARGE, OpponentHitByWindChargeGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
         INSTANCE.register(GoalType.OPPONENT_OBTAINS_CRAFTING_TABLE, OpponentObtainsCraftingTableGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL_NOT_IN_RANDOM_POOL);
