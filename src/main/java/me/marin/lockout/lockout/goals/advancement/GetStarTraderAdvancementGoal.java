@@ -8,21 +8,17 @@ import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-public class GetAnySpyglassAdvancementGoal extends AdvancementGoal implements TextureProvider {
+public class GetStarTraderAdvancementGoal extends AdvancementGoal implements TextureProvider{
 
-    private static final List<Identifier> ADVANCEMENTS = List.of(
-            Identifier.of("minecraft", "adventure/spyglass_at_parrot"),
-            Identifier.of("minecraft", "adventure/spyglass_at_ghast"),
-            Identifier.of("minecraft", "adventure/spyglass_at_dragon")
-            );
+    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.of("minecraft", "adventure/trade_at_world_height"));
 
-    public GetAnySpyglassAdvancementGoal(String id, String data) {
+    public GetStarTraderAdvancementGoal(String id, String data) {
         super(id, data);
     }
 
     @Override
     public String getGoalName() {
-        return "Get any Spyglass Advancement";
+        return "Obtain \"Star Trader\" advancement";
     }
 
     @Override
@@ -30,8 +26,7 @@ public class GetAnySpyglassAdvancementGoal extends AdvancementGoal implements Te
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/spyglass/spyglass_advancement.png");
-
+    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/star_trader.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

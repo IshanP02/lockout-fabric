@@ -94,7 +94,7 @@ public class GoalType {
     public static final String OBTAIN_DISPENSER = "OBTAIN_DISPENSER";
     public static final String OBTAIN_PISTON = "OBTAIN_PISTON";
     public static final String OBTAIN_ALL_RAW_ORE_BLOCKS = "OBTAIN_ALL_RAW_ORE_BLOCKS";
-    public static final String OBTAIN_ALL_HORSE_ARMOR = "OBTAIN_ALL_HORSE_ARMOR";
+    public static final String OBTAIN_3_UNIQUE_HORSE_ARMOR = "OBTAIN_3_UNIQUE_HORSE_ARMOR";
     public static final String OBTAIN_4_UNIQUE_SEEDS = "OBTAIN_4_UNIQUE_SEEDS";
     public static final String OBTAIN_6_UNIQUE_FLOWERS = "OBTAIN_6_UNIQUE_FLOWERS";
     public static final String OBTAIN_COLORED_GLAZED_TERRACOTTA = "OBTAIN_COLORED_GLAZED_TERRACOTTA";
@@ -176,7 +176,6 @@ public class GoalType {
     public static final String REACH_EXP_LEVEL_30 = "REACH_EXP_LEVEL_30";
     public static final String RIDE_HORSE = "RIDE_HORSE";
     public static final String RIDE_PIG = "RIDE_PIG";
-    public static final String RIDE_NAUTILUS = "RIDE_NAUTILUS";
     public static final String RIDE_MINECART = "RIDE_MINECART";
     public static final String USE_STONECUTTER = "USE_STONECUTTER";
     public static final String USE_ANVIL = "USE_ANVIL";
@@ -230,6 +229,7 @@ public class GoalType {
     public static final String SPRINT_1_KM = "SPRINT_1_KM";
     public static final String PUT_BANNER_ON_SHIELD = "PUT_BANNER_ON_SHIELD";
     public static final String HAVE_MORE_UNIQUE_CRAFTS = "HAVE_MORE_UNIQUE_CRAFTS";
+    public static final String HAVE_MORE_UNIQUE_SMELTS = "HAVE_MORE_UNIQUE_SMELTS";
     public static final String HAVE_YOUR_SHIELD_DISABLED = "HAVE_YOUR_SHIELD_DISABLED";
     public static final String ITEM_FRAME_IN_ITEM_FRAME = "ITEM_FRAME_IN_ITEM_FRAME";
     public static final String FILL_CAMPFIRE = "FILL_CAMPFIRE";
@@ -260,6 +260,7 @@ public class GoalType {
     public static final String OPPONENT_HIT_BY_ARROW = "OPPONENT_HIT_BY_ARROW";
     public static final String DAMAGED_BY_8_UNIQUE_SOURCES = "DAMAGED_BY_8_UNIQUE_SOURCES";
     public static final String DAMAGED_BY_12_UNIQUE_SOURCES = "DAMAGED_BY_12_UNIQUE_SOURCES";
+    public static final String DAMAGED_BY_15_UNIQUE_SOURCES = "DAMAGED_BY_15_UNIQUE_SOURCES";
     public static final String BREW_FIRE_RESISTANCE_POTION = "BREW_FIRE_RESISTANCE_POTION";
     public static final String OBTAIN_3_UNIQUE_BANNER_PATTERNS = "OBTAIN_3_UNIQUE_BANNER_PATTERNS";
     public static final String OBTAIN_ALL_TORCHES = "OBTAIN_ALL_TORCHES";
@@ -313,5 +314,28 @@ public class GoalType {
     public static final String KILL_PARCHED = "KILL_PARCHED";
     public static final String OBTAIN_GILDED_BLACKSTONE = "OBTAIN_GILDED_BLACKSTONE";
     public static final String FILL_DECORATED_POT = "FILL_DECORATED_POT";
+    public static final String DIE_TO_TRIDENT = "DIE_TO_TRIDENT";
+    public static final String OBTAIN_2_UNIQUE_ARMOR_TRIMS = "OBTAIN_2_UNIQUE_ARMOR_TRIMS";
+    public static final String OPPONENT_HIT_BY_WIND_CHARGE = "OPPONENT_HIT_BY_WIND_CHARGE";
+    public static final String GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT = "GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT";
+    public static final String BREED_CAMEL = "BREED_CAMEL";
+    public static final String EXTINGUISH_CAMPFIRE_WITH_SHOVEL = "EXTINGUISH_CAMPFIRE_WITH_SHOVEL"; 
+    public static final String OBTAIN_BEE_HIVE = "OBTAIN_BEE_HIVE";
+    public static final String LOOK_AT_5_UNIQUE_MOBS = "LOOK_AT_5_UNIQUE_MOBS";
+    public static final String LOOK_AT_10_UNIQUE_MOBS = "LOOK_AT_10_UNIQUE_MOBS";
+    public static final String LOOK_AT_15_UNIQUE_MOBS = "LOOK_AT_15_UNIQUE_MOBS";
+    public static final String LOOK_AT_20_UNIQUE_MOBS = "LOOK_AT_20_UNIQUE_MOBS";
+    public static final String LOOK_AT_HUSK = "LOOK_AT_HUSK";
+    public static final String LOOK_AT_GUARDIAN = "LOOK_AT_GUARDIAN";
+    public static final String LOOK_AT_IRON_GOLEM = "LOOK_AT_IRON_GOLEM";
+    public static final String LOOK_AT_PIGLIN_BRUTE = "LOOK_AT_PIGLIN_BRUTE";
+    public static final String LOOK_AT_ENDERMAN = "LOOK_AT_ENDERMAN";
+    public static final String LOOK_AT_HORSE = "LOOK_AT_HORSE";
+    public static final String VISIT_ALL_CAVE_BIOMES = "VISIT_ALL_CAVE_BIOMES";
+    public static final String OBTAIN_NAUTILUS_ARMOR = "OBTAIN_ANY_NAUTILUS_ARMOR";
+    public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
+    public static final String ENRAGE_ENDERMAN = "ENRAGE_ENDERMAN";
+    public static final String GET_STAR_TRADER_ADVANCEMENT = "GET_STAR_TRADER_ADVANCEMENT";
+    public static final String TAME_NAUTILUS = "TAME_NAUTILUS";
 
 }

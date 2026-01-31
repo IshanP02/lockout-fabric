@@ -25,7 +25,7 @@ public class TameAnimalCriterionMixin {
             if (!(goal instanceof TameAnimalGoal tameAnimalGoal)) continue;
             if (goal.isCompleted()) continue;
 
-            if (entity.getType().equals(tameAnimalGoal.getAnimal())) {
+            if (tameAnimalGoal.matchesAnimal(entity.getType())) {
                 lockout.completeGoal(tameAnimalGoal, player);
                 return;
             }
