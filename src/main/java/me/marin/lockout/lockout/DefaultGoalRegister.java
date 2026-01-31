@@ -555,6 +555,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.DAMAGED_BY_15_UNIQUE_SOURCES, DamagedBy15UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.CONSTRUCT_COPPER_GOLEM, ConstructCopperGolemGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
+        INSTANCE.register(GoalType.EXTINGUISH_CAMPFIRE_WITH_SHOVEL, ExtinguishCampfireWithShovelGoal.class);
         INSTANCE.register(GoalType.ITEM_FRAME_IN_ITEM_FRAME, ItemFrameInItemFrameGoal.class);
         INSTANCE.register(GoalType.LIGHT_CANDLE, LightCandleGoal.class);
         INSTANCE.register(GoalType.PLACE_END_CRYSTAL, PlaceEndCrystalGoal.class);

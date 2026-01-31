@@ -14,6 +14,7 @@
     "server.BrewingStandScreenHandlerPotionSlotMixin",
     "server.BrushableBlockEntityMixin",
     "server.BundleItemMixin",
+    "server.CampfireBlockMixin",
     "server.CampfireBlockEntityMixin",
     "server.ChiseledBookshelfBlockMixin",
     "server.CompassItemMixin",

@@ -320,5 +320,6 @@ public class GoalType {
     public static final String OPPONENT_HIT_BY_WIND_CHARGE = "OPPONENT_HIT_BY_WIND_CHARGE";
     public static final String GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT = "GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT";
     public static final String BREED_CAMEL = "BREED_CAMEL";
+    public static final String EXTINGUISH_CAMPFIRE_WITH_SHOVEL = "EXTINGUISH_CAMPFIRE_WITH_SHOVEL"; 
 
 }
