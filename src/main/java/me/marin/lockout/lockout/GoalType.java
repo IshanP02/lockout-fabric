@@ -336,5 +336,6 @@ public class GoalType {
     public static final String OBTAIN_NAUTILUS_ARMOR = "OBTAIN_ANY_NAUTILUS_ARMOR";
     public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
     public static final String ENRAGE_ENDERMAN = "ENRAGE_ENDERMAN";
+    public static final String GET_STAR_TRADER_ADVANCEMENT = "GET_STAR_TRADER_ADVANCEMENT";
 
 }
