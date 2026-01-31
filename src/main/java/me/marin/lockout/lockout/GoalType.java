@@ -333,5 +333,6 @@ public class GoalType {
     public static final String LOOK_AT_HORSE = "LOOK_AT_HORSE";
     public static final String VISIT_ALL_CAVE_BIOMES = "VISIT_ALL_CAVE_BIOMES";
     public static final String OBTAIN_NAUTILUS_ARMOR = "OBTAIN_ANY_NAUTILUS_ARMOR";
+    public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
 
 }

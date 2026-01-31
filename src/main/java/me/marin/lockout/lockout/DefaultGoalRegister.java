@@ -361,6 +361,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_A_TERRIBLE_FORTRESS_ADVANCEMENT, GetATerribleFortressAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_EYE_SPY_ADVANCEMENT, GetEyeSpyAdvancementGoal.class);
         INSTANCE.register(GoalType.ENTER_END, EnterEndGoal.class);
+        INSTANCE.register(GoalType.GET_REMOTE_GATEWAY_ADVANCEMENT, GetRemoteGatewayAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_THE_CITY_AT_THE_END_OF_THE_GAME_ADVANCEMENT, GetCityAtTheEndOfTheGameAdvancementGoal.class);
         INSTANCE.register(GoalType.OPPONENT_DIES, OpponentDiesGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL);
