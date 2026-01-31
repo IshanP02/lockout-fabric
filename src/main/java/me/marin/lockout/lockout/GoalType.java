@@ -330,9 +330,11 @@ public class GoalType {
     public static final String LOOK_AT_GUARDIAN = "LOOK_AT_GUARDIAN";
     public static final String LOOK_AT_IRON_GOLEM = "LOOK_AT_IRON_GOLEM";
     public static final String LOOK_AT_PIGLIN_BRUTE = "LOOK_AT_PIGLIN_BRUTE";
+    public static final String LOOK_AT_ENDERMAN = "LOOK_AT_ENDERMAN";
     public static final String LOOK_AT_HORSE = "LOOK_AT_HORSE";
     public static final String VISIT_ALL_CAVE_BIOMES = "VISIT_ALL_CAVE_BIOMES";
     public static final String OBTAIN_NAUTILUS_ARMOR = "OBTAIN_ANY_NAUTILUS_ARMOR";
     public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
+    public static final String ENRAGE_ENDERMAN = "ENRAGE_ENDERMAN";
 
 }

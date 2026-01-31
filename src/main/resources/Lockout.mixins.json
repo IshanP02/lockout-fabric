@@ -24,6 +24,7 @@
     "server.CrossbowItemMixin",
     "server.DecoratedPotBlockMixin",
     "server.EndCrystalItemMixin",
+    "server.EndermanEntityMixin",
     "server.EntityMixin",
     "server.FoodComponentMixin",
     "server.GlowInkSacItemMixin",

@@ -203,15 +203,16 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.LOOK_AT_10_UNIQUE_MOBS, LookAt10UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_15_UNIQUE_MOBS, LookAt15UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_20_UNIQUE_MOBS, LookAt20UniqueMobsGoal.class);
-        INSTANCE.register(GoalType.LOOK_AT_HUSK, LookAtHuskGoal.class, new GoalRequirements.Builder()
-                        .biomes(List.of(DESERT))
-                        .build()
-                );
+        INSTANCE.register(GoalType.LOOK_AT_ENDERMAN, LookAtEndermanGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_GUARDIAN, LookAtGuardianGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(MONUMENT))
                         .build()
                 );
         INSTANCE.register(GoalType.LOOK_AT_HORSE, LookAtHorseGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_HUSK, LookAtHuskGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(DESERT))
+                        .build()
+                );
         INSTANCE.register(GoalType.LOOK_AT_IRON_GOLEM, LookAtIronGolemGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_PIGLIN_BRUTE, LookAtPiglinBruteGoal.class);
         INSTANCE.register(GoalType.USE_BREWING_STAND, GetLocalBreweryAdvancementGoal.class);
@@ -338,6 +339,7 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.KILL_ZOGLIN, KillZoglinGoal.class);
         INSTANCE.register(GoalType.KILL_ZOMBIE_VILLAGER, KillZombieVillagerGoal.class);
+        INSTANCE.register(GoalType.ENRAGE_ENDERMAN, AngerEndermanGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ZOMBIFIED_PIGLIN, AngerZombifiedPiglinGoal.class);
         INSTANCE.register(GoalType.KILL_OTHER_PLAYER, KillOtherTeamPlayer.class,
                         GoalRequirements.TEAMS_GOAL);
