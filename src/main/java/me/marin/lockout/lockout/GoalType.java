@@ -321,5 +321,6 @@ public class GoalType {
     public static final String GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT = "GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT";
     public static final String BREED_CAMEL = "BREED_CAMEL";
     public static final String EXTINGUISH_CAMPFIRE_WITH_SHOVEL = "EXTINGUISH_CAMPFIRE_WITH_SHOVEL"; 
+    public static final String OBTAIN_BEE_HIVE = "OBTAIN_BEE_HIVE";
 
 }

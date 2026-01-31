@@ -295,6 +295,10 @@ public class DefaultGoalRegister {
                         .biomes(List.of(DESERT))
                         .build()
                 );
+        INSTANCE.register(GoalType.GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT, GetWhosThePillagerNowAdvancementGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(PILLAGER_OUTPOST))
+                        .build()
+                );
         INSTANCE.register(GoalType.KILL_SILVERFISH, KillSilverfishGoal.class);
         INSTANCE.register(GoalType.KILL_SLIME, KillSlimeGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(SWAMP))
@@ -422,6 +426,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_ALL_TORCHES, ObtainAllTorchesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_AMETHYST_BLOCK, ObtainAmethystBlockGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ANCIENT_DEBRIS, ObtainAncientDebrisGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_BEE_HIVE, ObtainBeeHiveGoal.class);
         INSTANCE.register(GoalType.OBTAIN_BELL, ObtainBellGoal.class,
                         GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.OBTAIN_BLOCK_OF_RESIN, ObtainBlockOfResinGoal.class, new GoalRequirements.Builder()
@@ -508,10 +513,6 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_MOB_KABOB_ADVANCEMENT, GetMobKabobAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_SNIPER_DUEL_ADVANCEMENT, GetSniperDuelAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_STAY_HYDRATED_ADVANCEMENT, GetStayHydratedAdvancementGoal.class);
-        INSTANCE.register(GoalType.GET_WHOS_THE_PILLAGER_NOW_ADVANCEMENT, GetWhosThePillagerNowAdvancementGoal.class, new GoalRequirements.Builder()
-                        .structures(List.of(PILLAGER_OUTPOST))
-                        .build()
-                );
         INSTANCE.register(GoalType.GET_THIS_BOAT_HAS_LEGS_ADVANCEMENT, GetThisBoatHasLegsAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_WHAT_A_DEAL_ADVANCEMENT, GetWhatADealAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_UNDER_LOCK_AND_KEY_ADVANCEMENT, GetUnderLockAndKeyAdvancementGoal.class, new GoalRequirements.Builder()
