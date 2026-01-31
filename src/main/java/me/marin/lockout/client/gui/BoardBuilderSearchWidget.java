@@ -388,6 +388,7 @@ public class BoardBuilderSearchWidget extends ScrollableWidget {
         if (me.marin.lockout.generator.GoalGroup.BIOMES_CATEGORY.getGoals().contains(goalId)) return "Visit Biome";
         if (me.marin.lockout.generator.GoalGroup.BREED_CATEGORY.getGoals().contains(goalId)) return "Breed Animals";
         if (me.marin.lockout.generator.GoalGroup.LEASH_CATEGORY.getGoals().contains(goalId)) return "Leash Entities";
+        if (me.marin.lockout.generator.GoalGroup.SPYGLASS_CATEGORY.getGoals().contains(goalId)) return "Spyglass";
         if (me.marin.lockout.generator.GoalGroup.BREWING_CATEGORY.getGoals().contains(goalId)) return "Brewing";
         if (me.marin.lockout.generator.GoalGroup.CONSUME_CATEGORY.getGoals().contains(goalId)) return "Consume";
         if (me.marin.lockout.generator.GoalGroup.DEATH_CATEGORY.getGoals().contains(goalId)) return "Death Tasks";

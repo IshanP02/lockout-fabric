@@ -322,5 +322,14 @@ public class GoalType {
     public static final String BREED_CAMEL = "BREED_CAMEL";
     public static final String EXTINGUISH_CAMPFIRE_WITH_SHOVEL = "EXTINGUISH_CAMPFIRE_WITH_SHOVEL"; 
     public static final String OBTAIN_BEE_HIVE = "OBTAIN_BEE_HIVE";
+    public static final String LOOK_AT_5_UNIQUE_MOBS = "LOOK_AT_5_UNIQUE_MOBS";
+    public static final String LOOK_AT_10_UNIQUE_MOBS = "LOOK_AT_10_UNIQUE_MOBS";
+    public static final String LOOK_AT_15_UNIQUE_MOBS = "LOOK_AT_15_UNIQUE_MOBS";
+    public static final String LOOK_AT_20_UNIQUE_MOBS = "LOOK_AT_20_UNIQUE_MOBS";
+    public static final String LOOK_AT_HUSK = "LOOK_AT_HUSK";
+    public static final String LOOK_AT_GUARDIAN = "LOOK_AT_GUARDIAN";
+    public static final String LOOK_AT_IRON_GOLEM = "LOOK_AT_IRON_GOLEM";
+    public static final String LOOK_AT_PIGLIN_BRUTE = "LOOK_AT_PIGLIN_BRUTE";
+    public static final String LOOK_AT_HORSE = "LOOK_AT_HORSE";
 
 }

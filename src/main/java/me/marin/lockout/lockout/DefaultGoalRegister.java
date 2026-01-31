@@ -38,6 +38,8 @@ import me.marin.lockout.lockout.goals.ride.RideHorseGoal;
 import me.marin.lockout.lockout.goals.ride.RideMinecartGoal;
 import me.marin.lockout.lockout.goals.ride.RideNautilusGoal;
 import me.marin.lockout.lockout.goals.ride.RidePigGoal;
+import me.marin.lockout.lockout.goals.spyglass.*;
+import me.marin.lockout.lockout.goals.spyglass.unique.*;
 import me.marin.lockout.lockout.goals.status_effect.*;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get3StatusEffectsGoal;
 import me.marin.lockout.lockout.goals.status_effect.unique.Get4StatusEffectsGoal;
@@ -192,6 +194,21 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_IRON_GOLEM, LeashIronGolemGoal.class);
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_STRIDER, LeashStriderGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_5_UNIQUE_MOBS, LookAt5UniqueMobsGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_10_UNIQUE_MOBS, LookAt10UniqueMobsGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_15_UNIQUE_MOBS, LookAt15UniqueMobsGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_20_UNIQUE_MOBS, LookAt20UniqueMobsGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_HUSK, LookAtHuskGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(DESERT))
+                        .build()
+                );
+        INSTANCE.register(GoalType.LOOK_AT_GUARDIAN, LookAtGuardianGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(MONUMENT))
+                        .build()
+                );
+        INSTANCE.register(GoalType.LOOK_AT_HORSE, LookAtHorseGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_IRON_GOLEM, LookAtIronGolemGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_PIGLIN_BRUTE, LookAtPiglinBruteGoal.class);
         INSTANCE.register(GoalType.USE_BREWING_STAND, GetLocalBreweryAdvancementGoal.class);
         INSTANCE.register(GoalType.BREW_FIRE_RESISTANCE_POTION, BrewFireResistancePotionGoal.class);
         INSTANCE.register(GoalType.BREW_HEALING_POTION, BrewHealingPotionGoal.class);

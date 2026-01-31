@@ -200,6 +200,12 @@ public class GoalGroup {
     public static final GoalGroup CAMPFIRE = new GoalGroup(List.of(
         EXTINGUISH_CAMPFIRE_WITH_SHOVEL, FILL_CAMPFIRE
     ), 1);
+    public static final GoalGroup SPYGLASS = new GoalGroup(List.of(
+        LOOK_AT_HUSK, LOOK_AT_GUARDIAN, LOOK_AT_IRON_GOLEM, LOOK_AT_PIGLIN_BRUTE, LOOK_AT_HORSE
+    ), 1);
+    public static final GoalGroup SPYGLASS_UNIQUE = new GoalGroup(List.of(
+        LOOK_AT_5_UNIQUE_MOBS, LOOK_AT_10_UNIQUE_MOBS, LOOK_AT_15_UNIQUE_MOBS, LOOK_AT_20_UNIQUE_MOBS
+    ), 2);
 
     public static final GoalGroup PICKS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
     public static final GoalGroup BANS = new GoalGroup(new ArrayList<>(), Integer.MAX_VALUE);
@@ -234,7 +240,9 @@ public class GoalGroup {
             LEASH_4_UNIQUE_ENTITIES_AT_ONCE, LEASH_6_UNIQUE_ENTITIES_AT_ONCE, LEASH_8_UNIQUE_ENTITIES_AT_ONCE, ATTACH_LEAD_TO_CHERRY_CHEST_BOAT, ATTACH_LEAD_TO_COW, ATTACH_LEAD_TO_DOLPHIN, ATTACH_LEAD_TO_FOX, 
             ATTACH_LEAD_TO_FROG, ATTACH_LEAD_TO_IRON_GOLEM, ATTACH_LEAD_TO_STRIDER
     ), Integer.MAX_VALUE);
-
+    public static final GoalGroup SPYGLASS_CATEGORY = new GoalGroup(List.of(
+            LOOK_AT_5_UNIQUE_MOBS, LOOK_AT_10_UNIQUE_MOBS, LOOK_AT_15_UNIQUE_MOBS, LOOK_AT_20_UNIQUE_MOBS, LOOK_AT_HUSK, LOOK_AT_GUARDIAN, LOOK_AT_IRON_GOLEM, LOOK_AT_PIGLIN_BRUTE, LOOK_AT_HORSE
+    ), Integer.MAX_VALUE);
     public static final GoalGroup BREWING_CATEGORY = new GoalGroup(List.of(
             USE_BREWING_STAND, BREW_FIRE_RESISTANCE_POTION, BREW_HEALING_POTION, BREW_INVISIBILITY_POTION, BREW_POISON_POTION, BREW_SWIFTNESS_POTION,
             BREW_WATER_BREATHING_POTION, BREW_WEAKNESS_POTION, BREW_LINGERING_POTION
@@ -338,6 +346,8 @@ public class GoalGroup {
         EAT_X_UNIQUE_FOOD.requirePredecessor.add(EAT_25_UNIQUE_FOOD);
         X_ADVANCEMENTS.requirePredecessor.add(GET_30_ADVANCEMENTS);
         UNIQUE_BIOMES.requirePredecessor.add(VISIT_20_UNIQUE_BIOMES);
+        SPYGLASS_UNIQUE.requirePredecessor.add(LOOK_AT_15_UNIQUE_MOBS);
+        SPYGLASS_UNIQUE.requirePredecessor.add(LOOK_AT_20_UNIQUE_MOBS);
     }
 
     static {
@@ -394,6 +404,7 @@ public class GoalGroup {
         GOAL_GROUPS.add(LEASH);
         GOAL_GROUPS.add(LEASH_UNIQUE);
         GOAL_GROUPS.add(CAMPFIRE);
+        GOAL_GROUPS.add(SPYGLASS);
     }
 
 

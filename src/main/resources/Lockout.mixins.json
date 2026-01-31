@@ -46,6 +46,7 @@
     "server.SmithingScreenHandlerMixin",
     "server.StatusEffectMixin",
     "server.TameAnimalCriterionMixin",
+    "server.UsingItemCriterionMixin",
     "server.WolfEntityMixin",
     "server.ZombieEntityMixin",
     "server.ZombifiedPiglinEntityMixin",

@@ -37,6 +37,7 @@ public class Lockout {
     public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> bredAnimalTypes = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> killedHostileTypes = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> killedRaidMobs = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> lookedAtMobTypes = new HashMap<>();
     public final Map<LockoutTeam, Integer> killedUndeadMobs = new HashMap<>();
     public final Map<LockoutTeam, Integer> killedArthropods = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<Item>> foodTypesEaten = new HashMap<>();
