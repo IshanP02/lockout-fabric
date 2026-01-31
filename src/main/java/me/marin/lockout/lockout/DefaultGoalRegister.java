@@ -490,6 +490,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_LODESTONE, ObtainLodestoneGoal.class);
         INSTANCE.register(GoalType.OBTAIN_MOSSY_STONE_BRICK_WALL, ObtainMossyStoneBrickWallGoal.class);
         INSTANCE.register(GoalType.OBTAIN_MUD_BRICK_WALL, ObtainMudBrickWallGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_NAUTILUS_ARMOR, ObtainNautilusArmorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_OBSERVER, ObtainObserverGoal.class);
         INSTANCE.register(GoalType.OBTAIN_PISTON, ObtainPistonGoal.class);
         INSTANCE.register(GoalType.OBTAIN_POTTERY_SHERD, ObtainPotterySherdGoal.class);
