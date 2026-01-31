@@ -26,6 +26,9 @@ public abstract class GoalRequirements {
     public static final GoalRequirements JUNGLE_BIOMES = new Builder()
             .biomes(List.of(BAMBOO_JUNGLE, JUNGLE, SPARSE_JUNGLE))
             .build();
+    public static final GoalRequirements SNOWY_BIOMES = new Builder()
+            .biomes(List.of(SNOWY_PLAINS, SNOWY_TAIGA, ICE_SPIKES, GROVE, SNOWY_SLOPES, FROZEN_PEAKS, FROZEN_RIVER, SNOWY_BEACH, FROZEN_OCEAN, DEEP_FROZEN_OCEAN))
+            .build();
     public static final GoalRequirements RABBIT_BIOMES = new Builder()
             .biomes(List.of(DESERT, SNOWY_PLAINS, SNOWY_TAIGA, GROVE, SNOWY_SLOPES, FLOWER_FOREST, TAIGA, MEADOW, OLD_GROWTH_PINE_TAIGA, OLD_GROWTH_SPRUCE_TAIGA, CHERRY_GROVE))
             .build();

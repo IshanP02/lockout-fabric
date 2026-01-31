@@ -120,7 +120,7 @@ public class DefaultGoalRegister {
                         .biomes(List.of(SAVANNA, SAVANNA_PLATEAU, WINDSWEPT_SAVANNA, BADLANDS, ERODED_BADLANDS, WOODED_BADLANDS)) /* armadillo spawn biomes */
                         .build());
         INSTANCE.register(GoalType.WEAR_CARVED_PUMPKIN_FOR_5_MINUTES, WearCarvedPumpkinFor5MinutesGoal.class);
-        INSTANCE.register(GoalType.TAME_CAT, TameCatGoal.class);
+        INSTANCE.register(GoalType.TAME_CAT, TameCatGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.TAME_HORSE, TameHorseGoal.class);
         INSTANCE.register(GoalType.TAME_NAUTILUS, TameNautilusGoal.class);
         INSTANCE.register(GoalType.TAME_PARROT, TameParrotGoal.class);
@@ -264,7 +264,7 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.DIE_BY_INTENTIONAL_GAME_DESIGN, DieToIntentionalGameDesignGoal.class);
-        INSTANCE.register(GoalType.DIE_BY_IRON_GOLEM, DieToIronGolemGoal.class);
+        INSTANCE.register(GoalType.DIE_BY_IRON_GOLEM, DieToIronGolemGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.DIE_BY_MAGIC, DieByMagicGoal.class);
         INSTANCE.register(GoalType.DIE_BY_TNT_MINECART, DieToTNTMinecartGoal.class);
         INSTANCE.register(GoalType.DIE_TO_POLAR_BEAR, DieToPolarBearGoal.class, new GoalRequirements.Builder()
@@ -292,12 +292,15 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.KILL_30_UNDEAD_MOBS, Kill30UndeadMobsGoal.class);
         INSTANCE.register(GoalType.KILL_100_MOBS, Kill100MobsGoal.class);
         INSTANCE.register(GoalType.KILL_BAT, KillBatGoal.class);
-        INSTANCE.register(GoalType.KILL_BLAZE_WITH_SNOWBALL, KillBlazeWithSnowballGoal.class);
+        INSTANCE.register(GoalType.KILL_BLAZE_WITH_SNOWBALL, KillBlazeWithSnowballGoal.class, GoalRequirements.SNOWY_BIOMES);
         INSTANCE.register(GoalType.KILL_BOGGED, KillBoggedGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(SWAMP))
                         .build()
                 );
-        INSTANCE.register(GoalType.KILL_BREEZE_USING_WIND_CHARGE, KillBreezeWithWindChargeGoal.class);
+        INSTANCE.register(GoalType.KILL_BREEZE_USING_WIND_CHARGE, KillBreezeWithWindChargeGoal.class, new GoalRequirements.Builder()
+                .structures(List.of(TRIAL_CHAMBERS))
+                .build()
+                );
         INSTANCE.register(GoalType.KILL_COLORED_SHEEP, KillColoredSheepGoal.class, null,
                         GoalDataGenerator.builder().withDye(attainableDyes -> {
                         attainableDyes.remove(DyeColor.WHITE);
@@ -325,8 +328,8 @@ public class DefaultGoalRegister {
                         .biomes(List.of(SWAMP))
                         .build()
                 );
-        INSTANCE.register(GoalType.KILL_SNOW_GOLEM, KillSnowGolemGoal.class);
-        INSTANCE.register(GoalType.KILL_SNOW_GOLEM_IN_NETHER, KillSnowGolemInNetherGoal.class);
+        INSTANCE.register(GoalType.KILL_SNOW_GOLEM, KillSnowGolemGoal.class, GoalRequirements.SNOWY_BIOMES);
+        INSTANCE.register(GoalType.KILL_SNOW_GOLEM_IN_NETHER, KillSnowGolemInNetherGoal.class, GoalRequirements.SNOWY_BIOMES);
         INSTANCE.register(GoalType.KILL_STRAY, KillStrayGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(FROZEN_RIVER, SNOWY_PLAINS, ICE_SPIKES))
                         .build()
@@ -536,8 +539,8 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_OH_SHINY_ADVANCEMENT, GetOhShinyAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_MOB_KABOB_ADVANCEMENT, GetMobKabobAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_SNIPER_DUEL_ADVANCEMENT, GetSniperDuelAdvancementGoal.class);
-        INSTANCE.register(GoalType.GET_STAR_TRADER_ADVANCEMENT, GetStarTraderAdvancementGoal.class);
-        INSTANCE.register(GoalType.GET_WHAT_A_DEAL_ADVANCEMENT, GetWhatADealAdvancementGoal.class);
+        INSTANCE.register(GoalType.GET_STAR_TRADER_ADVANCEMENT, GetStarTraderAdvancementGoal.class, GoalRequirements.VILLAGE);
+        INSTANCE.register(GoalType.GET_WHAT_A_DEAL_ADVANCEMENT, GetWhatADealAdvancementGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.GET_UNDER_LOCK_AND_KEY_ADVANCEMENT, GetUnderLockAndKeyAdvancementGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(TRIAL_CHAMBERS))
                         .build()
