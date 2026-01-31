@@ -1,3 +1,43 @@
+## Lockout v0.11.0
+- Added new Goals:
+	- Die to Trident
+	- Have more Unique Smelts
+	- Obtain 2 Unique Armor Trims
+	- Opponent hit with Wind Charge
+	- Kill Pillager with Crossbow
+	- Damaged by 15 Unique Sources
+	- Breed Camel
+	- Extinguish Campfire
+	- Obtain Beehive
+	- Visit All Cave Biomes
+	- Obtain Nautilus Armor
+	- Enter End Gateway
+	- Enrage Enderman
+	- Obtain "Star Trader" Advancement
+	- Look at 5/10/15/20 Unique Mobs with Spyglass
+	- Look at Enderman with Spyglass
+	- Look at Guardian with Spyglass
+	- Look at Husk with Spyglass
+	- Look at Iron Golem with Spyglass
+	- Look at Piglin Brute with Spyglass
+- Changed Goals:
+	- Changed Obtain All Horse Armor to Obtain 3 Unique Horse Armor
+	- Changed Ride Nautilus to Tame Nautilus (Accepts Nautilus and Zombie Nautilus)
+		- Removed biome requirement
+- Updated Textures:
+	- Tame Nautilus
+	- Obtain any Spyglass Advancement
+	- Obtain 4 Unique Seeds (Added the stack number to match other Obtain goals)
+- Added Biome Requirement:
+	- Kill Snow Golem
+	- Kill Snow Golem in Nether
+	- Kill Blaze with Snowball
+- Added Structure Requirement:
+	- Trade with Villager
+	- Obtain "Star Trader" Advancement
+	- Die to Iron Golem
+	- Tame Cat
+	- Kill Breeze with Wind Charge
 ## Lockout v0.10.11
 - Added new Goals:
 	- Kill Parched
