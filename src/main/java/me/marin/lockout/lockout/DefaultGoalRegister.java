@@ -8,6 +8,7 @@ import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get30UniqueAdvancementsGoal;
+import me.marin.lockout.lockout.goals.biome.VisitAllCaveBiomesGoal;
 import me.marin.lockout.lockout.goals.biome.VisitBadlandsBiomeGoal;
 import me.marin.lockout.lockout.goals.biome.VisitIceSpikesBiomeGoal;
 import me.marin.lockout.lockout.goals.biome.VisitMushroomBiomeGoal;
@@ -133,6 +134,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.VISIT_10_UNIQUE_BIOMES, Visit10UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_15_UNIQUE_BIOMES, Visit15UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_20_UNIQUE_BIOMES, Visit20UniqueBiomesGoal.class);
+        INSTANCE.register(GoalType.VISIT_ALL_CAVE_BIOMES, VisitAllCaveBiomesGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(LUSH_CAVES, DRIPSTONE_CAVES, DEEP_DARK))
+                        .build()
+                );
         INSTANCE.register(GoalType.GET_HOT_TOURIST_DESTINATIONS_ADVANCEMENT, GetHotTouristDestinationsAdvancementGoal.class);
         INSTANCE.register(GoalType.VISIT_BADLANDS_BIOME, VisitBadlandsBiomeGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(BADLANDS, ERODED_BADLANDS, WOODED_BADLANDS))

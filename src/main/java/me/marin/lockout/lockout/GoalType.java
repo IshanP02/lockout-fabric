@@ -331,5 +331,6 @@ public class GoalType {
     public static final String LOOK_AT_IRON_GOLEM = "LOOK_AT_IRON_GOLEM";
     public static final String LOOK_AT_PIGLIN_BRUTE = "LOOK_AT_PIGLIN_BRUTE";
     public static final String LOOK_AT_HORSE = "LOOK_AT_HORSE";
+    public static final String VISIT_ALL_CAVE_BIOMES = "VISIT_ALL_CAVE_BIOMES";
 
 }

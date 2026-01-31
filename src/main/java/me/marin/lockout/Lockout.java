@@ -58,6 +58,7 @@ public class Lockout {
     public final Map<UUID, Integer> distanceSwam = new HashMap<>();
     public final Map<UUID, Set<EntityType<?>>> leashedEntities = new HashMap<>();
     public final Map<LockoutTeam, Set<Identifier>> biomesVisited = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<Identifier>> visitedSpecificBiomes = new HashMap<>();
     public final Map<LockoutTeam, Integer> damageByUniqueSources = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> damageTypesTaken = new HashMap<>();
     public final Map<UUID, Integer> distanceByBoat = new HashMap<>();

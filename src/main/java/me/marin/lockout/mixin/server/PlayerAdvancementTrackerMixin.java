@@ -7,6 +7,8 @@ import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.GetHotTouristDestinationsAdvancementGoal;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.interfaces.GetUniqueAdvancementsGoal;
+import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
+import me.marin.lockout.lockout.interfaces.VisitAllSpecificBiomesGoal;
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.server.LockoutServer;
@@ -144,6 +146,20 @@ public abstract class PlayerAdvancementTrackerMixin {
             if (goal instanceof VisitBiomeGoal visitBiomeGoal) {
                 if (visitBiomeGoal.getBiomes().contains(biomeId)) {
                     lockout.completeGoal(goal, owner);
+                }
+            }
+
+            if (goal instanceof VisitAllSpecificBiomesGoal visitAllSpecificBiomesGoal) {
+                if (visitAllSpecificBiomesGoal.getBiomes().contains(biomeId)) {
+                    visitAllSpecificBiomesGoal.getTrackerMap().computeIfAbsent(team, t -> new LinkedHashSet<>());
+                    visitAllSpecificBiomesGoal.getTrackerMap().get(team).add(biomeId);
+
+                    int size = visitAllSpecificBiomesGoal.getTrackerMap().get(team).size();
+
+                    ((LockoutTeamServer) team).sendTooltipUpdate((Goal & HasTooltipInfo) goal);
+                    if (size >= visitAllSpecificBiomesGoal.getBiomes().size()) {
+                        lockout.completeGoal(visitAllSpecificBiomesGoal, team);
+                    }
                 }
             }
 
