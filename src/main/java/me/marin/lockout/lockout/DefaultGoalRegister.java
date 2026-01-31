@@ -410,6 +410,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.FILL_SHELF_WITH_SHELVES, FillShelfWithShelvesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_2_UNIQUE_ARMOR_TRIMS, Obtain2UniqueArmorTrimsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_BANNER_PATTERNS, Obtain3UniqueBannerPatternsGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_HORSE_ARMOR, Obtain3UniqueHorseArmorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_MUSIC_DISCS, Obtain3UniqueMusicDiscsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SAPLINGS, Obtain4UniqueSaplingsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_4_UNIQUE_SEEDS, Obtain4UniqueSeedsGoal.class);
@@ -440,7 +441,6 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ACTIVATOR_RAIL, ObtainActivatorRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_FURNACE_TYPES, ObtainAllFurnaceTypesGoal.class);
-        INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_HORSE_ARMOR, Obtain3UniqueHorseArmorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MINECARTS, ObtainAllMinecartsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MUSHROOMS, ObtainAllMushroomsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_PUMPKINS, ObtainAllPumpkinsGoal.class);
