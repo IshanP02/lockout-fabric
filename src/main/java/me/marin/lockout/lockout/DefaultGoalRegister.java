@@ -37,7 +37,6 @@ import me.marin.lockout.lockout.goals.obtain.*;
 import me.marin.lockout.lockout.goals.opponent.*;
 import me.marin.lockout.lockout.goals.ride.RideHorseGoal;
 import me.marin.lockout.lockout.goals.ride.RideMinecartGoal;
-import me.marin.lockout.lockout.goals.ride.RideNautilusGoal;
 import me.marin.lockout.lockout.goals.ride.RidePigGoal;
 import me.marin.lockout.lockout.goals.spyglass.*;
 import me.marin.lockout.lockout.goals.spyglass.unique.*;
@@ -48,6 +47,7 @@ import me.marin.lockout.lockout.goals.status_effect.unique.Get6StatusEffectsGoal
 import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor5MinutesGoal;
 import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor8MinutesGoal;
 import me.marin.lockout.lockout.goals.status_effect.applied_for_x_minutes.HaveEffectsAppliedFor10MinutesGoal;
+import me.marin.lockout.lockout.goals.tame_animal.TameNautilusGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameCatGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameHorseGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameParrotGoal;
@@ -122,15 +122,12 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.WEAR_CARVED_PUMPKIN_FOR_5_MINUTES, WearCarvedPumpkinFor5MinutesGoal.class);
         INSTANCE.register(GoalType.TAME_CAT, TameCatGoal.class);
         INSTANCE.register(GoalType.TAME_HORSE, TameHorseGoal.class);
+        INSTANCE.register(GoalType.TAME_NAUTILUS, TameNautilusGoal.class);
         INSTANCE.register(GoalType.TAME_PARROT, TameParrotGoal.class);
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
-        INSTANCE.register(GoalType.RIDE_NAUTILUS, RideNautilusGoal.class, new GoalRequirements.Builder()
-                        .biomes(List.of(BADLANDS, ERODED_BADLANDS, WOODED_BADLANDS))
-                        .build()
-                );
         INSTANCE.register(GoalType.GET_THIS_BOAT_HAS_LEGS_ADVANCEMENT, GetThisBoatHasLegsAdvancementGoal.class);
         INSTANCE.register(GoalType.VISIT_10_UNIQUE_BIOMES, Visit10UniqueBiomesGoal.class);
         INSTANCE.register(GoalType.VISIT_15_UNIQUE_BIOMES, Visit15UniqueBiomesGoal.class);

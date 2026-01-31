@@ -176,7 +176,6 @@ public class GoalType {
     public static final String REACH_EXP_LEVEL_30 = "REACH_EXP_LEVEL_30";
     public static final String RIDE_HORSE = "RIDE_HORSE";
     public static final String RIDE_PIG = "RIDE_PIG";
-    public static final String RIDE_NAUTILUS = "RIDE_NAUTILUS";
     public static final String RIDE_MINECART = "RIDE_MINECART";
     public static final String USE_STONECUTTER = "USE_STONECUTTER";
     public static final String USE_ANVIL = "USE_ANVIL";
@@ -337,5 +336,6 @@ public class GoalType {
     public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
     public static final String ENRAGE_ENDERMAN = "ENRAGE_ENDERMAN";
     public static final String GET_STAR_TRADER_ADVANCEMENT = "GET_STAR_TRADER_ADVANCEMENT";
+    public static final String TAME_NAUTILUS = "TAME_NAUTILUS";
 
 }
