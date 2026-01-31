@@ -440,7 +440,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ACTIVATOR_RAIL, ObtainActivatorRailGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_FURNACE_TYPES, ObtainAllFurnaceTypesGoal.class);
-        INSTANCE.register(GoalType.OBTAIN_ALL_HORSE_ARMOR, ObtainAllHorseArmorGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_3_UNIQUE_HORSE_ARMOR, Obtain3UniqueHorseArmorGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MINECARTS, ObtainAllMinecartsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MUSHROOMS, ObtainAllMushroomsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_PUMPKINS, ObtainAllPumpkinsGoal.class);

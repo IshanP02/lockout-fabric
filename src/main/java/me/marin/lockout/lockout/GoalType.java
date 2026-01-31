@@ -94,7 +94,7 @@ public class GoalType {
     public static final String OBTAIN_DISPENSER = "OBTAIN_DISPENSER";
     public static final String OBTAIN_PISTON = "OBTAIN_PISTON";
     public static final String OBTAIN_ALL_RAW_ORE_BLOCKS = "OBTAIN_ALL_RAW_ORE_BLOCKS";
-    public static final String OBTAIN_ALL_HORSE_ARMOR = "OBTAIN_ALL_HORSE_ARMOR";
+    public static final String OBTAIN_3_UNIQUE_HORSE_ARMOR = "OBTAIN_3_UNIQUE_HORSE_ARMOR";
     public static final String OBTAIN_4_UNIQUE_SEEDS = "OBTAIN_4_UNIQUE_SEEDS";
     public static final String OBTAIN_6_UNIQUE_FLOWERS = "OBTAIN_6_UNIQUE_FLOWERS";
     public static final String OBTAIN_COLORED_GLAZED_TERRACOTTA = "OBTAIN_COLORED_GLAZED_TERRACOTTA";

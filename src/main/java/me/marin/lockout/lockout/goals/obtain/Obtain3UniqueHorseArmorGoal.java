@@ -1,16 +1,16 @@
 package me.marin.lockout.lockout.goals.obtain;
 
-import me.marin.lockout.lockout.interfaces.ObtainAllItemsGoal;
+import me.marin.lockout.lockout.interfaces.ObtainSomeOfTheItemsGoal;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
 import java.util.List;
 
-public class ObtainAllHorseArmorGoal extends ObtainAllItemsGoal {
+public class Obtain3UniqueHorseArmorGoal extends ObtainSomeOfTheItemsGoal {
 
     private static final List<Item> ITEMS = List.of(Items.IRON_HORSE_ARMOR, Items.LEATHER_HORSE_ARMOR, Items.DIAMOND_HORSE_ARMOR, Items.GOLDEN_HORSE_ARMOR, Items.NETHERITE_HORSE_ARMOR, Items.COPPER_HORSE_ARMOR);
 
-    public ObtainAllHorseArmorGoal(String id, String data) {
+    public Obtain3UniqueHorseArmorGoal(String id, String data) {
         super(id, data);
     }
 
@@ -20,8 +20,13 @@ public class ObtainAllHorseArmorGoal extends ObtainAllItemsGoal {
     }
 
     @Override
+    public int getAmount() {
+        return 3;
+    }
+
+    @Override
     public String getGoalName() {
-        return "Obtain every type of Horse Armor";
+        return "Obtain 3 unique Horse Armor";
     }
 
 }
