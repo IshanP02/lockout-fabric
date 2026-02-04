@@ -55,6 +55,7 @@
   ],
   "client": [
     "client.DebugHudMixin",
+    "client.EntityRendererMixin",
     "client.InGameHudMixin",
     "client.InputMixin",
     "client.ItemInHandRendererMixin",
@@ -63,7 +64,8 @@
     "client.toasts.RecipeToastMixin",
     "client.toasts.SystemToastMixin",
     "client.toasts.TutorialToastMixin",
-    "client.LocatorBarMixin"
+    "client.LocatorBarMixin",
+    "client.WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
