@@ -1,3 +1,7 @@
+## Lockout v0.11.1
+- Fixed GUI inconsistencies
+- Updated Debug Menu to be more consistent across player changes
+- Debug Menu no longer overlaps with the lockout board
 ## Lockout v0.11.0
 - Added new Goals:
 	- Die to Trident

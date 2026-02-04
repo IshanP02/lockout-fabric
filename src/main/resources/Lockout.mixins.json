@@ -54,6 +54,7 @@
     "server.network.ServerCommonNetworkHandlerMixin"
   ],
   "client": [
+    "client.DebugHudMixin",
     "client.InGameHudMixin",
     "client.InputMixin",
     "client.ItemInHandRendererMixin",

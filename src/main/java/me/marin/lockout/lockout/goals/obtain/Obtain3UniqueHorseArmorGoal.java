@@ -30,7 +30,7 @@ public class Obtain3UniqueHorseArmorGoal extends ObtainSomeOfTheItemsGoal {
 
     @Override
     public String getGoalName() {
-        return "Obtain 3 unique Horse Armor";
+        return "Obtain 3 Unique Horse Armor";
     }
 
     @Override

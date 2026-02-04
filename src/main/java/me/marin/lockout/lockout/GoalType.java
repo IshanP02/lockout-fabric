@@ -277,7 +277,7 @@ public class GoalType {
     public static final String RIGHT_CLICK_BANNER_WITH_MAP = "RIGHT_CLICK_BANNER_WITH_MAP";
     public static final String OBTAIN_SEA_LANTERN = "OBTAIN_SEA_LANTERN";
     public static final String BOAT_2KM = "BOAT_2KM";
-    public static final String EQUIP_HORSE_WITH_COLORED_LEATHER_ARMOR = "EQUIP_HORSE_WITH_COLORED_LEATHER_ARMOR";
+    public static final String EQUIP_HORSE_WITH_COLORED_LEATHER_HORSE_ARMOR = "EQUIP_HORSE_WITH_COLORED_LEATHER_HORSE_ARMOR";
     public static final String EAT_BEETROOT_SOUP = "EAT_BEETROOT_SOUP";
     public static final String KILL_SLIME = "KILL_SLIME";
     public static final String BREAK_ANY_TOOL = "BREAK_ANY_TOOL";
