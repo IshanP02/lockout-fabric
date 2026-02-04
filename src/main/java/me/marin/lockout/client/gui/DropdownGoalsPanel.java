@@ -64,7 +64,7 @@ public class DropdownGoalsPanel extends ClickableWidget {
         
         if (maybePlayer.isPresent()) {
             Team team = maybePlayer.get().getScoreboardTeam();
-            if (team != null && team.getColor() != null) {
+            if (team != null && team.getColor() != null && team.getColor().isColor()) {
                 Identifier flag = getFlagTexture(team.getColor());
                 if (flag != null) flagCache.put(playerName, flag);
             }
@@ -166,7 +166,7 @@ public class DropdownGoalsPanel extends ClickableWidget {
                 team = scoreboard.getScoreHolderTeam(playerName);
             }
             
-            if (team != null && team.getColor() != null) {
+            if (team != null && team.getColor() != null && team.getColor().isColor()) {
                 flagTexture = getFlagTexture(team.getColor());
             }
         }

@@ -15,7 +15,7 @@ public class LeashCherryChestBoatGoal extends LeashMobGoal implements TexturePro
 
     @Override
     public String getGoalName() {
-        return "Attach Lead to Pretty Pink Chest Boat";
+        return "Attach Lead to Cherry Chest Boat";
     }
 
     @Override
