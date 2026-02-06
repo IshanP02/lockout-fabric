@@ -65,6 +65,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.permission.LeveledPermissionPredicate;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static me.marin.lockout.Constants.PLACEHOLDER_PERM_STRING;
 
@@ -109,7 +110,7 @@ public class LockoutServer {
 
     private static boolean isInitialized = false;
 
-    public static Map<UUID, Long> waitingForVersionPacketPlayersMap = new HashMap<>();
+    public static Map<UUID, Long> waitingForVersionPacketPlayersMap = new ConcurrentHashMap<>();
 
     public static void initializeServer() {
         lockout = null;
@@ -142,7 +143,7 @@ public class LockoutServer {
         // Add timeout handler for version packet checking
         ServerTickEvents.END_SERVER_TICK.register((server) -> {
             long currentTime = System.currentTimeMillis();
-            long timeoutMs = 5000; // 5 second timeout
+            long timeoutMs = 20000; // 20 second timeout
             
             // Check for players who haven't responded within timeout
             waitingForVersionPacketPlayersMap.entrySet().removeIf(entry -> {
