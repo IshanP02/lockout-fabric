@@ -1,7 +1,12 @@
 package me.marin.lockout.mixin.client;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.DebugHud;
+import net.minecraft.entity.Entity;
+import me.marin.lockout.client.RenderedEntityCounter;
+import me.marin.lockout.mixin.client.EntityRendererMixin;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -134,35 +139,35 @@ public abstract class DebugHudMixin {
             }
             
             // Categorize individual lines
-            if (line.contains("1.21")) {
+            if (line.startsWith("Minecraft 1.21.11")) {
                 mcVersion = line;
-            } else if (line.contains("vsync")) {
+            } else if (line.contains("fps T:")) {
                 fpsCounter = line;
-            } else if (line.contains("pU:")) {
+            } else if (line.startsWith("C:")) {
                 cCounter = line;
-            } else if (line.contains("SD:")) {
+            } else if (line.startsWith("E:")) {
                 eCounter = line;
-            } else if (line.contains("Biome")) {
+            } else if (line.startsWith("Biome:")) {
                 biome = line;
-            } else if (line.contains("XYZ:")) {
+            } else if (line.startsWith("XYZ:")) {
                 playerCoords = line;
-            } else if (line.contains("Block:")) {
+            } else if (line.startsWith("Block:")) {
                 block = line;
-            } else if (line.contains("Chunk:")) {
+            } else if (line.startsWith("Chunk:")) {
                 chunk = line;
-            } else if (line.contains("Facing:")) {
+            } else if (line.startsWith("Facing:")) {
                 facing = line;
             } else if (line.contains("FC:")) {
                 dimension = line;
-            } else if (line.contains("Section-relative")) {
+            } else if (line.startsWith("Section-relative:")) {
                 sectionRelative = line;
-            } else if (line.contains("CH S:")) {
+            } else if (line.startsWith("CH S:")) {
                 heightmap1 = line;
-            } else if (line.contains("SH S:")) {
+            } else if (line.startsWith("SH S:")) {
                 heightmap2 = line;
-            } else if (line.contains("Debug charts:")) {
+            } else if (line.startsWith("Debug charts:")) {
                 debugChartHelp = line;
-            } else if (line.contains("To edit:")) {
+            } else if (line.startsWith("To edit:")) {
                 editDebugChartHelp = line;
             } else {
                 // This is an uncategorized line
@@ -295,17 +300,50 @@ public abstract class DebugHudMixin {
                 merged = lockout$filterTargetedInfo(merged);
                 // Reorder all debug lines
                 merged = lockout$reorderDebugLines(merged);
+                // Fix the broken E: counter
+                merged = lockout$fixEntityCounter(merged);
                 lockout$invokeDrawText(context, merged, true);
                 lockout$rightText.clear();
             } else {
                 // Reorder debug lines for left-only display
                 text = lockout$reorderDebugLines(text);
+                // Fix the broken E: counter
+                text = lockout$fixEntityCounter(text);
                 lockout$invokeDrawText(context, text, true);
             }
         } else {
             // Capture and filter right column, don't render it
             lockout$rightText = lockout$filterTargetedInfo(new ArrayList<>(text));
         }
+    }
+
+    /**
+     * Fix the broken E: (entity) counter in 1.21.11.
+     * Replaces the incorrect value with the actual rendered entity count.
+     */
+    @Unique
+    private List<String> lockout$fixEntityCounter(List<String> text) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.world == null) {
+            return text;
+        }
+        
+        for (int i = 0; i < text.size(); i++) {
+            String line = text.get(i);
+            
+            if (line.startsWith("E:") && client.world != null) {
+                int rendered = RenderedEntityCounter.get();
+
+                int total = 0;
+                for (Entity ignored : client.world.getEntities()) {
+                    total++;
+                }
+
+                text.set(i, "E: " + rendered + "/" + total);
+            }
+        }
+        
+        return text;
     }
 
 }
