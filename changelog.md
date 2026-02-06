@@ -1,3 +1,5 @@
+## Lockout v0.11.3
+- Fixed issue where some worlds got stuck on loading screen
 ## Lockout v0.11.2
 - Fixed Entity Counter bug that occurs in 1.21.11
 - Debug Menu compatibility with Sodium
