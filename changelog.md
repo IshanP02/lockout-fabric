@@ -1,5 +1,8 @@
 ## Lockout v0.11.3
 - Fixed issue where some worlds got stuck on loading screen
+- Fixed issue where Goal Pings could be heard across teams if opponents were in close proximity
+- Fixed issue where copper armor did not count towards "Wear 4 Unique Armor Pieces"
+- Removed enchantment glint from "Wear 4 Unique Armor Pieces" as it looked similar to "Wear Full Enchanted Armor"
 ## Lockout v0.11.2
 - Fixed Entity Counter bug that occurs in 1.21.11
 - Debug Menu compatibility with Sodium
