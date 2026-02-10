@@ -54,8 +54,10 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
 
         tooltip.add(" ");
         tooltip.add("Unique Sources: " + Math.min(getAmount(), set.size()) + "/" + getAmount());
-        // list registry ids for the damage types
-        List<String> names = set.stream().map(k -> k.getValue().toString()).collect(Collectors.toList());
+        // list formatted damage type names
+        List<String> names = set.stream()
+            .map(k -> org.apache.commons.lang3.text.WordUtils.capitalize(k.getValue().getPath().replace("_", " "), ' '))
+            .collect(Collectors.toList());
         if (!names.isEmpty()) {
             tooltip.addAll(HasTooltipInfo.commaSeparatedList(names));
         }

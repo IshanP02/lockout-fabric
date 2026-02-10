@@ -51,24 +51,31 @@ public class GetHotTouristDestinationsAdvancementGoal extends AdvancementGoal im
     @Override
     public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
         List<String> tooltip = new ArrayList<>();
-        var biomes = LockoutServer.lockout.biomesVisited.getOrDefault(team, new LinkedHashSet<>());
         
-        // Filter to only show nether biomes
-        var netherBiomes = biomes.stream()
-            .filter(id -> id.getPath().contains("nether") || 
-                         id.getPath().contains("basalt") || 
-                         id.getPath().contains("warped") || 
-                         id.getPath().contains("crimson") || 
-                         id.getPath().contains("soul_sand"))
-            .collect(Collectors.toSet());
+        // Get player-specific nether biomes from their advancement progress
+        var netherBiomes = new LinkedHashSet<Identifier>();
+        
+        if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+            // Get the advancement progress for Hot Tourist Destinations
+            var advancementEntry = LockoutServer.server.getAdvancementLoader().get(Identifier.of("minecraft", "nether/explore_nether"));
+            if (advancementEntry != null) {
+                var progress = serverPlayer.getAdvancementTracker().getProgress(advancementEntry);
+                // Get all obtained criteria (each criterion is a biome)
+                for (String criterion : progress.getObtainedCriteria()) {
+                    netherBiomes.add(Identifier.of(criterion));
+                }
+            }
+        }
 
         tooltip.add(" ");
         tooltip.add("Nether Biomes: " + netherBiomes.size() + "/5");
-        tooltip.addAll(HasTooltipInfo.commaSeparatedList(
-            netherBiomes.stream()
-                .map(id -> Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
-                .collect(Collectors.toList())
-        ));
+        if (!netherBiomes.isEmpty()) {
+            tooltip.addAll(HasTooltipInfo.commaSeparatedList(
+                netherBiomes.stream()
+                    .map(id -> Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
+                    .collect(Collectors.toList())
+            ));
+        }
         return tooltip;
     }
 

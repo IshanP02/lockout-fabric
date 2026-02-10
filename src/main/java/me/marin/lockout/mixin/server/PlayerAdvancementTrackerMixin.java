@@ -144,6 +144,14 @@ public abstract class PlayerAdvancementTrackerMixin {
         Identifier biomeId = Identifier.of(criterionName);
         LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(owner.getUuid());
 
+        // For nether biomes (HOT_TOURIST_DESTINATIONS), ensure the biome is tracked before processing goals
+        // Track whether this was a new biome so we can use it later for tooltip updates
+        boolean wasNewBiomeForNether = false;
+        if (advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+            lockout.biomesVisited.putIfAbsent(team, new LinkedHashSet<>());
+            wasNewBiomeForNether = lockout.biomesVisited.get(team).add(biomeId);
+        }
+
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
             if (goal.isCompleted()) continue;
@@ -169,38 +177,41 @@ public abstract class PlayerAdvancementTrackerMixin {
             }
 
             if (goal instanceof VisitUniqueBiomesGoal visitUniqueBiomesGoal) {
-                Optional<AdvancementDisplay> advancementDisplay = advancement.value().display();
-                if (advancementDisplay.isPresent()) {
-                    visitUniqueBiomesGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
-                    var set = visitUniqueBiomesGoal.getTrackerMap().get(team);
-                    boolean added = set.add(biomeId);
+                // Track biomes from both ADVENTURING_TIME and HOT_TOURIST_DESTINATIONS
+                visitUniqueBiomesGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
+                var set = visitUniqueBiomesGoal.getTrackerMap().get(team);
+                
+                // If this is a nether biome, we already added it above, use that result
+                // Otherwise, add it now for overworld biomes
+                boolean added = advancement.id().equals(HOT_TOURIST_DESTINATIONS) 
+                    ? wasNewBiomeForNether 
+                    : set.add(biomeId);
 
-                    int size = set.size();
+                int size = set.size();
 
-                    if (added) {
-                        // send updates for every VisitUniqueBiomesGoal on the board
-                        for (Goal g : lockout.getBoard().getGoals()) {
-                            if (g instanceof VisitUniqueBiomesGoal uniqueBiome) {
-                                VisitUniqueBiomesGoal visitGoal = (VisitUniqueBiomesGoal)g;
-                                int amount = visitGoal.getAmount();
-                                if(size <= amount) {
-                                    team.sendTooltipUpdate(uniqueBiome);
-                                }
-                            }
-                            // Also update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
-                            if (g instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal && advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
-                                team.sendTooltipUpdate(hotTouristGoal, true);
+                if (added) {
+                    // send updates for every VisitUniqueBiomesGoal on the board
+                    for (Goal g : lockout.getBoard().getGoals()) {
+                        if (g instanceof VisitUniqueBiomesGoal uniqueBiome) {
+                            VisitUniqueBiomesGoal visitGoal = (VisitUniqueBiomesGoal)g;
+                            int amount = visitGoal.getAmount();
+                            if(size <= amount) {
+                                team.sendTooltipUpdate(uniqueBiome);
                             }
                         }
                     }
-
-                    if (size >= visitUniqueBiomesGoal.getAmount()) {
-                        lockout.completeGoal(goal, team);
-                    }
                 }
+
+                if (size >= visitUniqueBiomesGoal.getAmount()) {
+                    lockout.completeGoal(goal, team);
+                }
+            }
+            
+            // Update GetHotTouristDestinationsAdvancementGoal tooltip for nether biomes
+            if (goal instanceof GetHotTouristDestinationsAdvancementGoal hotTouristGoal && advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
+                team.sendTooltipUpdate(hotTouristGoal, true);
             }
 
         }
-
     }
 }
