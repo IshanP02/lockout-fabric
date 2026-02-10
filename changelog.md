@@ -1,6 +1,8 @@
 ## Lockout v0.11.4
 - Fixed an issue where spectators would crash if the board had any advancement related goals with tooltips
 - Fixed an issue where if spectators got advancement progress, it would fail to update tooltips for all players
+- Fixed an issue where nether biomes weren't updating tooltips for Visit X Unique Biomes
+- Fixed an issue where players could see their team's progress on Visit All Nether Biomes 
 - Added tooltip for "Have More" Goals to show the Leader and all team member's progress
 - Added `/GracePeriod <seconds>` to allow for a starting grace period
 - Added a 30 second Respawn PvP Immunity
