@@ -40,6 +40,11 @@ public class ServerPlayerEntityMixin {
 
         PlayerEntity player = (PlayerEntity) (Object) this;
         if (player.getEntityWorld().isClient()) return;
+        
+        // Track death time for respawn grace period
+        if (lockout.isLockoutPlayer(player.getUuid())) {
+            LockoutServer.playerDeathTimes.put(player.getUuid(), lockout.getTicks());
+        }
 
         int i = 0;
         for (ItemStack item : player.getInventory().getMainStacks()) {

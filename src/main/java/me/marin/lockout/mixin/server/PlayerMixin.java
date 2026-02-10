@@ -31,6 +31,8 @@ import net.minecraft.stat.Stats;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.StatType;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -83,6 +85,58 @@ public abstract class PlayerMixin {
         if (world.isClient()) return;
         if (!lockout.hasStarted()) {
             cir.setReturnValue(false);
+            return;
+        }
+        
+        // Grace period: prevent PVP damage from other players
+        int gracePeriod = LockoutServer.getGracePeriodSeconds();
+        if (gracePeriod > 0 && lockout.getTicks() < 20L * gracePeriod) {
+            if (source.getAttacker() instanceof PlayerEntity attacker) {
+                PlayerEntity victim = (PlayerEntity) (Object) this;
+                if (lockout.isLockoutPlayer(victim.getUuid()) && lockout.isLockoutPlayer(attacker.getUuid())) {
+                    // Both are lockout players, check if they're on different teams
+                    if (!lockout.getPlayerTeam(victim.getUuid()).equals(lockout.getPlayerTeam(attacker.getUuid()))) {
+                        long remainingSeconds = (20L * gracePeriod - lockout.getTicks()) / 20;
+                        if (attacker instanceof ServerPlayerEntity serverAttacker) {
+                            serverAttacker.sendMessage(Text.literal(remainingSeconds + " seconds until grace period ends!").formatted(Formatting.RED), false);
+                        }
+                        cir.setReturnValue(false);
+                    }
+                }
+            }
+        }
+        
+        // Death-based grace period: 30 seconds of PVP immunity after respawn
+        if (source.getAttacker() instanceof PlayerEntity attacker) {
+            PlayerEntity victim = (PlayerEntity) (Object) this;
+            if (lockout.isLockoutPlayer(victim.getUuid()) && lockout.isLockoutPlayer(attacker.getUuid())) {
+                // Check if they're on different teams
+                if (!lockout.getPlayerTeam(victim.getUuid()).equals(lockout.getPlayerTeam(attacker.getUuid()))) {
+                    long gracePeriodTicks = 20L * 30; // 30 seconds
+                    
+                    // Check if victim is in grace period
+                    Long victimDeathTime = LockoutServer.playerDeathTimes.get(victim.getUuid());
+                    if (victimDeathTime != null && lockout.getTicks() - victimDeathTime < gracePeriodTicks) {
+                        long remainingSeconds = (gracePeriodTicks - (lockout.getTicks() - victimDeathTime)) / 20;
+                        if (attacker instanceof ServerPlayerEntity serverAttacker) {
+                            serverAttacker.sendMessage(Text.literal(victim.getName().getString() + " has " + remainingSeconds + " seconds of spawn protection!").formatted(Formatting.RED), false);
+                        }
+                        cir.setReturnValue(false);
+                        return;
+                    }
+                    
+                    // Check if attacker is in grace period (also can't attack)
+                    Long attackerDeathTime = LockoutServer.playerDeathTimes.get(attacker.getUuid());
+                    if (attackerDeathTime != null && lockout.getTicks() - attackerDeathTime < gracePeriodTicks) {
+                        long remainingSeconds = (gracePeriodTicks - (lockout.getTicks() - attackerDeathTime)) / 20;
+                        if (attacker instanceof ServerPlayerEntity serverAttacker) {
+                            serverAttacker.sendMessage(Text.literal("You have " + remainingSeconds + " seconds of spawn protection! You cannot attack other players.").formatted(Formatting.RED), false);
+                        }
+                        cir.setReturnValue(false);
+                        return;
+                    }
+                }
+            }
         }
     }
 

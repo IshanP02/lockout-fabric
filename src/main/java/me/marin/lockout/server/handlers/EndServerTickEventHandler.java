@@ -29,6 +29,8 @@ import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -216,6 +218,29 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
         }
 
         lockout.tick();
+        
+        // Check if grace period just ended
+        int gracePeriod = me.marin.lockout.server.LockoutServer.getGracePeriodSeconds();
+        if (gracePeriod > 0 && lockout.getTicks() == 20L * gracePeriod) {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                player.sendMessage(Text.literal("Grace period over! PvP enabled.").formatted(Formatting.RED), false);
+            }
+        }
+        
+        // Check for expired spawn protection every second
+        if (lockout.getTicks() % 20 == 0) {
+            long gracePeriodTicks = 20L * 30; // 30 seconds
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                if (lockout.isLockoutPlayer(player.getUuid())) {
+                    Long deathTime = me.marin.lockout.server.LockoutServer.playerDeathTimes.get(player.getUuid());
+                    if (deathTime != null && lockout.getTicks() - deathTime == gracePeriodTicks) {
+                        player.sendMessage(Text.literal("Your spawn protection has expired! PvP enabled.").formatted(Formatting.GOLD), false);
+                        me.marin.lockout.server.LockoutServer.playerDeathTimes.remove(player.getUuid());
+                    }
+                }
+            }
+        }
+        
         if (lockout.getTicks() % 20 == 0) {
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(player, lockout.getUpdateTimerPacket());

@@ -77,6 +77,7 @@ public class LockoutServer {
     public static final List<DyeColor> AVAILABLE_DYE_COLORS = new ArrayList<>();
 
     private static int lockoutStartTime = 60;
+    private static int gracePeriodSeconds = 0;
     private static int boardSize;
     public static String boardType;
     public static java.util.List<String> boardTypeExcludedGoals = new java.util.ArrayList<>();
@@ -111,12 +112,16 @@ public class LockoutServer {
     private static boolean isInitialized = false;
 
     public static Map<UUID, Long> waitingForVersionPacketPlayersMap = new ConcurrentHashMap<>();
+    
+    // Track player death times for respawn grace period (30 seconds)
+    public static Map<UUID, Long> playerDeathTimes = new ConcurrentHashMap<>();
 
     public static void initializeServer() {
         lockout = null;
         compassHandler = null;
         gameStartRunnables.clear();
         waitingForVersionPacketPlayersMap.clear();
+        playerDeathTimes.clear();
 
         // Ideally, rejoining a world gets detected here, and this data doesn't get wiped
         BIOME_LOCATE_DATA.clear();
@@ -197,14 +202,22 @@ public class LockoutServer {
                 LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
                 for (Goal goal : lockout.getBoard().getGoals()) {
                     if (goal instanceof HasTooltipInfo hasTooltipInfo) {
-                        ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), String.join("\n", hasTooltipInfo.getTooltip(team, player))));
+                        List<String> tooltip = hasTooltipInfo.getTooltip(team, player);
+                        if (tooltip != null && !tooltip.isEmpty()) {
+                            String tooltipText = String.join("\n", tooltip);
+                            ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), tooltipText));
+                        }
                     }
                 }
                 player.changeGameMode(GameMode.SURVIVAL);
             } else {
                 for (Goal goal : lockout.getBoard().getGoals()) {
                     if (goal instanceof HasTooltipInfo hasTooltipInfo) {
-                        ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), String.join("\n", hasTooltipInfo.getSpectatorTooltip())));
+                        List<String> spectatorTooltip = hasTooltipInfo.getSpectatorTooltip();
+                        if (spectatorTooltip != null && !spectatorTooltip.isEmpty()) {
+                            String tooltipText = String.join("\n", spectatorTooltip);
+                            ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), tooltipText));
+                        }
                     }
                 }
                 player.changeGameMode(GameMode.SPECTATOR);
@@ -809,20 +822,29 @@ public class LockoutServer {
 
         compassHandler = new CompassItemHandler(allLockoutPlayers, playerManager);
 
-        List<Goal> tooltipGoals = new ArrayList<>(lockout.getBoard().getGoals()).stream().filter(g -> g instanceof HasTooltipInfo).toList();
-        for (Goal goal : tooltipGoals) {
-            // Update teams tooltip
-            for (LockoutTeam team : lockout.getTeams()) {
-                ((LockoutTeamServer) team).sendTooltipUpdate((Goal & HasTooltipInfo) goal, false);
-            }
-            // Update spectator tooltip
-            if (!allSpectatorPlayers.isEmpty()) {
-                var payload = new UpdateTooltipPayload(goal.getId(), String.join("\n", ((HasTooltipInfo) goal).getSpectatorTooltip()));
-                for (UUID spectator : allSpectatorPlayers) {
-                    ServerPlayNetworking.send(playerManager.getPlayer(spectator), payload);
+        // Delay tooltip sending by 1 tick to ensure lockout is fully initialized
+        ((LockoutRunnable) () -> {
+            List<Goal> tooltipGoals = new ArrayList<>(lockout.getBoard().getGoals()).stream().filter(g -> g instanceof HasTooltipInfo).toList();
+            for (Goal goal : tooltipGoals) {
+                // Update teams tooltip
+                for (LockoutTeam team : lockout.getTeams()) {
+                    ((LockoutTeamServer) team).sendTooltipUpdate((Goal & HasTooltipInfo) goal, false);
+                }
+                // Update spectator tooltip
+                if (!allSpectatorPlayers.isEmpty()) {
+                    List<String> spectatorTooltip = ((HasTooltipInfo) goal).getSpectatorTooltip();
+                    if (spectatorTooltip != null && !spectatorTooltip.isEmpty()) {
+                        var payload = new UpdateTooltipPayload(goal.getId(), String.join("\n", spectatorTooltip));
+                        for (UUID spectator : allSpectatorPlayers) {
+                            ServerPlayerEntity spectatorPlayer = playerManager.getPlayer(spectator);
+                            if (spectatorPlayer != null) {
+                                ServerPlayNetworking.send(spectatorPlayer, payload);
+                            }
+                        }
+                    }
                 }
             }
-        }
+        }).runTaskAfter(1L);
 
         for (ServerPlayerEntity player : allServerPlayers) {
             ServerPlayNetworking.send(player, lockout.getTeamsGoalsPacket());
@@ -1156,6 +1178,18 @@ public class LockoutServer {
         lockoutStartTime = seconds;
         context.getSource().sendMessage(Text.of("Updated start time to " + seconds + "s."));
         return 1;
+    }
+
+    public static int setGracePeriod(CommandContext<ServerCommandSource> context) {
+        int seconds = context.getArgument("seconds", Integer.class);
+
+        gracePeriodSeconds = seconds;
+        context.getSource().sendMessage(Text.of("Updated grace period to " + seconds + "s."));
+        return 1;
+    }
+
+    public static int getGracePeriodSeconds() {
+        return gracePeriodSeconds;
     }
 
     public static int setBoardSize(CommandContext<ServerCommandSource> context) {

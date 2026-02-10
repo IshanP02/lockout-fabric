@@ -134,6 +134,7 @@ public abstract class PlayerAdvancementTrackerMixin {
     public void onAdvancementProgress(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (!lockout.isLockoutPlayer(owner.getUuid())) return;
 
         if (!advancement.id().equals(ADVENTURING_TIME) && !advancement.id().equals(HOT_TOURIST_DESTINATIONS)) return;
         Identifier biomeId = Identifier.of(criterionName);
