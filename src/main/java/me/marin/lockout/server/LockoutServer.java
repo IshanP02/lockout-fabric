@@ -52,6 +52,8 @@ import net.minecraft.server.command.LocateCommand;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
 import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
@@ -65,6 +67,7 @@ import net.minecraft.world.gen.structure.Structure;
 import oshi.util.tuples.Pair;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.permission.LeveledPermissionPredicate;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -367,16 +370,17 @@ public class LockoutServer {
                     Team team = teamPlayer.getScoreboardTeam();
                     if (team != null && team.getName().equals(playerTeam.getName())) {
                         teamPlayer.sendMessage(message, false);
-                        // Play sound directly to the player (not positional)
-                        teamPlayer.getEntityWorld().playSound(
-                            null, // No source player (global sound)
-                            teamPlayer.getX(),
-                            teamPlayer.getY(),
-                            teamPlayer.getZ(),
-                            net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_HARP.value(),
-                            net.minecraft.sound.SoundCategory.MASTER,
-                            1.0f,
-                            pitch
+                        teamPlayer.networkHandler.sendPacket(
+                            new PlaySoundS2CPacket(
+                                SoundEvents.BLOCK_NOTE_BLOCK_HARP,
+                                SoundCategory.MASTER,
+                                teamPlayer.getX(),
+                                teamPlayer.getY(),
+                                teamPlayer.getZ(),
+                                1.0f,
+                                pitch,
+                                teamPlayer.getRandom().nextLong()
+                            )
                         );
                     }
                 }
