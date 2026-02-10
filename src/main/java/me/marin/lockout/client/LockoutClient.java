@@ -120,6 +120,20 @@ public class LockoutClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(UpdateTooltipPayload.ID, (payload, context) -> {
             goalTooltipMap.put(payload.goal(), payload.tooltip());
         });
+        
+        ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.GoalDetailsPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                if (client.player != null) {
+                    // Display goal details in chat
+                    String[] lines = payload.details().split("\\\\n");
+                    for (String line : lines) {
+                        client.player.sendMessage(Text.literal(line), false);
+                    }
+                }
+            });
+        });
+        
         ClientPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             client.execute(() -> {

@@ -136,6 +136,15 @@ public class LockoutInitializer implements ModInitializer {
             }
 
             {
+                // GracePeriod command
+                var gracePeriodRoot = CommandManager.literal("GracePeriod").requires(PERMISSIONS).build();
+                var gracePeriodSeconds = CommandManager.argument("seconds", IntegerArgumentType.integer(0, 600)).executes(LockoutServer::setGracePeriod).build();
+
+                dispatcher.getRoot().addChild(gracePeriodRoot);
+                gracePeriodRoot.addChild(gracePeriodSeconds);
+            }
+
+            {
                 // RemoveCustomBoard command (SetCustomBoard is registered in LockoutClient, and server listens for a packet)
 
                 dispatcher.getRoot().addChild(CommandManager.literal("RemoveCustomBoard").requires(PERMISSIONS).executes((context) -> {

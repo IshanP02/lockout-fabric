@@ -13,8 +13,10 @@ import me.marin.lockout.network.AnnounceGoalFocusPayload;
 import me.marin.lockout.network.BroadcastPickBanPayload;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.EndPickBanSessionPayload;
+import me.marin.lockout.network.GoalDetailsPayload;
 import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.RequestGoalDetailsPayload;
 import me.marin.lockout.network.SetBoardTypePayload;
 import me.marin.lockout.network.StartLockoutPayload;
 import me.marin.lockout.network.StartPickBanSessionPayload;
@@ -80,6 +82,7 @@ public class LockoutServer {
     public static final List<DyeColor> AVAILABLE_DYE_COLORS = new ArrayList<>();
 
     private static int lockoutStartTime = 60;
+    private static int gracePeriodSeconds = 0;
     private static int boardSize;
     public static String boardType;
     public static java.util.List<String> boardTypeExcludedGoals = new java.util.ArrayList<>();
@@ -114,12 +117,16 @@ public class LockoutServer {
     private static boolean isInitialized = false;
 
     public static Map<UUID, Long> waitingForVersionPacketPlayersMap = new ConcurrentHashMap<>();
+    
+    // Track player death times for respawn grace period (30 seconds)
+    public static Map<UUID, Long> playerDeathTimes = new ConcurrentHashMap<>();
 
     public static void initializeServer() {
         lockout = null;
         compassHandler = null;
         gameStartRunnables.clear();
         waitingForVersionPacketPlayersMap.clear();
+        playerDeathTimes.clear();
 
         // Ideally, rejoining a world gets detected here, and this data doesn't get wiped
         BIOME_LOCATE_DATA.clear();
@@ -200,14 +207,22 @@ public class LockoutServer {
                 LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
                 for (Goal goal : lockout.getBoard().getGoals()) {
                     if (goal instanceof HasTooltipInfo hasTooltipInfo) {
-                        ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), String.join("\n", hasTooltipInfo.getTooltip(team, player))));
+                        List<String> tooltip = hasTooltipInfo.getTooltip(team, player);
+                        if (tooltip != null && !tooltip.isEmpty()) {
+                            String tooltipText = String.join("\n", tooltip);
+                            ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), tooltipText));
+                        }
                     }
                 }
                 player.changeGameMode(GameMode.SURVIVAL);
             } else {
                 for (Goal goal : lockout.getBoard().getGoals()) {
                     if (goal instanceof HasTooltipInfo hasTooltipInfo) {
-                        ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), String.join("\n", hasTooltipInfo.getSpectatorTooltip())));
+                        List<String> spectatorTooltip = hasTooltipInfo.getSpectatorTooltip();
+                        if (spectatorTooltip != null && !spectatorTooltip.isEmpty()) {
+                            String tooltipText = String.join("\n", spectatorTooltip);
+                            ServerPlayNetworking.send(player, new UpdateTooltipPayload(goal.getId(), tooltipText));
+                        }
                     }
                 }
                 player.changeGameMode(GameMode.SPECTATOR);
@@ -368,6 +383,178 @@ public class LockoutServer {
                             )
                         );
                     }
+                }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(RequestGoalDetailsPayload.ID, (payload, context) -> {
+            server.execute(() -> {
+                ServerPlayerEntity spectator = context.player();
+                
+                // Check if lockout is active
+                if (!Lockout.exists(lockout)) {
+                    return;
+                }
+                
+                // Find the goal
+                Goal goal = lockout.getBoard().getGoals().stream()
+                    .filter(g -> g !=null && g.getId().equals(payload.goalId()))
+                    .findFirst()
+                    .orElse(null);
+                
+                if (goal == null) {
+                    return;
+                }
+                
+                // Build detailed information
+                StringBuilder details = new StringBuilder();
+                
+                // Check if it's a tooltip goal
+                if (goal instanceof me.marin.lockout.lockout.interfaces.KillUniqueHostileMobsGoal killGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var hostiles = lockout.killedHostileTypes.getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String mobsList = hostiles.stream()
+                            .map(type -> type.getName().getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(mobsList.isEmpty() ? "None" : mobsList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.BreedUniqueAnimalsGoal breedGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var animals = lockout.bredAnimalTypes.getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String animalsList = animals.stream()
+                            .map(type -> type.getName().getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(animalsList.isEmpty() ? "None" : animalsList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.EatUniqueFoodsGoal eatGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var foods = lockout.foodTypesEaten.getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String foodsList = foods.stream()
+                            .map(item -> item.getName().getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(foodsList.isEmpty() ? "None" : foodsList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.VisitUniqueBiomesGoal visitGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var biomes = lockout.biomesVisited.getOrDefault(team, new java.util.HashSet<>());
+                        String biomesList = biomes.stream()
+                            .map(id -> id.getPath().replace("_", " "))
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(biomesList.isEmpty() ? "None" : biomesList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.VisitAllSpecificBiomesGoal specificBiomesGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var visitedBiomes = specificBiomesGoal.getTrackerMap().getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String biomesList = visitedBiomes.stream()
+                            .map(id -> net.minecraft.text.Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(biomesList.isEmpty() ? "None" : biomesList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.LookAtUniqueMobsGoal lookGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var mobs = lockout.lookedAtMobTypes.getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String mobsList = mobs.stream()
+                            .map(type -> type.getName().getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(mobsList.isEmpty() ? "None" : mobsList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.GetUniqueAdvancementsGoal advancementGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var advancements = advancementGoal.getTrackerMap().getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String advancementsList = advancements.stream()
+                            .map(id -> server.getAdvancementLoader().get(id).value().display().get().getTitle().getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(advancementsList.isEmpty() ? "None" : advancementsList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.DamagedByUniqueSourcesGoal damageGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var damageSources = damageGoal.getTrackerMap().getOrDefault(team, new java.util.LinkedHashSet<>());
+                        String sourcesList = damageSources.stream()
+                            .map(key -> key.getValue().toString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(sourcesList.isEmpty() ? "None" : sourcesList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.interfaces.ReachXPLevelGoal xpGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        // Find players on this team and their XP levels
+                        var teamPlayers = team.getPlayerNames().stream()
+                            .map(uuid -> server.getPlayerManager().getPlayer(uuid))
+                            .filter(p -> p != null)
+                            .collect(java.util.stream.Collectors.toList());
+                        
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ");
+                        if (teamPlayers.isEmpty()) {
+                            details.append(net.minecraft.util.Formatting.GRAY).append("No players").append(net.minecraft.util.Formatting.RESET);
+                        } else {
+                            String playerLevels = teamPlayers.stream()
+                                .map(p -> p.getName().getString() + " (Lv " + p.experienceLevel + ")")
+                                .collect(java.util.stream.Collectors.joining(", "));
+                            details.append(net.minecraft.util.Formatting.GRAY).append(playerLevels).append(net.minecraft.util.Formatting.RESET);
+                        }
+                        details.append("\\n");
+                    }
+                } else if (goal instanceof me.marin.lockout.lockout.goals.advancement.GetHotTouristDestinationsAdvancementGoal hotTouristGoal) {
+                    details.append("Goal: ").append(goal.getGoalName()).append("\\n");
+                    for (LockoutTeam team : lockout.getTeams()) {
+                        var biomes = lockout.biomesVisited.getOrDefault(team, new java.util.HashSet<>());
+                        
+                        // Filter to only show nether biomes
+                        var netherBiomes = biomes.stream()
+                            .filter(id -> id.getPath().contains("nether") || 
+                                         id.getPath().contains("basalt") || 
+                                         id.getPath().contains("warped") || 
+                                         id.getPath().contains("crimson") || 
+                                         id.getPath().contains("soul_sand"))
+                            .collect(java.util.stream.Collectors.toSet());
+                        
+                        String biomesList = netherBiomes.stream()
+                            .map(id -> net.minecraft.text.Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
+                            .collect(java.util.stream.Collectors.joining(", "));
+                        
+                        net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
+                            .append(net.minecraft.util.Formatting.GRAY).append(biomesList.isEmpty() ? "None" : biomesList)
+                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                    }
+                } 
+                
+                // Send details back to spectator only if there's content
+                if (details.length() > 0) {
+                    ServerPlayNetworking.send(spectator, new GoalDetailsPayload(payload.goalId(), details.toString()));
                 }
             });
         });
@@ -813,20 +1000,29 @@ public class LockoutServer {
 
         compassHandler = new CompassItemHandler(allLockoutPlayers, playerManager);
 
-        List<Goal> tooltipGoals = new ArrayList<>(lockout.getBoard().getGoals()).stream().filter(g -> g instanceof HasTooltipInfo).toList();
-        for (Goal goal : tooltipGoals) {
-            // Update teams tooltip
-            for (LockoutTeam team : lockout.getTeams()) {
-                ((LockoutTeamServer) team).sendTooltipUpdate((Goal & HasTooltipInfo) goal, false);
-            }
-            // Update spectator tooltip
-            if (!allSpectatorPlayers.isEmpty()) {
-                var payload = new UpdateTooltipPayload(goal.getId(), String.join("\n", ((HasTooltipInfo) goal).getSpectatorTooltip()));
-                for (UUID spectator : allSpectatorPlayers) {
-                    ServerPlayNetworking.send(playerManager.getPlayer(spectator), payload);
+        // Delay tooltip sending by 1 tick to ensure lockout is fully initialized
+        ((LockoutRunnable) () -> {
+            List<Goal> tooltipGoals = new ArrayList<>(lockout.getBoard().getGoals()).stream().filter(g -> g instanceof HasTooltipInfo).toList();
+            for (Goal goal : tooltipGoals) {
+                // Update teams tooltip
+                for (LockoutTeam team : lockout.getTeams()) {
+                    ((LockoutTeamServer) team).sendTooltipUpdate((Goal & HasTooltipInfo) goal, false);
+                }
+                // Update spectator tooltip
+                if (!allSpectatorPlayers.isEmpty()) {
+                    List<String> spectatorTooltip = ((HasTooltipInfo) goal).getSpectatorTooltip();
+                    if (spectatorTooltip != null && !spectatorTooltip.isEmpty()) {
+                        var payload = new UpdateTooltipPayload(goal.getId(), String.join("\n", spectatorTooltip));
+                        for (UUID spectator : allSpectatorPlayers) {
+                            ServerPlayerEntity spectatorPlayer = playerManager.getPlayer(spectator);
+                            if (spectatorPlayer != null) {
+                                ServerPlayNetworking.send(spectatorPlayer, payload);
+                            }
+                        }
+                    }
                 }
             }
-        }
+        }).runTaskAfter(1L);
 
         for (ServerPlayerEntity player : allServerPlayers) {
             ServerPlayNetworking.send(player, lockout.getTeamsGoalsPacket());
@@ -1160,6 +1356,18 @@ public class LockoutServer {
         lockoutStartTime = seconds;
         context.getSource().sendMessage(Text.of("Updated start time to " + seconds + "s."));
         return 1;
+    }
+
+    public static int setGracePeriod(CommandContext<ServerCommandSource> context) {
+        int seconds = context.getArgument("seconds", Integer.class);
+
+        gracePeriodSeconds = seconds;
+        context.getSource().sendMessage(Text.of("Updated grace period to " + seconds + "s."));
+        return 1;
+    }
+
+    public static int getGracePeriodSeconds() {
+        return gracePeriodSeconds;
     }
 
     public static int setBoardSize(CommandContext<ServerCommandSource> context) {

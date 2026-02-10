@@ -1,6 +1,7 @@
 package me.marin.lockout.mixin.server;
 
 import me.marin.lockout.Lockout;
+import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
@@ -10,7 +11,6 @@ import me.marin.lockout.lockout.interfaces.GetUniqueAdvancementsGoal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.VisitAllSpecificBiomesGoal;
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
-import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
 import me.marin.lockout.server.LockoutServer;
 import net.minecraft.advancement.AdvancementDisplay;
 import net.minecraft.advancement.AdvancementEntry;
@@ -100,6 +100,10 @@ public abstract class PlayerAdvancementTrackerMixin {
                         }
                         lockout.mostAdvancementsPlayer = owner.getUuid();
                         lockout.mostAdvancements = playerAdvancements;
+                        // Send tooltip updates to all teams
+                        for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                            ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostAdvancementsGoal) goal, true);
+                        }
                     }
                 }
             }
@@ -134,6 +138,7 @@ public abstract class PlayerAdvancementTrackerMixin {
     public void onAdvancementProgress(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (!lockout.isLockoutPlayer(owner.getUuid())) return;
 
         if (!advancement.id().equals(ADVENTURING_TIME) && !advancement.id().equals(HOT_TOURIST_DESTINATIONS)) return;
         Identifier biomeId = Identifier.of(criterionName);
