@@ -1,3 +1,9 @@
+## Lockout v0.11.4
+- Fixed an issue where spectators would crash if the board had any advancement related goals with tooltips
+- Fixed an issue where if spectators got advancement progress, it would fail to update tooltips for all players
+- Added `/GracePeriod <seconds>` to allow for a starting grace period
+- Added a 30 second Respawn PvP Immunity
+- Added Goal Details for spectators
 ## Lockout v0.11.3
 - Fixed issue where some worlds got stuck on loading screen
 ## Lockout v0.11.2
