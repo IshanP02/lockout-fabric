@@ -1,6 +1,8 @@
 package me.marin.lockout.mixin.server;
 
 import me.marin.lockout.Lockout;
+import me.marin.lockout.LockoutTeam;
+import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueSmeltsGoal;
 import me.marin.lockout.lockout.goals.workstation.LockMapUsingCartographyTableGoal;
@@ -87,6 +89,10 @@ public class SlotMixin {
 
                                         lockout.mostUniqueSmeltsPlayer = serverPlayer.getUuid();
                                         lockout.mostUniqueSmelts = smelts.size();
+                                        // Send tooltip updates to all teams
+                                        for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                                            ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostUniqueSmeltsGoal) goal, true);
+                                        }
                                     }
                                 }
                             }

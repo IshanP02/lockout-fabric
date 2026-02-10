@@ -19,6 +19,7 @@ public class Networking {
         PayloadTypeRegistry.playS2C().register(UpdatePickBanSessionPayload.ID, UpdatePickBanSessionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(EndPickBanSessionPayload.ID, EndPickBanSessionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(SyncLocateDataPayload.ID, SyncLocateDataPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(GoalDetailsPayload.ID, GoalDetailsPayload.CODEC);
 
         PayloadTypeRegistry.playC2S().register(CustomBoardPayload.ID, CustomBoardPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(LockoutVersionPayload.ID, LockoutVersionPayload.CODEC);
@@ -28,5 +29,6 @@ public class Networking {
         PayloadTypeRegistry.playC2S().register(LockPickBanSelectionsPayload.ID, LockPickBanSelectionsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(UploadBoardTypePayload.ID, UploadBoardTypePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(AnnounceGoalFocusPayload.ID, AnnounceGoalFocusPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(RequestGoalDetailsPayload.ID, RequestGoalDetailsPayload.CODEC);
     }
 }

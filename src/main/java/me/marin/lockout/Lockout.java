@@ -349,7 +349,7 @@ public class Lockout {
 
 
     public final Map<UUID, Integer> levels = new LinkedHashMap<>();
-    private UUID mostLevelsPlayer;
+    public UUID mostLevelsPlayer;
 
     public void recalculateXPGoal(Goal goal) {
         List<UUID> largestLevelPlayers = new ArrayList<>();

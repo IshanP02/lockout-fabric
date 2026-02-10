@@ -2,6 +2,7 @@ package me.marin.lockout.server.handlers;
 
 import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutRunnable;
+import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
@@ -62,6 +63,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                     lockout.levels.put(player.getUuid(), player.isDead() ? 0 : player.experienceLevel);
                 }
                 lockout.recalculateXPGoal(goal);
+                // Send tooltip updates to all teams
+                for (LockoutTeam team : lockout.getTeams()) {
+                    ((LockoutTeamServer) team).sendTooltipUpdate((HaveMostXPLevelsGoal) goal, true);
+                }
             }
 
             if (goal instanceof HaveMostCreeperKillsGoal) {
@@ -70,6 +75,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                     lockout.creeperKills.put(player.getUuid(), creeperKills);
                 }
                 lockout.recalculateCreeperKillsGoal(goal);
+                // Send tooltip updates to all teams
+                for (LockoutTeam team : lockout.getTeams()) {
+                    ((LockoutTeamServer) team).sendTooltipUpdate((HaveMostCreeperKillsGoal) goal, true);
+                }
             }
 
             if (goal.isCompleted()) continue;

@@ -5,6 +5,7 @@ import me.marin.lockout.Utility;
 import me.marin.lockout.client.LockoutClient;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.network.AnnounceGoalFocusPayload;
+import me.marin.lockout.network.RequestGoalDetailsPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -53,7 +54,14 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
         if (clickedGoal != null) {
             MinecraftClient client = MinecraftClient.getInstance();
             
-            // Check if player is on a team
+            // Check if player is a spectator (not on any team)
+            if (client.player != null && client.player.getScoreboardTeam() == null) {
+                // Spectator: request detailed goal info
+                ClientPlayNetworking.send(new RequestGoalDetailsPayload(clickedGoal.getId()));
+                return true;
+            }
+            
+            // Team player: announce working on goal
             if (client.player != null && client.player.getScoreboardTeam() != null) {
                 // Left-click (button 0) = working on, Right-click (button 1) = reminder
                 boolean isReminder = (button == 1);
