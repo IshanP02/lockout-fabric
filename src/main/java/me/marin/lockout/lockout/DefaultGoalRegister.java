@@ -533,8 +533,8 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_ANY_SPYGLASS_ADVANCEMENT, GetAnySpyglassAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_BULLSEYE_ADVANCEMENT, GetBullseyeAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_HIRED_HELP_ADVANCEMENT, GetHiredHelpAdvancementGoal.class);
-        INSTANCE.register(GoalType.GET_NOT_QUITE_NINE_LIVES_ADVANCEMENT, GetNotQuiteNineLivesAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_OH_SHINY_ADVANCEMENT, GetOhShinyAdvancementGoal.class);
+        INSTANCE.register(GoalType.GET_NOT_QUITE_NINE_LIVES_ADVANCEMENT, GetNotQuiteNineLivesAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_MOB_KABOB_ADVANCEMENT, GetMobKabobAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_SNIPER_DUEL_ADVANCEMENT, GetSniperDuelAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_STAR_TRADER_ADVANCEMENT, GetStarTraderAdvancementGoal.class, GoalRequirements.VILLAGE);

@@ -24,7 +24,7 @@ public class GetNotQuiteNineLivesAdvancementGoal extends AdvancementGoal {
 
     @Override
     public String getGoalName() {
-        return "Charge a Respawn Anchor";
+        return "Fully Charge a Respawn Anchor";
     }
 
     @Override

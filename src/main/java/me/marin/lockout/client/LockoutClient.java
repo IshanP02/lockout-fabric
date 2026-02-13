@@ -366,7 +366,10 @@ public class LockoutClient implements ClientModInitializer {
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(StartLockoutPayload.ID, (payload, context) -> {
-            lockout.setStarted(true);
+            // Null check to prevent crash when packet arrives before LockoutGoalsTeamsPayload
+            if (lockout != null) {
+                lockout.setStarted(true);
+            }
             context.client().execute(() -> {
                 if (MinecraftClient.getInstance().currentScreen != null) {
                     MinecraftClient.getInstance().currentScreen.close();
@@ -374,11 +377,17 @@ public class LockoutClient implements ClientModInitializer {
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(UpdateTimerPayload.ID, (payload, context) -> {
-            lockout.setTicks(payload.ticks());
+            // Null check to prevent crash when packet arrives before LockoutGoalsTeamsPayload
+            if (lockout != null) {
+                lockout.setTicks(payload.ticks());
+            }
         });
         ClientPlayNetworking.registerGlobalReceiver(CompleteTaskPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             client.execute(() -> {
+                // Null check to prevent crash when packet arrives before LockoutGoalsTeamsPayload
+                if (lockout == null) return;
+                
                 Goal goal = lockout.getBoard().getGoals().stream().filter(g -> g.getId().equals(payload.goal())).findFirst().get();
                 if (goal.isCompleted() || payload.teamIndex() == -1) {
                     lockout.clearGoalCompletion(goal, false);
@@ -402,6 +411,9 @@ public class LockoutClient implements ClientModInitializer {
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(EndLockoutPayload.ID, (payload, context) -> {
+            // Null check to prevent crash when packet arrives before LockoutGoalsTeamsPayload
+            if (lockout == null) return;
+            
             lockout.setRunning(false);
             MinecraftClient client = context.client();
             client.execute(() -> {

@@ -81,7 +81,7 @@ public class Swim500mGoal extends Goal implements CustomTextureRenderer, HasTool
             for (UUID uuid : serverTeam.getPlayers()) {
                 max = Math.max(max, LockoutServer.lockout.distanceSwam.getOrDefault(uuid, 0));
             }
-            tooltip.add(t.getColor() + t.getDisplayName() + Formatting.RESET + ": " + String.format("%.2fm", Math.min(FIVE_HUNDRED_METERS, max) / 500.0));
+            tooltip.add(t.getColor() + t.getDisplayName() + Formatting.RESET + ": " + String.format("%.2fm", Math.min(FIVE_HUNDRED_METERS, max) / 100.0));
         }
         tooltip.add(" ");
 

@@ -38,6 +38,7 @@
     "server.PlayerInventoryAccessor",
     "server.PlayerMixin",
     "server.PotionContentsComponentMixin",
+    "server.PumpkinBlockMixin",
     "server.RaidMixin",
     "server.ScreenHandlerMixin",
     "server.ServerPlayerEntityMixin",
