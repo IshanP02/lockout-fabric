@@ -2,7 +2,7 @@
 - Fixed an issue where spectators would be kicked when trying to join a server with an ongoing Lockout game
 - Fixed an issue where Swim 500m would display the tooltip as 100m for spectators
 - Fixed an issue where players who shear a pumpkin already placed on copper block would not be granted the Construct Copper Golem goal
-- Updated Charge Respawn Achor title for better clarity
+- Updated Charge Respawn Anchor title for better clarity
 ## Lockout v0.11.4
 - Fixed an issue where spectators would crash if the board had any advancement related goals with tooltips
 - Fixed an issue where if spectators got advancement progress, it would fail to update tooltips for all players
