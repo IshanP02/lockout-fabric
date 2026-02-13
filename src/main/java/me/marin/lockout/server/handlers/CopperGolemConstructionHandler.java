@@ -28,6 +28,10 @@ public class CopperGolemConstructionHandler implements UseBlockCallback {
     private static final int MAX_PLACEMENT_AGE_TICKS = 5;
     
     private record PumpkinPlacement(ServerPlayerEntity player, long tickTime) {}
+    public static void recordPumpkinAction(BlockPos pos, ServerPlayerEntity player, World world) {
+        if (!Lockout.isLockoutRunning(lockout)) return;
+        RECENT_PUMPKIN_PLACEMENTS.put(pos, new PumpkinPlacement(player, world.getTime()));
+    }
     
     @Override
     public ActionResult interact(PlayerEntity player, World world, Hand hand, BlockHitResult blockHitResult) {
@@ -43,18 +47,12 @@ public class CopperGolemConstructionHandler implements UseBlockCallback {
             player.getStackInHand(hand).isOf(Blocks.JACK_O_LANTERN.asItem())) {
             
             // Record this pumpkin placement with current world time
-            RECENT_PUMPKIN_PLACEMENTS.put(placementPos, new PumpkinPlacement(serverPlayer, world.getTime()));
+            recordPumpkinAction(placementPos, serverPlayer, world);
         }
         
         return ActionResult.PASS;
     }
     
-    /**
-     * Call this method when a copper golem spawns to check if a player constructed it
-     * @param golemPos The position where the golem spawned
-     * @param world The world the golem spawned in
-     * @return The player who constructed the golem, or null if not found
-     */
     public static ServerPlayerEntity findConstructor(BlockPos golemPos, World world) {
         if (!Lockout.isLockoutRunning(lockout)) return null;
         
