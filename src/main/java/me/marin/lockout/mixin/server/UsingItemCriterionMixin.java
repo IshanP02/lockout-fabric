@@ -14,8 +14,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -62,6 +65,26 @@ public class UsingItemCriterionMixin {
         
         Entity entity = closestEntity.get();
         if (!(entity instanceof LivingEntity)) return;
+
+        // Check line of sight - ensure no solid blocks between player and entity
+        Vec3d entityEyePos = entity.getEntityPos().add(0, entity.getEyeHeight(entity.getPose()), 0);
+        RaycastContext raycastContext = new RaycastContext(
+            start, 
+            entityEyePos,
+            RaycastContext.ShapeType.COLLIDER,
+            RaycastContext.FluidHandling.NONE,
+            player
+        );
+        BlockHitResult blockHitResult = player.getEntityWorld().raycast(raycastContext);
+        
+        // If we hit a block before reaching the entity, they're not in line of sight
+        if (blockHitResult.getType() == HitResult.Type.BLOCK) {
+            double distanceToBlock = start.squaredDistanceTo(blockHitResult.getPos());
+            double distanceToEntity = start.squaredDistanceTo(entityEyePos);
+            if (distanceToBlock < distanceToEntity) {
+                return; // Block is in the way
+            }
+        }
 
         LockoutTeam team = lockout.getPlayerTeam(player.getUuid());
         if (team == null) return;

@@ -197,10 +197,10 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_IRON_GOLEM, LeashIronGolemGoal.class);
         INSTANCE.register(GoalType.ATTACH_LEAD_TO_STRIDER, LeashStriderGoal.class);
-        INSTANCE.register(GoalType.LOOK_AT_5_UNIQUE_MOBS, LookAt5UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_10_UNIQUE_MOBS, LookAt10UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_15_UNIQUE_MOBS, LookAt15UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_20_UNIQUE_MOBS, LookAt20UniqueMobsGoal.class);
+        INSTANCE.register(GoalType.LOOK_AT_25_UNIQUE_MOBS, LookAt25UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_ENDERMAN, LookAtEndermanGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_GUARDIAN, LookAtGuardianGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(MONUMENT))
