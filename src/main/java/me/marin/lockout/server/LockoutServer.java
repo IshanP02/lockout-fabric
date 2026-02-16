@@ -451,7 +451,7 @@ public class LockoutServer {
                     for (LockoutTeam team : lockout.getTeams()) {
                         var biomes = lockout.biomesVisited.getOrDefault(team, new java.util.HashSet<>());
                         String biomesList = biomes.stream()
-                            .map(id -> id.getPath().replace("_", " "))
+                            .map(id -> net.minecraft.text.Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
                             .collect(java.util.stream.Collectors.joining(", "));
                         net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
                         details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
@@ -499,7 +499,7 @@ public class LockoutServer {
                     for (LockoutTeam team : lockout.getTeams()) {
                         var damageSources = damageGoal.getTrackerMap().getOrDefault(team, new java.util.LinkedHashSet<>());
                         String sourcesList = damageSources.stream()
-                            .map(key -> key.getValue().toString())
+                            .map(key -> org.apache.commons.lang3.text.WordUtils.capitalize(key.getValue().getPath().replace("_", " "), ' '))
                             .collect(java.util.stream.Collectors.joining(", "));
                         net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
                         details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
@@ -530,25 +530,41 @@ public class LockoutServer {
                 } else if (goal instanceof me.marin.lockout.lockout.goals.advancement.GetHotTouristDestinationsAdvancementGoal hotTouristGoal) {
                     details.append("Goal: ").append(goal.getGoalName()).append("\\n");
                     for (LockoutTeam team : lockout.getTeams()) {
-                        var biomes = lockout.biomesVisited.getOrDefault(team, new java.util.HashSet<>());
-                        
-                        // Filter to only show nether biomes
-                        var netherBiomes = biomes.stream()
-                            .filter(id -> id.getPath().contains("nether") || 
-                                         id.getPath().contains("basalt") || 
-                                         id.getPath().contains("warped") || 
-                                         id.getPath().contains("crimson") || 
-                                         id.getPath().contains("soul_sand"))
-                            .collect(java.util.stream.Collectors.toSet());
-                        
-                        String biomesList = netherBiomes.stream()
-                            .map(id -> net.minecraft.text.Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
-                            .collect(java.util.stream.Collectors.joining(", "));
+                        // Find players on this team and their nether biome progress
+                        var teamPlayers = team.getPlayerNames().stream()
+                            .map(uuid -> server.getPlayerManager().getPlayer(uuid))
+                            .filter(p -> p != null)
+                            .collect(java.util.stream.Collectors.toList());
                         
                         net.minecraft.util.Formatting teamColor = team.getColor() != null ? team.getColor() : net.minecraft.util.Formatting.WHITE;
-                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(": ")
-                            .append(net.minecraft.util.Formatting.GRAY).append(biomesList.isEmpty() ? "None" : biomesList)
-                            .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                        details.append(teamColor).append(team.getDisplayName()).append(net.minecraft.util.Formatting.RESET).append(":\\n");
+                        
+                        if (teamPlayers.isEmpty()) {
+                            details.append(net.minecraft.util.Formatting.GRAY).append("  No players").append(net.minecraft.util.Formatting.RESET).append("\\n");
+                        } else {
+                            // Get the advancement
+                            var advancementEntry = server.getAdvancementLoader().get(net.minecraft.util.Identifier.of("minecraft", "nether/explore_nether"));
+                            
+                            for (net.minecraft.server.network.ServerPlayerEntity player : teamPlayers) {
+                                var netherBiomes = new java.util.LinkedHashSet<net.minecraft.util.Identifier>();
+                                
+                                if (advancementEntry != null) {
+                                    var progress = player.getAdvancementTracker().getProgress(advancementEntry);
+                                    for (String criterion : progress.getObtainedCriteria()) {
+                                        netherBiomes.add(net.minecraft.util.Identifier.of(criterion));
+                                    }
+                                }
+                                
+                                String biomesList = netherBiomes.stream()
+                                    .map(id -> net.minecraft.text.Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
+                                    .collect(java.util.stream.Collectors.joining(", "));
+                                
+                                details.append("  ").append(player.getName().getString()).append(": ")
+                                    .append(net.minecraft.util.Formatting.GRAY).append(netherBiomes.size()).append("/5 - ")
+                                    .append(biomesList.isEmpty() ? "None" : biomesList)
+                                    .append(net.minecraft.util.Formatting.RESET).append("\\n");
+                            }
+                        }
                     }
                 } 
                 
