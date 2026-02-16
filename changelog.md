@@ -1,3 +1,8 @@
+## Lockout v0.11.6
+- Fixed an issue where players can claim Spyglass credit by looking at mobs through walls
+- Fixed an issue where LookAtXUniqueMobs goals were not added to a GoalGroup and therefore had no limits on how frequent they could appear on boards
+- Removed LookAt5UniqueMobs goal
+- Added LookAt25UniqueMobs goal
 ## Lockout v0.11.5
 - Fixed an issue where spectators would be kicked when trying to join a server with an ongoing Lockout game
 - Fixed an issue where Swim 500m would display the tooltip as 100m for spectators
