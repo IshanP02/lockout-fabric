@@ -1,3 +1,17 @@
+## Lockout v0.11.7
+- Fixed an issue where mobs attached to non-players would count towards LeashUniqueEntities progress
+- Updated Goal Requirement:
+	- Use Brush on Suspicious Block
+- Added New Biome Requirement:
+	- Tame Nautilus
+	- Tame Parrot
+	- Breed Rabbit
+	- Obtain Scaffolding
+- Added New Structure Requirement:
+	- Kill Guardian
+	- Find an End City
+	- Obtain Sea Lantern
+	- Get Levitation
 ## Lockout v0.11.6
 - Fixed an issue where players can claim Spyglass credit by looking at mobs through walls
 - Fixed an issue where LookAtXUniqueMobs goals were not added to a GoalGroup and therefore had no limits on how frequent they could appear on boards
