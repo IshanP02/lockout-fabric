@@ -30,7 +30,7 @@ public class RightClickBannerWithMapGoal extends IncrementItemStatGoal implement
 
     @Override
     public String getGoalName() {
-        return "Right Click a Banner with a Map";
+        return "Create a Waypoint by using a Map on a Banner";
     }
 
     @Override
