@@ -31,11 +31,18 @@ public interface LeashableMixin {
         // Server-only
         if (entity.getEntityWorld().isClient()) return;
 
-        // Only player-held leashes
-        if (!(leashHolder instanceof PlayerEntity player)) return;
-
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
+
+        // If leashing to a non-player (fence, etc.), remove from all players' tracking
+        if (!(leashHolder instanceof PlayerEntity)) {
+            // Remove this entity type from all players who were tracking it
+            LeashUniqueEntitiesAtOnceGoal.removeEntityTypeFromAllPlayers(entity.getType());
+            return;
+        }
+
+        // Only player-held leashes from here on
+        PlayerEntity player = (PlayerEntity) leashHolder;
 
         // Track unique mob types for this player
         LeashUniqueEntitiesAtOnceGoal.addLeashedType(player.getUuid(), entity.getType());
