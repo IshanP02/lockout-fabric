@@ -46,6 +46,14 @@ public abstract class LeashUniqueEntitiesAtOnceGoal extends Goal implements Requ
         }
     }
 
+    public static void removeEntityTypeFromAllPlayers(EntityType<?> entityType) {
+        Map<UUID, Set<EntityType<?>>> leashedEntities = LockoutServer.lockout.leashedEntities;
+        // Remove this entity type from all players
+        leashedEntities.values().forEach(types -> types.remove(entityType));
+        // Clean up empty sets
+        leashedEntities.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+    }
+
     public static int getUniqueLeashedCount(UUID playerUuid) {
         Set<EntityType<?>> types = LockoutServer.lockout.leashedEntities.get(playerUuid);
         return types != null ? types.size() : 0;
