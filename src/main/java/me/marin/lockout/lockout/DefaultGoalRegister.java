@@ -282,7 +282,10 @@ public class DefaultGoalRegister {
                         .biomes(List.of(LUKEWARM_OCEAN, WARM_OCEAN, DEEP_LUKEWARM_OCEAN))
                         .build()
                 );
-        INSTANCE.register(GoalType.DIE_TO_TRIDENT, DieToTridentGoal.class);
+        INSTANCE.register(GoalType.DIE_TO_TRIDENT, DieToTridentGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(OCEAN, DEEP_OCEAN, WARM_OCEAN, LUKEWARM_OCEAN, DEEP_LUKEWARM_OCEAN, COLD_OCEAN, DEEP_COLD_OCEAN, FROZEN_OCEAN, DEEP_FROZEN_OCEAN))
+                        .build()
+                );
         INSTANCE.register(GoalType.DIE_TO_WARDEN, DieToWardenGoal.class,  new GoalRequirements.Builder()
                 .structures(List.of(ANCIENT_CITY))
                 .build()
@@ -321,7 +324,10 @@ public class DefaultGoalRegister {
                         return GoalDataConstants.getDyeColorDataString(attainableDyes.get(Lockout.random.nextInt(0, attainableDyes.size())));
                         })
                 );
-        INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class);
+        INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(MONUMENT))
+                        .build()
+                );
         INSTANCE.register(GoalType.KILL_GHAST, KillGhastGoal.class);
         INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(MONUMENT))
@@ -596,6 +602,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.TAKE_200_DAMAGE, Take200DamageGoal.class);
         INSTANCE.register(GoalType.DEAL_400_DAMAGE, Deal400DamageGoal.class);
         INSTANCE.register(GoalType.CONSTRUCT_COPPER_GOLEM, ConstructCopperGolemGoal.class);
+        INSTANCE.register(GoalType.RIGHT_CLICK_BANNER_WITH_MAP, RightClickBannerWithMapGoal.class);
         INSTANCE.register(GoalType.PUT_BANNER_ON_SHIELD, ObtainShieldWithBannerGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ENDERMAN, AngerEndermanGoal.class);
@@ -609,7 +616,6 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.ITEM_FRAME_IN_ITEM_FRAME, ItemFrameInItemFrameGoal.class);
         INSTANCE.register(GoalType.REACH_BEDROCK, ReachBedrockGoal.class);
         INSTANCE.register(GoalType.REACH_HEIGHT_LIMIT, ReachHeightLimitGoal.class);
-        INSTANCE.register(GoalType.RIGHT_CLICK_BANNER_WITH_MAP, RightClickBannerWithMapGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_8_UNIQUE_SOURCES, DamagedBy8UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_12_UNIQUE_SOURCES, DamagedBy12UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_15_UNIQUE_SOURCES, DamagedBy15UniqueSourcesGoal.class);

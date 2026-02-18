@@ -1,13 +1,17 @@
 ## Lockout v0.11.7
 - Fixed an issue where mobs attached to non-players would count towards LeashUniqueEntities progress
+- Tweaked Pick/Ban chat messages to use the getGoalName string rather than the Goal ID string
+- Adjusted naming of "Right Click Banner with Map" for better clarification
 - Updated Goal Requirement:
 	- Use Brush on Suspicious Block
 - Added New Biome Requirement:
 	- Tame Nautilus
 	- Tame Parrot
 	- Breed Rabbit
+	- Die by Trident
 	- Obtain Scaffolding
 - Added New Structure Requirement:
+	- Kill Elder Guardian
 	- Kill Guardian
 	- Find an End City
 	- Obtain Sea Lantern
