@@ -548,8 +548,14 @@ public class GoalListScreen extends Screen {
     }
 
     private String formatGoalName(String goalId) {
-        // Convert GOAL_ID to "Goal Id" format using the same capitalization as GUI
-        return WordUtils.capitalize(goalId.replace("_", " ").toLowerCase(), ' ');
+        // Get the actual goal name from the goal instance
+        me.marin.lockout.lockout.Goal goal = me.marin.lockout.lockout.GoalRegistry.INSTANCE.newGoal(goalId, null);
+        if (goal != null) {
+            return goal.getGoalName();
+        } else {
+            // Fallback to capitalized ID if goal creation fails
+            return WordUtils.capitalize(goalId.replace("_", " ").toLowerCase(), ' ');
+        }
     }
 
     private void loadGoals() {

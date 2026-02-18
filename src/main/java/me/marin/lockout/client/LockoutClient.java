@@ -195,10 +195,17 @@ public class LockoutClient implements ClientModInitializer {
                         }
                     }
                     
-                    // Format the goal name
-                    String goalName = org.apache.commons.lang3.text.WordUtils.capitalize(
-                        payload.goalId().replace("_", " ").toLowerCase(), ' '
-                    );
+                    // Get the actual goal name from the goal instance
+                    String goalName;
+                    me.marin.lockout.lockout.Goal goal = me.marin.lockout.lockout.GoalRegistry.INSTANCE.newGoal(payload.goalId(), null);
+                    if (goal != null) {
+                        goalName = goal.getGoalName();
+                    } else {
+                        // Fallback to capitalized ID if goal creation fails
+                        goalName = org.apache.commons.lang3.text.WordUtils.capitalize(
+                            payload.goalId().replace("_", " ").toLowerCase(), ' '
+                        );
+                    }
                     
                     // Create and display the message
                     Text message;
