@@ -79,7 +79,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.HAVE_YOUR_SHIELD_DISABLED, HaveShieldDisabledGoal.class);
         INSTANCE.register(GoalType.SHOOT_FIREWORK_FROM_CROSSBOW, ShootFireworkFromCrossbowGoal.class);
         INSTANCE.register(GoalType.USE_BRUSH_ON_SUSPICIOUS_BLOCK, UseBrushOnSuspiciousBlock.class, new GoalRequirements.Builder()
-                        .structures(List.of(OCEAN_RUIN_WARM, TRAIL_RUINS))
+                        .structures(List.of(OCEAN_RUIN_WARM, OCEAN_RUIN_COLD, TRAIL_RUINS))
                         .build()
                 );
         INSTANCE.register(GoalType.BREAK_ANY_TOOL, BreakAnyToolGoal.class);
@@ -122,8 +122,14 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.WEAR_CARVED_PUMPKIN_FOR_5_MINUTES, WearCarvedPumpkinFor5MinutesGoal.class);
         INSTANCE.register(GoalType.TAME_CAT, TameCatGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.TAME_HORSE, TameHorseGoal.class);
-        INSTANCE.register(GoalType.TAME_NAUTILUS, TameNautilusGoal.class);
-        INSTANCE.register(GoalType.TAME_PARROT, TameParrotGoal.class);
+        INSTANCE.register(GoalType.TAME_NAUTILUS, TameNautilusGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(WARM_OCEAN, LUKEWARM_OCEAN, DEEP_LUKEWARM_OCEAN))
+                        .build()
+                );
+        INSTANCE.register(GoalType.TAME_PARROT, TameParrotGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(JUNGLE, BAMBOO_JUNGLE))
+                        .build()
+                );
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
@@ -175,7 +181,8 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.BREED_HOGLIN, BreedHoglinGoal.class);
         INSTANCE.register(GoalType.BREED_PIG, BreedPigGoal.class);
-        INSTANCE.register(GoalType.BREED_RABBIT, BreedRabbitGoal.class);
+        INSTANCE.register(GoalType.BREED_RABBIT, BreedRabbitGoal.class,
+                        GoalRequirements.RABBIT_BIOMES);
         INSTANCE.register(GoalType.BREED_SHEEP, BreedSheepGoal.class);
         INSTANCE.register(GoalType.BREED_STRIDER, BreedStriderGoal.class);
         INSTANCE.register(GoalType.LEASH_4_UNIQUE_ENTITIES_AT_ONCE, Leash4UniqueEntitiesAtOnceGoal.class);
@@ -316,7 +323,10 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class);
         INSTANCE.register(GoalType.KILL_GHAST, KillGhastGoal.class);
-        INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class);
+        INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(MONUMENT))
+                        .build()
+                );
         INSTANCE.register(GoalType.KILL_PARCHED, KillParchedGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(DESERT))
                         .build()
@@ -363,7 +373,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_EYE_SPY_ADVANCEMENT, GetEyeSpyAdvancementGoal.class);
         INSTANCE.register(GoalType.ENTER_END, EnterEndGoal.class);
         INSTANCE.register(GoalType.GET_REMOTE_GATEWAY_ADVANCEMENT, GetRemoteGatewayAdvancementGoal.class);
-        INSTANCE.register(GoalType.GET_THE_CITY_AT_THE_END_OF_THE_GAME_ADVANCEMENT, GetCityAtTheEndOfTheGameAdvancementGoal.class);
+        INSTANCE.register(GoalType.GET_THE_CITY_AT_THE_END_OF_THE_GAME_ADVANCEMENT, GetCityAtTheEndOfTheGameAdvancementGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(END_CITY))
+                        .build()
+                );
         INSTANCE.register(GoalType.OPPONENT_DIES, OpponentDiesGoal.class,
                         GoalRequirements.TO2_ONLY_GOAL);
         INSTANCE.register(GoalType.OPPONENT_DIES_3_TIMES, OpponentDies3TimesGoal.class,
@@ -505,8 +518,12 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.OBTAIN_REDSTONE_LAMP, ObtainRedstoneLampGoal.class);
         INSTANCE.register(GoalType.OBTAIN_REDSTONE_REPEATER, ObtainRedstoneRepeaterGoal.class);
         INSTANCE.register(GoalType.OBTAIN_RED_NETHER_BRICK_STAIRS, ObtainRedNetherBrickStairsGoal.class);
-        INSTANCE.register(GoalType.OBTAIN_SCAFFOLDING, ObtainScaffoldingGoal.class);
-        INSTANCE.register(GoalType.OBTAIN_SEA_LANTERN, ObtainSeaLanternGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_SCAFFOLDING, ObtainScaffoldingGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(JUNGLE, BAMBOO_JUNGLE))
+                        .build()
+                );
+        INSTANCE.register(GoalType.OBTAIN_SEA_LANTERN, ObtainSeaLanternGoal.class,
+                        GoalRequirements.MONUMENT);
         INSTANCE.register(GoalType.OBTAIN_SMOOTH_QUARTZ_STAIRS, ObtainSmoothQuartzStairsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SOUL_CAMPFIRE, ObtainSoulCampfireGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SOUL_LANTERN, ObtainSoulLanternGoal.class);
@@ -559,7 +576,10 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_GLOWING_STATUS_EFFECT, GetGlowingStatusEffectGoal.class);
         INSTANCE.register(GoalType.GET_INFESTED_STATUS_EFFECT, GetInfestedStatusEffectGoal.class);
         INSTANCE.register(GoalType.GET_JUMP_BOOST_STATUS_EFFECT, GetJumpBoostStatusEffectGoal.class);
-        INSTANCE.register(GoalType.GET_LEVITATION_STATUS_EFFECT, GetLevitationStatusEffectGoal.class);
+        INSTANCE.register(GoalType.GET_LEVITATION_STATUS_EFFECT, GetLevitationStatusEffectGoal.class, new GoalRequirements.Builder()
+                        .structures(List.of(END_CITY))
+                        .build()
+                );
         INSTANCE.register(GoalType.GET_MINING_FATIGUE_STATUS_EFFECT, GetMiningFatigueStatusEffectGoal.class,
                         GoalRequirements.MONUMENT);
         INSTANCE.register(GoalType.GET_NAUSEA_STATUS_EFFECT, GetNauseaStatusEffectGoal.class, new GoalRequirements.Builder()
