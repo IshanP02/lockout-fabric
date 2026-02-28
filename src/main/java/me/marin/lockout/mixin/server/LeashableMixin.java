@@ -79,6 +79,9 @@ public interface LeashableMixin {
         // Server-only
         if (entity.getEntityWorld().isClient()) return;
 
+        Lockout lockout = LockoutServer.lockout;
+        if (!Lockout.isLockoutRunning(lockout)) return;
+
         if (!(entity instanceof Leashable leashable)) return;
         Entity leashHolder = leashable.getLeashHolder();
         if (!(leashHolder instanceof PlayerEntity player)) return;
