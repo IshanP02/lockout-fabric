@@ -30,6 +30,10 @@ public class ZombifiedPiglinEntityMixin {
             return;
         }
 
+        if (angryAt == null) {
+            return;
+        }
+
         ServerPlayerEntity player;
         try {
             LivingEntity target = angryAt.getEntityByClass(pigman.getEntityWorld(), LivingEntity.class);
@@ -39,7 +43,6 @@ public class ZombifiedPiglinEntityMixin {
                  return;
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return;
         }
 

@@ -27,6 +27,10 @@ public class EndermanEntityMixin {
             return;
         }
 
+        if (angryAt == null) {
+            return;
+        }
+
         ServerPlayerEntity player;
         try {
             LivingEntity target = angryAt.getEntityByClass(enderman.getEntityWorld(), LivingEntity.class);
@@ -36,7 +40,6 @@ public class EndermanEntityMixin {
                  return;
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return;
         }
 
