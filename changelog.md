@@ -1,5 +1,5 @@
 ## Lockout v0.11.8
-- Fixed bug where blackout timer would multiply the amount of time that the timer went up/ dowm by when the user did not close their instance between worlds
+- Fixed bug where blackout timer would multiply the amount of time that the timer went up/ down by when the user did not close their instance between worlds
 - Added feature to allow the user to toggle the board on/ off, default button H (User can change in keybinds)
 - Added feature to allow the user to toggle the board into sections, default button O (User can change in keybinds)
 - Added feature to allow the user to switch between board sections, 1 -> 2 -> 3 -> 4 -> 1 default button V (User can change in keybinds)
