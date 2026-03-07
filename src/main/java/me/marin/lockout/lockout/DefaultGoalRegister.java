@@ -541,7 +541,7 @@ public class DefaultGoalRegister {
                         .biomes(List.of(WARM_OCEAN, DEEP_LUKEWARM_OCEAN, LUKEWARM_OCEAN, LUSH_CAVES, MANGROVE_SWAMP))
                         .build()
                 );
-        INSTANCE.register(GoalType.OBTAIN_WITHER_SKELETON_SKULL, ObtainWitherSkeletonSkullGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_WITHER_SKELETON_SKULL, ObtainWitherSkeletonSkullGoal.class, GoalRequirements.NOT_IN_RANDOM_POOL);
         INSTANCE.register(GoalType.REACH_EXP_LEVEL_15, ReachXPLevel15Goal.class);
         INSTANCE.register(GoalType.REACH_EXP_LEVEL_30, ReachXPLevel30Goal.class);
         INSTANCE.register(GoalType.HAVE_MORE_XP_LEVELS, HaveMostXPLevelsGoal.class,

@@ -26,6 +26,10 @@ public abstract class InGameHudMixin {
             return;
         }
 
+        if (!LockoutClient.boardVisible) {
+            return;
+        }
+
         Utility.drawBingoBoard(context);
     }
 

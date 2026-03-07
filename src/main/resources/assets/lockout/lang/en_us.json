@@ -1,5 +1,9 @@
 {
   "key.lockout.open_board": "Open Board",
   "key.lockout.open_goal_list": "Open Pick/Ban List",
+  "key.lockout.toggle_board": "Toggle Board Visibility",
+  "key.lockout.toggle_section_view": "Toggle Section View",
+  "key.lockout.next_section": "Next Section",
+  "key.lockout.toggle_auto_cycle_section": "Toggle Auto-Cycle Sections",
   "key.category.lockout.keybinds": "Lockout"
 }

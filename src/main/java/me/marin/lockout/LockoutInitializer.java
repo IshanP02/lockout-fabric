@@ -63,6 +63,9 @@ public class LockoutInitializer implements ModInitializer {
         Networking.registerPayloads();
         DefaultGoalRegister.registerGoals();
 
+        // Register server event handlers once when mod initializes (not every world load)
+        LockoutServer.registerServerEventHandlers();
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             {
                 {

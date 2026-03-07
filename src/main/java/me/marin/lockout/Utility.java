@@ -35,6 +35,12 @@ public class Utility {
             return;
         }
 
+        // If in section view mode, render the section instead
+        if (LockoutClient.sectionViewEnabled) {
+            drawBingoBoardSection(context);
+            return;
+        }
+
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
         Lockout lockout = LockoutClient.lockout;
@@ -112,6 +118,111 @@ public class Utility {
             }
         }
 
+    }
+
+    public static void drawBingoBoardSection(DrawContext context) {
+        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
+
+        // Don't render board if F3 is open with left-side board.
+        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
+            return;
+        }
+
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+
+        Lockout lockout = LockoutClient.lockout;
+        LockoutBoard board = lockout.getBoard();
+
+        // Calculate midpoint for splitting the board in half (handles odd-sized boards)
+        int boardSize = board.size();
+        int midpoint = (boardSize + 1) / 2;  // Ceil division: 11->6, 12->6, 9->5
+
+        // Determine section bounds based on currentSection (0-3)
+        int sectionRow = LockoutClient.currentSection / 2;  // 0 = top, 1 = bottom
+        int sectionCol = LockoutClient.currentSection % 2;  // 0 = left, 1 = right
+
+        int rowStart = (sectionRow == 0) ? 0 : midpoint;
+        int rowEnd = (sectionRow == 0) ? midpoint : boardSize;
+        int colStart = (sectionCol == 0) ? 0 : midpoint;
+        int colEnd = (sectionCol == 0) ? midpoint : boardSize;
+
+        int sectionHeight = rowEnd - rowStart;
+        int sectionWidth = colEnd - colStart;
+
+        // Calculate board dimensions (based on actual section size)
+        int boardWidth = 2 * GUI_PADDING + sectionWidth * GUI_SLOT_SIZE;
+        int boardHeight = GUI_PADDING + GUI_PADDING_BOTTOM + sectionHeight * GUI_SLOT_SIZE;
+
+        int boardRightEdgeX = boardPosition == LEFT ? boardWidth : context.getScaledWindowWidth();
+        int boardLeftEdgeX = boardRightEdgeX - boardWidth;
+
+        int x = boardLeftEdgeX;
+        int y = 0;
+
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, Constants.GUI_IDENTIFIER, x, y, boardWidth, boardHeight);
+
+        x += GUI_PADDING + 1;
+        y += GUI_PADDING + 1;
+        final int startX = x;
+
+        // Render only the goals from the current section
+        for (int i = rowStart; i < rowEnd; i++) {
+            for (int j = colStart; j < colEnd; j++) {
+                Goal goal = board.getGoals().get(j + boardSize * i);
+                if (goal != null) {
+                    if (goal.isCompleted()) {
+                        context.fill(x, y, x + 16, y + 16, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
+                    }
+
+                    goal.render(context, textRenderer, x, y);
+
+                }
+                x += GUI_SLOT_SIZE;
+            }
+            y += GUI_SLOT_SIZE;
+            x = startX;
+        }
+
+        x += 2;
+        y += 1;
+        List<String> pointsList = new ArrayList<>();
+        for (LockoutTeam team : lockout.getTeams()) {
+            pointsList.add(team.getColor() + "" + team.getPoints() + Formatting.RESET);
+        }
+
+        context.drawText(textRenderer, String.join(Formatting.RESET + "" + Formatting.GRAY + "-", pointsList), x, y, FF000000, true);
+
+        String timer = Utility.ticksToTimer(lockout.getTicks());
+        context.drawText(textRenderer, Formatting.WHITE + timer, boardRightEdgeX - textRenderer.getWidth(timer) - 4, y, FF000000, true);
+
+        List<String> formattedNames = new ArrayList<>();
+        int maxWidth = 0;
+        for (LockoutTeam team : lockout.getTeams()) {
+            for (String playerName : team.getPlayerNames()) {
+                formattedNames.add(team.getColor() + playerName);
+                maxWidth = Math.max(maxWidth, textRenderer.getWidth(playerName));
+            }
+        }
+
+        y += 20;
+        switch (boardPosition) {
+            case RIGHT -> {
+                context.fill(context.getScaledWindowWidth() - maxWidth - 3 - 1,  y - 2, context.getScaledWindowWidth() - 1, y + formattedNames.size() * textRenderer.fontHeight + 1, 0x80_00_00_00);
+
+                for (String formattedName : formattedNames) {
+                    context.drawText(textRenderer, formattedName, context.getScaledWindowWidth() - textRenderer.getWidth(formattedName) - 2, y, FF000000, true);
+                    y += textRenderer.fontHeight;
+                }
+            }
+            case LEFT -> {
+                context.fill(1,  y - 2, 4 + maxWidth, y + formattedNames.size() * textRenderer.fontHeight + 1, 0x80_00_00_00);
+
+                for (String formattedName : formattedNames) {
+                    context.drawText(textRenderer, formattedName, 3, y, FF000000, true);
+                    y += textRenderer.fontHeight;
+                }
+            }
+        }
     }
 
     public static void drawCenterBingoBoard(DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY) {
