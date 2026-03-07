@@ -54,6 +54,16 @@ public class LockoutClient implements ClientModInitializer {
     public static java.util.List<String> currentExcludedGoals = new java.util.ArrayList<>(); // Excluded goals from server
     private static KeyBinding keyBinding;
     private static KeyBinding goalListKeyBinding;
+    private static KeyBinding toggleBoardKeyBinding;
+    private static KeyBinding toggleSectionViewKeyBinding;
+    private static KeyBinding nextSectionKeyBinding;
+    private static KeyBinding toggleAutoCycleSectionKeyBinding;
+    public static boolean boardVisible = true;
+    public static boolean sectionViewEnabled = false;
+    public static int currentSection = 1;  // 1-4, which section to display
+    public static boolean autoCycleSectionEnabled = false;
+    public static int autoCycleSectionInterval = 60;  // Ticks between section changes
+    public static int lastSectionCycleTime = 0;  // Tracks when the last section was cycled
     public static int CURRENT_TICK = 0;
     public static final Map<String, String> goalTooltipMap = new HashMap<>();
 
@@ -725,6 +735,34 @@ public class LockoutClient implements ClientModInitializer {
             LOCKOUT_CATEGORY // The translation key of the keybinding's category.
         ));
 
+        toggleBoardKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.lockout.toggle_board",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_H,
+            LOCKOUT_CATEGORY
+        ));
+
+        toggleSectionViewKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.lockout.toggle_section_view",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_O,
+            LOCKOUT_CATEGORY
+        ));
+
+        nextSectionKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.lockout.next_section",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_V,
+            LOCKOUT_CATEGORY
+        ));
+
+        toggleAutoCycleSectionKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.lockout.toggle_auto_cycle_section",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_M,
+            LOCKOUT_CATEGORY
+        ));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             CURRENT_TICK++;
 
@@ -763,9 +801,123 @@ public class LockoutClient implements ClientModInitializer {
                 }
                 client.setScreen(new GoalListScreen());
             }
+
+            boolean toggleBoardPressed = false;
+            while (toggleBoardKeyBinding.wasPressed()) {
+                toggleBoardPressed = true;
+            }
+            if (toggleBoardPressed) {
+                // Toggle board visibility (client-side only, no packet sent)
+                boardVisible = !boardVisible;
+            }
+
+            boolean toggleSectionViewPressed = false;
+            while (toggleSectionViewKeyBinding.wasPressed()) {
+                toggleSectionViewPressed = true;
+            }
+            if (toggleSectionViewPressed) {
+                if (client.currentScreen != null || client.player == null) {
+                    return;
+                }
+                if (!Lockout.exists(LockoutClient.lockout)) {
+                    return;
+                }
+                
+                // Only allow if board is at least 4x4 (can be divided into 4 sections)
+                if (LockoutClient.lockout.getBoard().size() < 4) {
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Board is too small to use section view").formatted(net.minecraft.util.Formatting.RED), false);
+                    }
+                    return;
+                }
+                
+                // Toggle section view on/off
+                sectionViewEnabled = !sectionViewEnabled;
+                currentSection = 1;  // Reset to section 1 when enabling
+                
+                if (sectionViewEnabled) {
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Section view enabled: Section 1").formatted(net.minecraft.util.Formatting.GREEN), false);
+                    }
+                } else {
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Section view disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
+                    }
+                }
+            }
+
+            boolean nextSectionPressed = false;
+            while (nextSectionKeyBinding.wasPressed()) {
+                nextSectionPressed = true;
+            }
+            if (nextSectionPressed) {
+                if (client.currentScreen != null || client.player == null) {
+                    return;
+                }
+                
+                // Only cycle sections if section view is enabled
+                if (sectionViewEnabled) {
+                    currentSection = currentSection % 4 + 1;  // Cycle 1→2→3→4→1
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Section " + currentSection).formatted(net.minecraft.util.Formatting.GREEN), false);
+                    }
+                }
+            }
+
+            boolean toggleAutoCyclePressed = false;
+            while (toggleAutoCycleSectionKeyBinding.wasPressed()) {
+                toggleAutoCyclePressed = true;
+            }
+            if (toggleAutoCyclePressed) {
+                if (client.currentScreen != null || client.player == null) {
+                    return;
+                }
+                if (!Lockout.exists(LockoutClient.lockout)) {
+                    return;
+                }
+                
+                // Only allow if section view is enabled
+                if (!sectionViewEnabled) {
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Enable section view first").formatted(net.minecraft.util.Formatting.RED), false);
+                    }
+                    return;
+                }
+                
+                // Toggle auto-cycling on/off
+                autoCycleSectionEnabled = !autoCycleSectionEnabled;
+                lastSectionCycleTime = CURRENT_TICK;
+                
+                if (autoCycleSectionEnabled) {
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            Text.literal("Auto-cycling enabled (").formatted(net.minecraft.util.Formatting.GREEN)
+                                .append(Text.literal(String.valueOf(autoCycleSectionInterval / 20.0)).formatted(net.minecraft.util.Formatting.YELLOW))
+                                .append(Text.literal("s interval)").formatted(net.minecraft.util.Formatting.GREEN)),
+                            false
+                        );
+                    }
+                } else {
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Auto-cycling disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
+                    }
+                }
+            }
+
+            // Auto-cycle sections if enabled
+            if (sectionViewEnabled && autoCycleSectionEnabled) {
+                if (CURRENT_TICK - lastSectionCycleTime >= autoCycleSectionInterval) {
+                    currentSection = currentSection % 4 + 1;  // Cycle 1→2→3→4→1
+                    lastSectionCycleTime = CURRENT_TICK;
+                }
+            }
         });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             LockoutConfig.load(); // reload config every time player joins world
+            // Load auto-cycle settings from config
+            autoCycleSectionEnabled = LockoutConfig.getInstance().autoCycleSectionsEnabled;
+            autoCycleSectionInterval = LockoutConfig.getInstance().autoCycleInterval;
+            lastSectionCycleTime = CURRENT_TICK;
             // Build locate cache once on join so opening the goal list doesn't trigger expensive searches
             client.execute(() -> ClientLocateUtil.buildCacheFromRegisteredGoals(client));
         });
