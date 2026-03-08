@@ -281,7 +281,7 @@ public class BoardBuilderScreen extends Screen {
 
     @Override
     public boolean mouseClicked(Click click, boolean consumed) {
-        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, (int) click.x(), (int) click.y());
+        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, (int) click.x(), (int) click.y(), false);
         if ((click.button() == 0 || click.button() == 1) && hoveredIdx.isPresent()) {
             Goal goal = BoardBuilderData.INSTANCE.getGoals().get(hoveredIdx.get());
             if (click.button() == 1 && goal != null && goal.hasData()) {
@@ -364,7 +364,7 @@ public class BoardBuilderScreen extends Screen {
         y += GUI_CENTER_PADDING + 1;
         final int startX = x;
 
-        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, mouseX, mouseY);
+        Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, mouseX, mouseY, false);
         Integer editingIdx = BoardBuilderData.INSTANCE.getModifyingIdx();
 
         for (int i = 0; i < size; i++) {

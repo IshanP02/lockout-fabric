@@ -33,6 +33,9 @@ public class LockoutConfig {
     @SerializedName("auto cycle interval (ticks)")
     public int autoCycleInterval = 60;  // Default 3 seconds at 20 ticks/second
 
+    @SerializedName("board scale")
+    public double boardScale = 1.0;  // Range: 0.5 to 2.0
+
     public static void load() {
         if (!Files.exists(CONFIG_PATH)) {
             createConfigDir();
@@ -57,6 +60,7 @@ public class LockoutConfig {
         instance.showNoiseRouterLine = false;
         instance.autoCycleSectionsEnabled = false;
         instance.autoCycleInterval = 60;
+        instance.boardScale = 1.0;
     }
 
     private static void createConfigDir() {
