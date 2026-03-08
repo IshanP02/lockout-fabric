@@ -145,9 +145,10 @@ public class Utility {
         int boardSize = board.size();
         int midpoint = (boardSize + 1) / 2;  // Ceil division: 11->6, 12->6, 9->5
 
-        // Determine section bounds based on currentSection (0-3)
-        int sectionRow = LockoutClient.currentSection / 2;  // 0 = top, 1 = bottom
-        int sectionCol = LockoutClient.currentSection % 2;  // 0 = left, 1 = right
+        // currentSection is 1-4 in input/UI. Convert to 0-3 for quadrant math.
+        int sectionIndex = Math.max(0, Math.min(3, LockoutClient.currentSection - 1));
+        int sectionRow = sectionIndex / 2;  // 0 = top, 1 = bottom
+        int sectionCol = sectionIndex % 2;  // 0 = left, 1 = right
 
         int rowStart = (sectionRow == 0) ? 0 : midpoint;
         int rowEnd = (sectionRow == 0) ? midpoint : boardSize;
