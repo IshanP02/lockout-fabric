@@ -27,13 +27,30 @@ public class Utility {
 
     public static int FF000000 = 0xFF000000;
 
-    public static void drawBingoBoard(DrawContext context) {
-        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
-
-        // Don't render board if F3 is open with left-side board.
-        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
-            return;
+    private static float getSafeBoardScale() {
+        double boardScale = LockoutConfig.getInstance().boardScale;
+        if (!Double.isFinite(boardScale)) {
+            return 1.0F;
         }
+        return (float) Math.max(0.5D, Math.min(2.0D, boardScale));
+    }
+
+    public static LockoutConfig.BoardPosition getEffectiveBoardPosition() {
+        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
+        if (boardPosition == null) {
+            boardPosition = LockoutConfig.BoardPosition.RIGHT;
+        }
+
+        // When F3 is open, left side is occupied by debug info. Render on the right instead of hiding.
+        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
+            return LockoutConfig.BoardPosition.RIGHT;
+        }
+
+        return boardPosition;
+    }
+
+    public static void drawBingoBoard(DrawContext context) {
+        LockoutConfig.BoardPosition boardPosition = getEffectiveBoardPosition();
 
         // If in section view mode, render the section instead
         if (LockoutClient.sectionViewEnabled) {
@@ -45,7 +62,7 @@ public class Utility {
 
         Lockout lockout = LockoutClient.lockout;
         LockoutBoard board = lockout.getBoard();
-        float boardScale = (float) LockoutConfig.getInstance().boardScale;
+        float boardScale = getSafeBoardScale();
 
         int boardWidth = 2 * GUI_PADDING + board.size() * GUI_SLOT_SIZE;
         int boardHeight = GUI_PADDING + GUI_PADDING_BOTTOM + board.size() * GUI_SLOT_SIZE;
@@ -128,18 +145,13 @@ public class Utility {
     }
 
     public static void drawBingoBoardSection(DrawContext context) {
-        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
-
-        // Don't render board if F3 is open with left-side board.
-        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
-            return;
-        }
+        LockoutConfig.BoardPosition boardPosition = getEffectiveBoardPosition();
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
         Lockout lockout = LockoutClient.lockout;
         LockoutBoard board = lockout.getBoard();
-        float boardScale = (float) LockoutConfig.getInstance().boardScale;
+        float boardScale = getSafeBoardScale();
 
         // Calculate midpoint for splitting the board in half (handles odd-sized boards)
         int boardSize = board.size();
@@ -249,7 +261,7 @@ public class Utility {
         int height = context.getScaledWindowHeight();
 
         LockoutBoard board = LockoutClient.lockout.getBoard();
-        float boardScale = applyScale ? (float) LockoutConfig.getInstance().boardScale : 1.0F;
+        float boardScale = applyScale ? getSafeBoardScale() : 1.0F;
 
         int boardWidth = 2 * GUI_CENTER_PADDING + board.size() * GUI_CENTER_SLOT_SIZE;
         int boardHeight = 2 * GUI_CENTER_PADDING + board.size() * GUI_CENTER_SLOT_SIZE;
@@ -302,7 +314,7 @@ public class Utility {
     }
 
     public static Optional<Integer> getBoardHoveredIndex(int size, int width, int height, int mouseX, int mouseY, boolean applyScale) {
-        double boardScale = applyScale ? LockoutConfig.getInstance().boardScale : 1.0;
+        double boardScale = applyScale ? getSafeBoardScale() : 1.0;
 
         int boardWidth = 2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE;
         int boardHeight = 2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE;

@@ -45,6 +45,7 @@ public class LockoutConfig {
             try {
                 String s = Files.readString(CONFIG_PATH);
                 instance = GSON.fromJson(s, LockoutConfig.class);
+                sanitize();
                 save(); // saves "new" config values (from updates)
             } catch (Exception e) {
                 Lockout.log("Invalid config file, using default values.");
@@ -73,10 +74,28 @@ public class LockoutConfig {
 
     public static void save() {
         try {
+            sanitize();
             Files.writeString(CONFIG_PATH, GSON.toJson(instance));
         } catch (Exception e) {
             Lockout.error(e);
         }
+    }
+
+    private static void sanitize() {
+        if (instance == null) {
+            loadDefaultConfig();
+            return;
+        }
+
+        instance.boardSize = Math.max(Constants.MIN_BOARD_SIZE, Math.min(Constants.MAX_BOARD_SIZE, instance.boardSize));
+        if (instance.boardPosition == null) {
+            instance.boardPosition = BoardPosition.RIGHT;
+        }
+        if (!Double.isFinite(instance.boardScale)) {
+            instance.boardScale = 1.0;
+        }
+        instance.boardScale = Math.max(0.5, Math.min(2.0, instance.boardScale));
+        instance.autoCycleInterval = Math.max(1, instance.autoCycleInterval);
     }
 
     public enum BoardPosition {

@@ -51,8 +51,8 @@ public class LockoutSettingsScreen extends Screen {
         int rightX = centerX + COLUMN_GAP / 2;
         int y = this.height / 6 - 12;
 
-        double currentScale = LockoutConfig.getInstance().boardScale;
-        double sliderValue = (currentScale - 0.5) / 1.5;
+        double currentScale = Math.max(0.5, Math.min(2.0, LockoutConfig.getInstance().boardScale));
+        double sliderValue = Math.max(0.0, Math.min(1.0, (currentScale - 0.5) / 1.5));
 
         scaleSlider = new SliderWidget(leftX, y, COLUMN_WIDTH, BUTTON_HEIGHT,
             Text.literal("Board Scale: " + String.format("%.1fx", currentScale)), sliderValue) {
@@ -67,6 +67,7 @@ public class LockoutSettingsScreen extends Screen {
             protected void applyValue() {
                 double scale = 0.5 + (this.value * 1.5);
                 scale = Math.round(scale * 10.0) / 10.0;
+                scale = Math.max(0.5, Math.min(2.0, scale));
                 LockoutConfig.getInstance().boardScale = scale;
                 LockoutConfig.save();
             }
