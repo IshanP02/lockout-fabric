@@ -561,6 +561,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.GET_MOB_KABOB_ADVANCEMENT, GetMobKabobAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_SNIPER_DUEL_ADVANCEMENT, GetSniperDuelAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_STAR_TRADER_ADVANCEMENT, GetStarTraderAdvancementGoal.class, GoalRequirements.VILLAGE);
+        INSTANCE.register(GoalType.GET_STAY_HYDRATED_ADVANCEMENT, GetStayHydratedAdvancementGoal.class);
         INSTANCE.register(GoalType.GET_WHAT_A_DEAL_ADVANCEMENT, GetWhatADealAdvancementGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.GET_UNDER_LOCK_AND_KEY_ADVANCEMENT, GetUnderLockAndKeyAdvancementGoal.class, new GoalRequirements.Builder()
                         .structures(List.of(TRIAL_CHAMBERS))
