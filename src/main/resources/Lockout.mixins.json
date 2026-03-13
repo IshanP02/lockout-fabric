@@ -66,6 +66,7 @@
     "client.toasts.SystemToastMixin",
     "client.toasts.TutorialToastMixin",
     "client.LocatorBarMixin",
+    "client.PauseScreenMixin",
     "client.WorldRendererMixin"
   ],
   "injectors": {
