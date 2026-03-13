@@ -27,6 +27,12 @@ public class LockoutConfig {
     @SerializedName("show NoiseRouter line")
     public boolean showNoiseRouterLine = false;
 
+    @SerializedName("auto cycle sections")
+    public boolean autoCycleSectionsEnabled = false;
+
+    @SerializedName("auto cycle interval (ticks)")
+    public int autoCycleInterval = 60;  // Default 3 seconds at 20 ticks/second
+
     public static void load() {
         if (!Files.exists(CONFIG_PATH)) {
             createConfigDir();
@@ -49,6 +55,8 @@ public class LockoutConfig {
         instance.boardSize = 5;
         instance.boardPosition = BoardPosition.RIGHT;
         instance.showNoiseRouterLine = false;
+        instance.autoCycleSectionsEnabled = false;
+        instance.autoCycleInterval = 60;
     }
 
     private static void createConfigDir() {

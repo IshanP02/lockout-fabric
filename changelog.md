@@ -1,3 +1,10 @@
+## Lockout v0.11.8
+- Fixed bug where blackout timer would multiply the amount of time that the timer went up/ down by when the user did not close their instance between worlds
+- Added feature to allow the user to toggle the board on/ off, default button H (User can change in keybinds)
+- Added feature to allow the user to toggle the board into sections, default button O (User can change in keybinds)
+- Added feature to allow the user to switch between board sections, 1 -> 2 -> 3 -> 4 -> 1 default button V (User can change in keybinds)
+- Added feature to allow the user to toggle to automatically switch between board sections every 3 seconds, default button M (User can change in keybinds)
+- Removed Obtain Wither Skeleton Skull from the random generated boards
 ## Lockout v0.11.7
 - Fixed an issue where mobs attached to non-players would count towards LeashUniqueEntities progress
 - Tweaked Pick/Ban chat messages to use the getGoalName string rather than the Goal ID string

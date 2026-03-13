@@ -136,7 +136,14 @@ public class LockoutServer {
         LockoutConfig.load(); // reload config every time the server starts
         boardSize = LockoutConfig.getInstance().boardSize;
         Lockout.log("Using default board size: " + boardSize);
+    }
 
+    /**
+     * Registers all server-side event handlers once when the mod initializes.
+     * This method is called from LockoutInitializer to ensure handlers are only registered once,
+     * not every time a world is loaded (which was causing the timer to multiply in blackout mode).
+     */
+    public static void registerServerEventHandlers() {
         if (isInitialized) return;
         isInitialized = true;
 
@@ -740,6 +747,10 @@ public class LockoutServer {
                 player.sendMessage(Text.literal("Set custom board."));
             }
         });
+    }
+
+    public static void resetServerForNewWorld() {
+        isInitialized = false;
     }
 
     public static int startPickBanSession(CommandContext<ServerCommandSource> context, Team team1, Team team2) {
