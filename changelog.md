@@ -1,3 +1,9 @@
+## Lockout v0.11.9
+- Added lockout settings page with lockout symbol next to the options button in the pause menu
+- Added Board scale from 0.5x to 2.0x
+- Added move board location Left and Right on this screen
+- Added keybinds for Open Board, Open Pick/ Ban list, toggle board visibility, toggle section view, next section, toggle auto-cycle sections to lockout settings page
+- Added feature that when F3 is pressed when board position is set to Left it moves to right until user pesses F3 again, then it moves abck to left
 ## Lockout v0.11.8
 - Fixed bug where blackout timer would multiply the amount of time that the timer went up/ down by when the user did not close their instance between worlds
 - Added feature to allow the user to toggle the board on/ off, default button H (User can change in keybinds)

@@ -89,6 +89,23 @@ public class LockoutClient implements ClientModInitializer {
         return true;
     }
 
+    public static List<KeyBinding> getLockoutKeyBindings() {
+        List<KeyBinding> bindings = new ArrayList<>();
+        if (keyBinding != null) bindings.add(keyBinding);
+        if (goalListKeyBinding != null) bindings.add(goalListKeyBinding);
+        if (toggleBoardKeyBinding != null) bindings.add(toggleBoardKeyBinding);
+        if (toggleSectionViewKeyBinding != null) bindings.add(toggleSectionViewKeyBinding);
+        if (nextSectionKeyBinding != null) bindings.add(nextSectionKeyBinding);
+        if (toggleAutoCycleSectionKeyBinding != null) bindings.add(toggleAutoCycleSectionKeyBinding);
+        return bindings;
+    }
+
+    private static void resetSectionViewState() {
+        sectionViewEnabled = false;
+        currentSection = 1;
+        autoCycleSectionEnabled = false;
+    }
+
     private static void sendBoardTypeMessage(Text message) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null) {
@@ -110,6 +127,9 @@ public class LockoutClient implements ClientModInitializer {
 
             lockout = new Lockout(new LockoutBoard(payload.goals().stream().map(Pair::getA).toList()), teams);
             lockout.setRunning(payload.isRunning());
+
+            // Always reset section state on new board/game payload to avoid stale section lock-in.
+            resetSectionViewState();
 
             List<Goal> goalList = lockout.getBoard().getGoals();
             for (int i = 0; i < goalList.size(); i++) {
@@ -822,27 +842,30 @@ public class LockoutClient implements ClientModInitializer {
                 if (!Lockout.exists(LockoutClient.lockout)) {
                     return;
                 }
-                
-                // Only allow if board is at least 4x4 (can be divided into 4 sections)
+
+                // Always allow disabling section mode, regardless of board size.
+                if (sectionViewEnabled) {
+                    resetSectionViewState();
+                    if (client.player != null) {
+                        client.player.sendMessage(Text.literal("Section view disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
+                    }
+                    return;
+                }
+
+                // Only allow enabling if board is at least 4x4.
                 if (LockoutClient.lockout.getBoard().size() < 4) {
                     if (client.player != null) {
                         client.player.sendMessage(Text.literal("Board is too small to use section view").formatted(net.minecraft.util.Formatting.RED), false);
                     }
                     return;
                 }
-                
-                // Toggle section view on/off
-                sectionViewEnabled = !sectionViewEnabled;
-                currentSection = 1;  // Reset to section 1 when enabling
-                
-                if (sectionViewEnabled) {
-                    if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Section view enabled: Section 1").formatted(net.minecraft.util.Formatting.GREEN), false);
-                    }
-                } else {
-                    if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Section view disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
-                    }
+
+                // Enable section view on section 1.
+                sectionViewEnabled = true;
+                currentSection = 1;
+
+                if (client.player != null) {
+                    client.player.sendMessage(Text.literal("Section view enabled: Section 1").formatted(net.minecraft.util.Formatting.GREEN), false);
                 }
             }
 
@@ -914,6 +937,7 @@ public class LockoutClient implements ClientModInitializer {
         });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             LockoutConfig.load(); // reload config every time player joins world
+            resetSectionViewState();
             // Load auto-cycle settings from config
             autoCycleSectionEnabled = LockoutConfig.getInstance().autoCycleSectionsEnabled;
             autoCycleSectionInterval = LockoutConfig.getInstance().autoCycleInterval;
@@ -923,6 +947,7 @@ public class LockoutClient implements ClientModInitializer {
         });
         ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> {
             lockout = null;
+            resetSectionViewState();
             goalTooltipMap.clear();
             ClientLocateUtil.clearCache();
         }));

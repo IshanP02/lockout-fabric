@@ -27,13 +27,30 @@ public class Utility {
 
     public static int FF000000 = 0xFF000000;
 
-    public static void drawBingoBoard(DrawContext context) {
-        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
-
-        // Don't render board if F3 is open with left-side board.
-        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
-            return;
+    private static float getSafeBoardScale() {
+        double boardScale = LockoutConfig.getInstance().boardScale;
+        if (!Double.isFinite(boardScale)) {
+            return 1.0F;
         }
+        return (float) Math.max(0.5D, Math.min(2.0D, boardScale));
+    }
+
+    public static LockoutConfig.BoardPosition getEffectiveBoardPosition() {
+        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
+        if (boardPosition == null) {
+            boardPosition = LockoutConfig.BoardPosition.RIGHT;
+        }
+
+        // When F3 is open, left side is occupied by debug info. Render on the right instead of hiding.
+        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
+            return LockoutConfig.BoardPosition.RIGHT;
+        }
+
+        return boardPosition;
+    }
+
+    public static void drawBingoBoard(DrawContext context) {
+        LockoutConfig.BoardPosition boardPosition = getEffectiveBoardPosition();
 
         // If in section view mode, render the section instead
         if (LockoutClient.sectionViewEnabled) {
@@ -45,14 +62,20 @@ public class Utility {
 
         Lockout lockout = LockoutClient.lockout;
         LockoutBoard board = lockout.getBoard();
+        float boardScale = getSafeBoardScale();
 
         int boardWidth = 2 * GUI_PADDING + board.size() * GUI_SLOT_SIZE;
         int boardHeight = GUI_PADDING + GUI_PADDING_BOTTOM + board.size() * GUI_SLOT_SIZE;
+        int scaledBoardWidth = Math.max(1, Math.round(boardWidth * boardScale));
 
-        int boardRightEdgeX = boardPosition == LEFT ? boardWidth : context.getScaledWindowWidth();
-        int boardLeftEdgeX = boardRightEdgeX - boardWidth;
+        int boardRightEdgeX = boardPosition == LEFT ? scaledBoardWidth : context.getScaledWindowWidth();
+        int boardLeftEdgeX = boardRightEdgeX - scaledBoardWidth;
 
-        int x = boardLeftEdgeX;
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate(boardLeftEdgeX, 0);
+        context.getMatrices().scale(boardScale, boardScale);
+
+        int x = 0;
         int y = 0;
 
         context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, Constants.GUI_IDENTIFIER, x, y, boardWidth, boardHeight);
@@ -66,11 +89,10 @@ public class Utility {
                 Goal goal = board.getGoals().get(j + board.size() * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + 16, y + 16, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + GUI_SLOT_SIZE, y + GUI_SLOT_SIZE, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
-
                 }
                 x += GUI_SLOT_SIZE;
             }
@@ -87,7 +109,9 @@ public class Utility {
         context.drawText(textRenderer, String.join(Formatting.RESET + "" + Formatting.GRAY + "-", pointsList), x, y, FF000000, true);
 
         String timer = Utility.ticksToTimer(lockout.getTicks());
-        context.drawText(textRenderer, Formatting.WHITE + timer, boardRightEdgeX - textRenderer.getWidth(timer) - 4, y, FF000000, true);
+        context.drawText(textRenderer, Formatting.WHITE + timer, boardWidth - textRenderer.getWidth(timer) - 4, y, FF000000, true);
+
+        context.getMatrices().popMatrix();
 
         List<String> formattedNames = new ArrayList<>();
         int maxWidth = 0;
@@ -98,7 +122,7 @@ public class Utility {
             }
         }
 
-        y += 20;
+        y = Math.round((GUI_PADDING + 1 + board.size() * GUI_SLOT_SIZE + 1 + 20) * boardScale);
         switch (boardPosition) {
             case RIGHT -> {
                 context.fill(context.getScaledWindowWidth() - maxWidth - 3 - 1,  y - 2, context.getScaledWindowWidth() - 1, y + formattedNames.size() * textRenderer.fontHeight + 1, 0x80_00_00_00);
@@ -121,25 +145,22 @@ public class Utility {
     }
 
     public static void drawBingoBoardSection(DrawContext context) {
-        LockoutConfig.BoardPosition boardPosition = LockoutConfig.getInstance().boardPosition;
-
-        // Don't render board if F3 is open with left-side board.
-        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
-            return;
-        }
+        LockoutConfig.BoardPosition boardPosition = getEffectiveBoardPosition();
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
         Lockout lockout = LockoutClient.lockout;
         LockoutBoard board = lockout.getBoard();
+        float boardScale = getSafeBoardScale();
 
         // Calculate midpoint for splitting the board in half (handles odd-sized boards)
         int boardSize = board.size();
         int midpoint = (boardSize + 1) / 2;  // Ceil division: 11->6, 12->6, 9->5
 
-        // Determine section bounds based on currentSection (0-3)
-        int sectionRow = LockoutClient.currentSection / 2;  // 0 = top, 1 = bottom
-        int sectionCol = LockoutClient.currentSection % 2;  // 0 = left, 1 = right
+        // currentSection is 1-4 in input/UI. Convert to 0-3 for quadrant math.
+        int sectionIndex = Math.max(0, Math.min(3, LockoutClient.currentSection - 1));
+        int sectionRow = sectionIndex / 2;  // 0 = top, 1 = bottom
+        int sectionCol = sectionIndex % 2;  // 0 = left, 1 = right
 
         int rowStart = (sectionRow == 0) ? 0 : midpoint;
         int rowEnd = (sectionRow == 0) ? midpoint : boardSize;
@@ -149,14 +170,18 @@ public class Utility {
         int sectionHeight = rowEnd - rowStart;
         int sectionWidth = colEnd - colStart;
 
-        // Calculate board dimensions (based on actual section size)
         int boardWidth = 2 * GUI_PADDING + sectionWidth * GUI_SLOT_SIZE;
         int boardHeight = GUI_PADDING + GUI_PADDING_BOTTOM + sectionHeight * GUI_SLOT_SIZE;
+        int scaledBoardWidth = Math.max(1, Math.round(boardWidth * boardScale));
 
-        int boardRightEdgeX = boardPosition == LEFT ? boardWidth : context.getScaledWindowWidth();
-        int boardLeftEdgeX = boardRightEdgeX - boardWidth;
+        int boardRightEdgeX = boardPosition == LEFT ? scaledBoardWidth : context.getScaledWindowWidth();
+        int boardLeftEdgeX = boardRightEdgeX - scaledBoardWidth;
 
-        int x = boardLeftEdgeX;
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate(boardLeftEdgeX, 0);
+        context.getMatrices().scale(boardScale, boardScale);
+
+        int x = 0;
         int y = 0;
 
         context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, Constants.GUI_IDENTIFIER, x, y, boardWidth, boardHeight);
@@ -171,11 +196,10 @@ public class Utility {
                 Goal goal = board.getGoals().get(j + boardSize * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + 16, y + 16, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + GUI_SLOT_SIZE, y + GUI_SLOT_SIZE, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
-
                 }
                 x += GUI_SLOT_SIZE;
             }
@@ -193,7 +217,9 @@ public class Utility {
         context.drawText(textRenderer, String.join(Formatting.RESET + "" + Formatting.GRAY + "-", pointsList), x, y, FF000000, true);
 
         String timer = Utility.ticksToTimer(lockout.getTicks());
-        context.drawText(textRenderer, Formatting.WHITE + timer, boardRightEdgeX - textRenderer.getWidth(timer) - 4, y, FF000000, true);
+        context.drawText(textRenderer, Formatting.WHITE + timer, boardWidth - textRenderer.getWidth(timer) - 4, y, FF000000, true);
+
+        context.getMatrices().popMatrix();
 
         List<String> formattedNames = new ArrayList<>();
         int maxWidth = 0;
@@ -204,7 +230,7 @@ public class Utility {
             }
         }
 
-        y += 20;
+        y = Math.round((GUI_PADDING + 1 + sectionHeight * GUI_SLOT_SIZE + 1 + 20) * boardScale);
         switch (boardPosition) {
             case RIGHT -> {
                 context.fill(context.getScaledWindowWidth() - maxWidth - 3 - 1,  y - 2, context.getScaledWindowWidth() - 1, y + formattedNames.size() * textRenderer.fontHeight + 1, 0x80_00_00_00);
@@ -226,16 +252,30 @@ public class Utility {
     }
 
     public static void drawCenterBingoBoard(DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY) {
+        // Default to applying scale
+        drawCenterBingoBoard(context, textRenderer, mouseX, mouseY, true);
+    }
+
+    public static void drawCenterBingoBoard(DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY, boolean applyScale) {
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
 
         LockoutBoard board = LockoutClient.lockout.getBoard();
+        float boardScale = applyScale ? getSafeBoardScale() : 1.0F;
 
         int boardWidth = 2 * GUI_CENTER_PADDING + board.size() * GUI_CENTER_SLOT_SIZE;
-        int x = width / 2 - boardWidth / 2;
-
         int boardHeight = 2 * GUI_CENTER_PADDING + board.size() * GUI_CENTER_SLOT_SIZE;
-        int y = height / 2 - boardHeight / 2;
+        int scaledBoardWidth = Math.max(1, Math.round(boardWidth * boardScale));
+        int scaledBoardHeight = Math.max(1, Math.round(boardHeight * boardScale));
+        int boardLeftX = width / 2 - scaledBoardWidth / 2;
+        int boardTopY = height / 2 - scaledBoardHeight / 2;
+
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate(boardLeftX, boardTopY);
+        context.getMatrices().scale(boardScale, boardScale);
+
+        int x = 0;
+        int y = 0;
 
         context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, GUI_CENTER_IDENTIFIER, x, y, boardWidth, boardHeight);
 
@@ -243,20 +283,20 @@ public class Utility {
         y += GUI_CENTER_PADDING + 1;
         final int startX = x;
 
-        Goal hoveredGoal = getBoardHoveredGoal(context, mouseX, mouseY);
+        Goal hoveredGoal = getBoardHoveredGoal(context, mouseX, mouseY, applyScale);
 
         for (int i = 0; i < board.size(); i++) {
             for (int j = 0; j < board.size(); j++) {
                 Goal goal = board.getGoals().get(j + board.size() * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + 16, y + 16, (0xFF << 24) | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + GUI_CENTER_SLOT_SIZE, y + GUI_CENTER_SLOT_SIZE, (0xFF << 24) | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
 
                     if (goal == hoveredGoal) {
-                        context.fill(x, y, x + 16, y + 16, GUI_CENTER_HOVERED_COLOR);
+                        context.fill(x, y, x + GUI_CENTER_SLOT_SIZE, y + GUI_CENTER_SLOT_SIZE, GUI_CENTER_HOVERED_COLOR);
                     }
                 }
                 x += GUI_CENTER_SLOT_SIZE;
@@ -264,16 +304,36 @@ public class Utility {
             y += GUI_CENTER_SLOT_SIZE;
             x = startX;
         }
+
+        context.getMatrices().popMatrix();
     }
 
     public static Optional<Integer> getBoardHoveredIndex(int size, int width, int height, int mouseX, int mouseY) {
-        int x = width / 2 - (2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE) / 2 + GUI_CENTER_PADDING - BoardBuilderScreen.CENTER_OFFSET;
-        int y = height / 2 - (2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE) / 2 + GUI_CENTER_PADDING;
+        return getBoardHoveredIndex(size, width, height, mouseX, mouseY, true);
+
+    }
+
+    public static Optional<Integer> getBoardHoveredIndex(int size, int width, int height, int mouseX, int mouseY, boolean applyScale) {
+        double boardScale = applyScale ? getSafeBoardScale() : 1.0;
+
+        int boardWidth = 2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE;
+        int boardHeight = 2 * GUI_CENTER_PADDING + size * GUI_CENTER_SLOT_SIZE;
+        int scaledBoardWidth = Math.max(1, (int) Math.round(boardWidth * boardScale));
+        int scaledBoardHeight = Math.max(1, (int) Math.round(boardHeight * boardScale));
+
+        int boardLeftX = width / 2 - scaledBoardWidth / 2 - BoardBuilderScreen.CENTER_OFFSET;
+        int boardTopY = height / 2 - scaledBoardHeight / 2;
+
+        double localMouseX = (mouseX - boardLeftX) / boardScale;
+        double localMouseY = (mouseY - boardTopY) / boardScale;
+
+        int x = GUI_CENTER_PADDING + 1;
+        int y = GUI_CENTER_PADDING + 1;
         final int startX = x;
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                if (mouseX >= x-1 && mouseX < x + GUI_CENTER_SLOT_SIZE && mouseY >= y-1 && mouseY < y + GUI_CENTER_SLOT_SIZE) {
+                if (localMouseX >= x - 1 && localMouseX < x + GUI_CENTER_SLOT_SIZE && localMouseY >= y - 1 && localMouseY < y + GUI_CENTER_SLOT_SIZE) {
                     return Optional.of(j + i * size);
                 }
                 x += GUI_CENTER_SLOT_SIZE;
@@ -286,7 +346,11 @@ public class Utility {
     }
 
     public static Goal getBoardHoveredGoal(DrawContext context, int mouseX, int mouseY) {
-        Optional<Integer> hoveredIdx = getBoardHoveredIndex(LockoutClient.lockout.getBoard().size(), context.getScaledWindowWidth(), context.getScaledWindowHeight(), mouseX, mouseY);
+        return getBoardHoveredGoal(context, mouseX, mouseY, true);
+    }
+
+    public static Goal getBoardHoveredGoal(DrawContext context, int mouseX, int mouseY, boolean applyScale) {
+        Optional<Integer> hoveredIdx = getBoardHoveredIndex(LockoutClient.lockout.getBoard().size(), context.getScaledWindowWidth(), context.getScaledWindowHeight(), mouseX, mouseY, applyScale);
         return hoveredIdx.map(integer -> LockoutClient.lockout.getBoard().getGoals().get(integer)).orElse(null);
     }
 

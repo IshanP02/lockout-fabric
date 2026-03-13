@@ -33,6 +33,9 @@ public class LockoutConfig {
     @SerializedName("auto cycle interval (ticks)")
     public int autoCycleInterval = 60;  // Default 3 seconds at 20 ticks/second
 
+    @SerializedName("board scale")
+    public double boardScale = 1.0;  // Range: 0.5 to 2.0
+
     public static void load() {
         if (!Files.exists(CONFIG_PATH)) {
             createConfigDir();
@@ -42,6 +45,7 @@ public class LockoutConfig {
             try {
                 String s = Files.readString(CONFIG_PATH);
                 instance = GSON.fromJson(s, LockoutConfig.class);
+                sanitize();
                 save(); // saves "new" config values (from updates)
             } catch (Exception e) {
                 Lockout.log("Invalid config file, using default values.");
@@ -57,6 +61,7 @@ public class LockoutConfig {
         instance.showNoiseRouterLine = false;
         instance.autoCycleSectionsEnabled = false;
         instance.autoCycleInterval = 60;
+        instance.boardScale = 1.0;
     }
 
     private static void createConfigDir() {
@@ -69,10 +74,28 @@ public class LockoutConfig {
 
     public static void save() {
         try {
+            sanitize();
             Files.writeString(CONFIG_PATH, GSON.toJson(instance));
         } catch (Exception e) {
             Lockout.error(e);
         }
+    }
+
+    private static void sanitize() {
+        if (instance == null) {
+            loadDefaultConfig();
+            return;
+        }
+
+        instance.boardSize = Math.max(Constants.MIN_BOARD_SIZE, Math.min(Constants.MAX_BOARD_SIZE, instance.boardSize));
+        if (instance.boardPosition == null) {
+            instance.boardPosition = BoardPosition.RIGHT;
+        }
+        if (!Double.isFinite(instance.boardScale)) {
+            instance.boardScale = 1.0;
+        }
+        instance.boardScale = Math.max(0.5, Math.min(2.0, instance.boardScale));
+        instance.autoCycleInterval = Math.max(1, instance.autoCycleInterval);
     }
 
     public enum BoardPosition {

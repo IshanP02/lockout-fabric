@@ -33,8 +33,8 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
         this.renderBackground(context, mouseX, mouseY, delta);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-        Utility.drawCenterBingoBoard(context, textRenderer, mouseX, mouseY);
-        Goal hoveredGoal = Utility.getBoardHoveredGoal(context, mouseX, mouseY);
+        Utility.drawCenterBingoBoard(context, textRenderer, mouseX, mouseY, false);
+        Goal hoveredGoal = Utility.getBoardHoveredGoal(context, mouseX, mouseY, false);
         if (hoveredGoal != null) {
             Utility.drawGoalInformation(context, textRenderer, hoveredGoal, mouseX, mouseY);
         }
@@ -49,7 +49,7 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
             return super.mouseClicked(click, doubleClick);
         }
         
-        Goal clickedGoal = Utility.getBoardHoveredGoal(lastDrawContext, (int) mouseX, (int) mouseY);
+        Goal clickedGoal = Utility.getBoardHoveredGoal(lastDrawContext, (int) mouseX, (int) mouseY, false);
         
         if (clickedGoal != null) {
             MinecraftClient client = MinecraftClient.getInstance();
