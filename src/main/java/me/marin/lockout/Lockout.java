@@ -342,8 +342,13 @@ public class Lockout {
     }
 
     public LockoutGoalsTeamsPayload getTeamsGoalsPacket() {
+        // Incomplete goals have no completed team yet; encode those as -1.
         return new LockoutGoalsTeamsPayload(teams.stream().map(team -> (LockoutTeam) team).toList(),
-                board.getGoals().stream().map(goal -> new Pair<>(new Pair<>(goal.getId(), goal.getData()), teams.indexOf(goal.getCompletedTeam()))).toList(),
+                board.getGoals().stream().map(goal -> {
+                    LockoutTeam completedTeam = goal.getCompletedTeam();
+                    int completedTeamIndex = completedTeam == null ? -1 : teams.indexOf(completedTeam);
+                    return new Pair<>(new Pair<>(goal.getId(), goal.getData()), completedTeamIndex);
+                }).toList(),
                 isRunning);
     }
 

@@ -91,7 +91,7 @@ public class LockoutInitializer implements ModInitializer {
 
                 {
                     // Blackout command
-                    var commandNode = CommandManager.literal("blackout").requires(PERMISSIONS).build();
+                    var commandNode = CommandManager.literal("blackout").requires(PERMISSIONS).executes(LockoutServer::openBlackoutSetupCommand).build();
                     var teamNode = CommandManager.literal("team").build();
                     var playersNode = CommandManager.literal("players").build();
                     //TODO make custom argument types

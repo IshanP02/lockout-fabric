@@ -6,6 +6,7 @@ import me.marin.lockout.*;
 import me.marin.lockout.client.LockoutBoard;
 import me.marin.lockout.generator.BoardGenerator;
 import me.marin.lockout.generator.GoalGroup;
+import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
@@ -16,9 +17,11 @@ import me.marin.lockout.network.EndPickBanSessionPayload;
 import me.marin.lockout.network.GoalDetailsPayload;
 import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
+import me.marin.lockout.network.OpenBlackoutSetupPayload;
 import me.marin.lockout.network.RequestGoalDetailsPayload;
 import me.marin.lockout.network.SetBoardTypePayload;
 import me.marin.lockout.network.StartLockoutPayload;
+import me.marin.lockout.network.SubmitBlackoutSetupPayload;
 import me.marin.lockout.network.StartPickBanSessionPayload;
 import me.marin.lockout.network.SyncPickBanLimitPayload;
 import me.marin.lockout.network.UpdatePickBanSessionPayload;
@@ -26,6 +29,7 @@ import me.marin.lockout.network.UpdatePicksBansPayload;
 import me.marin.lockout.network.UpdateTooltipPayload;
 import me.marin.lockout.network.UploadBoardTypePayload;
 import me.marin.lockout.server.handlers.*;
+import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -104,6 +108,7 @@ public class LockoutServer {
     public static final List<String> SERVER_PICKS = new ArrayList<>();
     public static final List<String> SERVER_BANS = new ArrayList<>();
     public static final Map<String, String> SERVER_GOAL_TO_PLAYER_MAP = new HashMap<>();
+    private static final Set<UUID> PENDING_BLACKOUT_SETUP_PLAYERS = new HashSet<>();
     
     // Active pick/ban session
     public static PickBanSession activePickBanSession = null;
@@ -127,6 +132,7 @@ public class LockoutServer {
         gameStartRunnables.clear();
         waitingForVersionPacketPlayersMap.clear();
         playerDeathTimes.clear();
+        PENDING_BLACKOUT_SETUP_PLAYERS.clear();
 
         // Ideally, rejoining a world gets detected here, and this data doesn't get wiped
         BIOME_LOCATE_DATA.clear();
@@ -195,6 +201,7 @@ public class LockoutServer {
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, minecraftServer) -> {
             waitingForVersionPacketPlayersMap.remove(handler.getPlayer().getUuid());
+            PENDING_BLACKOUT_SETUP_PLAYERS.remove(handler.getPlayer().getUuid());
         });
 
         ServerPlayNetworking.registerGlobalReceiver(LockoutVersionPayload.ID, (payload, context) -> {
@@ -582,6 +589,10 @@ public class LockoutServer {
             });
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(SubmitBlackoutSetupPayload.ID, (payload, context) -> {
+            server.execute(() -> applyAndStartBlackoutFromSetup(context.player(), payload));
+        });
+
         ServerPlayNetworking.registerGlobalReceiver(LockPickBanSelectionsPayload.ID, (payload, context) -> {
             server.execute(() -> {
                 if (activePickBanSession == null) {
@@ -856,6 +867,30 @@ public class LockoutServer {
         return 1;
     }
 
+    public static int openBlackoutSetupCommand(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("This command can only be used by a player."));
+            return 0;
+        }
+
+        String selectedBoardType = boardType == null ? "" : boardType;
+        List<String> availableBoardTypes = new ArrayList<>(BoardTypeManager.INSTANCE.getAllBoardTypeNames());
+        if (!selectedBoardType.isEmpty() && !"Default".equalsIgnoreCase(selectedBoardType) && !availableBoardTypes.contains(selectedBoardType)) {
+            availableBoardTypes.add(0, selectedBoardType);
+        }
+
+        ServerPlayNetworking.send(player, new OpenBlackoutSetupPayload(
+            boardSize,
+            lockoutStartTime,
+            selectedBoardType,
+            availableBoardTypes
+        ));
+        PENDING_BLACKOUT_SETUP_PLAYERS.add(player.getUuid());
+
+        return 1;
+    }
+
     public static int blackoutCommandLogic(CommandContext<ServerCommandSource> context) {
         List<LockoutTeamServer> teams = new ArrayList<>();
 
@@ -865,6 +900,87 @@ public class LockoutServer {
         startLockout(teams);
 
         return 1;
+    }
+
+    private static void applyAndStartBlackoutFromSetup(ServerPlayerEntity player, SubmitBlackoutSetupPayload payload) {
+        if (player == null) {
+            return;
+        }
+
+        int requestedBoardSize = Math.max(Constants.MIN_BOARD_SIZE, Math.min(Constants.MAX_BOARD_SIZE, payload.boardSize()));
+        int requestedStartTimer = Math.max(0, Math.min(300, payload.startTimerSeconds()));
+        String requestedBoardType = payload.boardTypeName() == null ? "" : payload.boardTypeName().trim();
+
+        JSONBoardType resolvedBoardType = null;
+        if (!requestedBoardType.isEmpty()) {
+            resolvedBoardType = BoardTypeManager.INSTANCE.getCustomBoardType(requestedBoardType);
+            if (resolvedBoardType == null) {
+                player.sendMessage(Text.literal("Unknown board type: " + requestedBoardType).formatted(Formatting.RED), false);
+                return;
+            }
+        }
+
+        boardSize = requestedBoardSize;
+        lockoutStartTime = requestedStartTimer;
+
+        applyBoardTypeSelection(requestedBoardType, resolvedBoardType);
+        player.sendMessage(Text.literal("Board Type: " + requestedBoardType + "Applied").formatted(Formatting.GREEN), false);
+
+        List<LockoutTeamServer> teams = createBlackoutSetupTeams(player);
+        if (teams.isEmpty()) {
+            player.sendMessage(Text.literal("Could not determine a valid team to start blackout.").formatted(Formatting.RED), false);
+            return;
+        }
+
+        startLockout(teams);
+        player.sendMessage(Text.literal("Started blackout with board " + requestedBoardSize + "x" + requestedBoardSize + " and start timer " + requestedStartTimer + "s.").formatted(Formatting.GREEN), false);
+    }
+
+    private static List<LockoutTeamServer> createBlackoutSetupTeams(ServerPlayerEntity commandPlayer) {
+        List<String> playerNames = new ArrayList<>();
+        playerNames.add(commandPlayer.getName().getString());
+
+        Team scoreboardTeam = commandPlayer.getScoreboardTeam();
+        if (scoreboardTeam != null) {
+            for (String member : scoreboardTeam.getPlayerList()) {
+                ServerPlayerEntity onlineMember = server.getPlayerManager().getPlayer(member);
+                if (onlineMember != null && !playerNames.contains(onlineMember.getName().getString())) {
+                    playerNames.add(onlineMember.getName().getString());
+                }
+            }
+        }
+
+        return List.of(new LockoutTeamServer(
+            playerNames,
+            Formatting.byColorIndex(Lockout.COLOR_ORDERS[0]),
+            server
+        ));
+    }
+
+    private static void applyBoardTypeSelection(String requestedBoardType, JSONBoardType resolvedBoardType) {
+        if (requestedBoardType.isEmpty() || resolvedBoardType == null) {
+            boardType = "Default";
+            boardTypeExcludedGoals = new ArrayList<>();
+        } else {
+            boardType = requestedBoardType;
+            boardTypeExcludedGoals = resolvedBoardType.excludedGoals == null
+                ? new ArrayList<>()
+                : new ArrayList<>(resolvedBoardType.excludedGoals);
+        }
+
+        GoalGroup.PICKS.getGoals().clear();
+        GoalGroup.BANS.getGoals().clear();
+        GoalGroup.PENDING_PICKS.getGoals().clear();
+        GoalGroup.PENDING_BANS.getGoals().clear();
+        GoalGroup.clearGoalPlayers();
+        SERVER_PICKS.clear();
+        SERVER_BANS.clear();
+        SERVER_GOAL_TO_PLAYER_MAP.clear();
+
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(p, new SetBoardTypePayload(boardType, boardTypeExcludedGoals));
+            ServerPlayNetworking.send(p, new UpdatePicksBansPayload(SERVER_PICKS, SERVER_BANS, SERVER_GOAL_TO_PLAYER_MAP));
+        }
     }
 
     public static int lockoutRandomCommandLogic(CommandContext<ServerCommandSource> context) {

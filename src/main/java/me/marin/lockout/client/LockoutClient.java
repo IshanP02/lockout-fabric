@@ -278,6 +278,10 @@ public class LockoutClient implements ClientModInitializer {
                 }
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(OpenBlackoutSetupPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> client.setScreen(new BlackoutSetupScreen(payload)));
+        });
         ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.SyncLocateDataPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             client.execute(() -> {

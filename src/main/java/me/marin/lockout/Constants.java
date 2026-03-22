@@ -26,6 +26,8 @@ public class Constants {
     public static final Identifier ANNOUNCE_GOAL_FOCUS_PACKET = Identifier.of(NAMESPACE, "announce_goal_focus");
     public static final Identifier REQUEST_GOAL_DETAILS_PACKET = Identifier.of(NAMESPACE, "request_goal_details");
     public static final Identifier GOAL_DETAILS_PACKET = Identifier.of(NAMESPACE, "goal_details");
+    public static final Identifier OPEN_BLACKOUT_SETUP_PACKET = Identifier.of(NAMESPACE, "open_blackout_setup");
+    public static final Identifier SUBMIT_BLACKOUT_SETUP_PACKET = Identifier.of(NAMESPACE, "submit_blackout_setup");
     
     public static final Identifier START_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "start_pick_ban_session");
     public static final Identifier UPDATE_PICK_BAN_SESSION_PACKET = Identifier.of(NAMESPACE, "update_pick_ban_session");
