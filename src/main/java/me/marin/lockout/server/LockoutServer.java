@@ -188,6 +188,7 @@ public class LockoutServer {
         ServerLifecycleEvents.SERVER_STARTED.register(new ServerStartedEventHandler());
 
         ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
+            LockoutStateStore.save(server);
             isInitialized = false;
         });
 

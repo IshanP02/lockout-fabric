@@ -35,6 +35,25 @@ public class LockoutTeamServer extends LockoutTeam {
         }
     }
 
+    public LockoutTeamServer(
+            List<String> playerNames,
+            Formatting formattingColor,
+            MinecraftServer server,
+            List<UUID> playerIds,
+            Map<UUID, String> playerNameMap,
+            int points
+    ) {
+        super(playerNames, formattingColor);
+        this.server = server;
+
+        this.players.addAll(playerIds);
+        this.playerNameMap.putAll(playerNameMap);
+
+        for (int i = 0; i < points; i++) {
+            addPoint();
+        }
+    }
+
     public String getPlayerName(UUID uuid) {
         return playerNameMap.get(uuid);
     }
