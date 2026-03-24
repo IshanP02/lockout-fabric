@@ -2,6 +2,7 @@ package me.marin.lockout;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import me.marin.lockout.lockout.DefaultGoalRegister;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.EndPickBanSessionPayload;
@@ -164,6 +165,24 @@ public class LockoutInitializer implements ModInitializer {
 
                 dispatcher.getRoot().addChild(setBoardTimeRoot);
                 setBoardTimeRoot.addChild(size);
+            }
+
+            {
+                // PauseLockout command
+                var pauseRoot = CommandManager.literal("PauseLockout").requires(PERMISSIONS).executes(LockoutServer::togglePauseLockout).build();
+                var pauseArg = CommandManager.argument("paused", BoolArgumentType.bool()).executes(LockoutServer::setPauseLockout).build();
+
+                dispatcher.getRoot().addChild(pauseRoot);
+                pauseRoot.addChild(pauseArg);
+            }
+
+            {
+                // LockoutState command
+                var stateRoot = CommandManager.literal("LockoutState").requires(PERMISSIONS).build();
+                var clearNode = CommandManager.literal("clear").executes(LockoutServer::clearSavedState).build();
+
+                dispatcher.getRoot().addChild(stateRoot);
+                stateRoot.addChild(clearNode);
             }
 
             {

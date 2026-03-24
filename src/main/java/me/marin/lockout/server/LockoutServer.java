@@ -13,6 +13,7 @@ import me.marin.lockout.network.AnnounceGoalFocusPayload;
 import me.marin.lockout.network.BroadcastPickBanPayload;
 import me.marin.lockout.network.CustomBoardPayload;
 import me.marin.lockout.network.EndPickBanSessionPayload;
+import me.marin.lockout.network.EndLockoutPayload;
 import me.marin.lockout.network.GoalDetailsPayload;
 import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.LockoutVersionPayload;
@@ -944,6 +945,8 @@ public class LockoutServer {
     }
 
     private static void startLockout(List<LockoutTeamServer> teams) {
+        LockoutStateStore.enablePersistence();
+
         // Clear old runnables
         gameStartRunnables.clear();
 
@@ -1403,6 +1406,72 @@ public class LockoutServer {
 
         boardSize = size;
         context.getSource().sendMessage(Text.of("Updated board size to " + size + "."));
+        return 1;
+    }
+
+    public static int clearSavedState(CommandContext<ServerCommandSource> context) {
+        if (Lockout.isLockoutRunning(lockout)) {
+            // End the active match immediately when state is cleared.
+            lockout.setPaused(false);
+            lockout.setRunning(false);
+
+            var payload = new EndLockoutPayload(new int[0], System.currentTimeMillis());
+            for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                ServerPlayNetworking.send(player, payload);
+            }
+
+            // Avoid stale runtime state after administrative clear.
+            lockout = null;
+            compassHandler = null;
+            gameStartRunnables.clear();
+
+            // Ensure world ticks are not left frozen if clear happened during pause.
+            var unfreezeCommand = "tick unfreeze";
+            var unfreezeParseResults = server.getCommandManager().getDispatcher().parse(unfreezeCommand, server.getCommandSource());
+            server.getCommandManager().execute(unfreezeParseResults, unfreezeCommand);
+        }
+
+        LockoutStateStore.clear(context.getSource().getServer());
+        context.getSource().sendMessage(Text.literal("Cleared persisted lockout state and ended the active match. Saving is disabled until the next new lockout/blackout match starts."));
+        return 1;
+    }
+
+    public static int togglePauseLockout(CommandContext<ServerCommandSource> context) {
+        if (!Lockout.isLockoutRunning(lockout)) {
+            context.getSource().sendError(Text.literal("There's no active lockout match."));
+            return 0;
+        }
+        return setPauseState(context, !lockout.isPaused());
+    }
+
+    public static int setPauseLockout(CommandContext<ServerCommandSource> context) {
+        if (!Lockout.isLockoutRunning(lockout)) {
+            context.getSource().sendError(Text.literal("There's no active lockout match."));
+            return 0;
+        }
+
+        boolean paused = context.getArgument("paused", Boolean.class);
+        return setPauseState(context, paused);
+    }
+
+    private static int setPauseState(CommandContext<ServerCommandSource> context, boolean paused) {
+        if (lockout.isPaused() == paused) {
+            context.getSource().sendMessage(Text.literal(paused ? "Lockout is already paused." : "Lockout is already running."));
+            return 1;
+        }
+
+        lockout.setPaused(paused);
+
+        String tickCommand = paused ? "tick freeze" : "tick unfreeze";
+        var parseResults = server.getCommandManager().getDispatcher().parse(tickCommand, server.getCommandSource());
+        server.getCommandManager().execute(parseResults, tickCommand);
+
+        context.getSource().getServer().getPlayerManager().broadcast(
+                Text.literal(paused ? "Lockout paused." : "Lockout resumed."),
+                false
+        );
+
+        LockoutStateStore.save(context.getSource().getServer());
         return 1;
     }
 

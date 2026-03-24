@@ -452,6 +452,9 @@ public class LockoutClient implements ClientModInitializer {
             if (lockout == null) return;
             
             lockout.setRunning(false);
+            if (payload.winners().length == 0) {
+                return;
+            }
             MinecraftClient client = context.client();
             client.execute(() -> {
                 if (client.player != null) {

@@ -30,12 +30,14 @@ public final class LockoutStateStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String FILE_NAME = "lockout_state.json";
     private static String lastSavedJson = null;
+    private static boolean persistenceSuppressed = false;
 
     private LockoutStateStore() {
     }
 
     public static void save(MinecraftServer server) {
         if (server == null) return;
+        if (persistenceSuppressed) return;
 
         SaveData data = buildSaveData();
         Path path = getStatePath(server);
@@ -89,6 +91,24 @@ public final class LockoutStateStore {
         }
     }
 
+    public static void clear(MinecraftServer server) {
+        if (server == null) return;
+
+        persistenceSuppressed = true;
+
+        Path path = getStatePath(server);
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            Lockout.error(e);
+        }
+        lastSavedJson = null;
+    }
+
+    public static void enablePersistence() {
+        persistenceSuppressed = false;
+    }
+
     private static Path getStatePath(MinecraftServer server) {
         return server.getSavePath(WorldSavePath.ROOT).resolve(FILE_NAME);
     }
@@ -101,6 +121,7 @@ public final class LockoutStateStore {
         data.ticks = lockout.getTicks();
         data.started = lockout.hasStarted();
         data.running = lockout.isRunning();
+        data.paused = lockout.isPaused();
 
         data.serverPicks = new ArrayList<>(LockoutServer.SERVER_PICKS);
         data.serverBans = new ArrayList<>(LockoutServer.SERVER_BANS);
@@ -223,6 +244,7 @@ public final class LockoutStateStore {
         restored.setTicks(data.ticks);
         restored.setStarted(data.started);
         restored.setRunning(data.running);
+        restored.setPaused(data.paused);
 
         List<Goal> restoredGoals = restored.getBoard().getGoals();
         for (int i = 0; i < Math.min(restoredGoals.size(), data.goals.size()); i++) {
@@ -263,6 +285,7 @@ public final class LockoutStateStore {
         long ticks;
         boolean started;
         boolean running;
+        boolean paused;
         String boardType;
         List<String> boardTypeExcludedGoals;
         List<String> serverPicks;

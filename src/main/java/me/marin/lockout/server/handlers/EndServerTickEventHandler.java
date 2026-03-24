@@ -46,6 +46,7 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
     @Override
     public void onEndTick(MinecraftServer server) {
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (lockout.isPaused()) return;
 
         for (LockoutRunnable runnable : new HashSet<>(gameStartRunnables.keySet())) {
             if (gameStartRunnables.get(runnable) <= 0) {
