@@ -27,7 +27,7 @@ public class Utility {
 
     public static int FF000000 = 0xFF000000;
 
-    private static float getSafeBoardScale() {
+    public static float getSafeBoardScale() {
         double boardScale = LockoutConfig.getInstance().boardScale;
         if (!Double.isFinite(boardScale)) {
             return 1.0F;
@@ -41,8 +41,8 @@ public class Utility {
             boardPosition = LockoutConfig.BoardPosition.RIGHT;
         }
 
-        // When F3 is open, left side is occupied by debug info. Render on the right instead of hiding.
-        if (boardPosition == LockoutConfig.BoardPosition.LEFT && MinecraftClient.getInstance().inGameHud.getDebugHud().shouldShowDebugHud()) {
+        // Move board right when the user has intentionally opened the debug menu (pure F3, no combo).
+        if (boardPosition == LockoutConfig.BoardPosition.LEFT && LockoutClient.lockoutDebugHudOpen) {
             return LockoutConfig.BoardPosition.RIGHT;
         }
 

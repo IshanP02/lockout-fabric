@@ -65,6 +65,7 @@
     "client.toasts.RecipeToastMixin",
     "client.toasts.SystemToastMixin",
     "client.toasts.TutorialToastMixin",
+    "client.KeyboardMixin",
     "client.LocatorBarMixin",
     "client.PauseScreenMixin",
     "client.WorldRendererMixin"

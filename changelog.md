@@ -6,6 +6,8 @@
 - Added feature that when F3 is pressed when board position is set to Left it moves to right until user pesses F3 again, then it moves abck to left
 - Fixed bug where completed goal highlights would bleed into adjacent slot borders, causing them to merge into a solid block
 - Fixed bug where the lockout settings button would appear in the F3+ESC game menu
+- Fixed bug where using F3 combo shortcuts (e.g. F3+B for hitboxes) would incorrectly move the board to the right
+- Fixed bug where status effects overlay would not account for board scale, causing overlap at larger board sizes
 ## Lockout v0.11.8
 - Fixed bug where blackout timer would multiply the amount of time that the timer went up/ down by when the user did not close their instance between worlds
 - Added feature to allow the user to toggle the board on/ off, default button H (User can change in keybinds)
