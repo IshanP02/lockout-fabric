@@ -89,7 +89,7 @@ public class Utility {
                 Goal goal = board.getGoals().get(j + board.size() * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + GUI_SLOT_SIZE, y + GUI_SLOT_SIZE, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + 16, y + 16, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
@@ -196,7 +196,7 @@ public class Utility {
                 Goal goal = board.getGoals().get(j + boardSize * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + GUI_SLOT_SIZE, y + GUI_SLOT_SIZE, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + 16, y + 16, FF000000 | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
@@ -290,13 +290,13 @@ public class Utility {
                 Goal goal = board.getGoals().get(j + board.size() * i);
                 if (goal != null) {
                     if (goal.isCompleted()) {
-                        context.fill(x, y, x + GUI_CENTER_SLOT_SIZE, y + GUI_CENTER_SLOT_SIZE, (0xFF << 24) | goal.getCompletedTeam().getColor().getColorValue());
+                        context.fill(x, y, x + 16, y + 16, (0xFF << 24) | goal.getCompletedTeam().getColor().getColorValue());
                     }
 
                     goal.render(context, textRenderer, x, y);
 
                     if (goal == hoveredGoal) {
-                        context.fill(x, y, x + GUI_CENTER_SLOT_SIZE, y + GUI_CENTER_SLOT_SIZE, GUI_CENTER_HOVERED_COLOR);
+                        context.fill(x, y, x + 16, y + 16, GUI_CENTER_HOVERED_COLOR);
                     }
                 }
                 x += GUI_CENTER_SLOT_SIZE;
