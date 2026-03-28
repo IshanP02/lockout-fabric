@@ -4,6 +4,8 @@
 - Added move board location Left and Right on this screen
 - Added keybinds for Open Board, Open Pick/ Ban list, toggle board visibility, toggle section view, next section, toggle auto-cycle sections to lockout settings page
 - Added feature that when F3 is pressed when board position is set to Left it moves to right until user pesses F3 again, then it moves abck to left
+- Fixed bug where completed goal highlights would bleed into adjacent slot borders, causing them to merge into a solid block
+- Fixed bug where the lockout settings button would appear in the F3+ESC game menu
 ## Lockout v0.11.8
 - Fixed bug where blackout timer would multiply the amount of time that the timer went up/ down by when the user did not close their instance between worlds
 - Added feature to allow the user to toggle the board on/ off, default button H (User can change in keybinds)
