@@ -44,6 +44,7 @@ import me.marin.lockout.lockout.goals.misc.Crouch100mGoal;
 import me.marin.lockout.lockout.goals.misc.Swim500mGoal;
 import me.marin.lockout.lockout.interfaces.DamagedByUniqueSourcesGoal;
 
+import java.util.LinkedHashSet;
 import java.util.Objects;
 
 @Mixin(PlayerEntity.class)
@@ -154,6 +155,14 @@ public abstract class PlayerMixin {
 
         lockout.damageTaken.putIfAbsent(team, 0d);
         lockout.damageTaken.merge(team, (double)amount, Double::sum);
+        
+        // Track per-player for statistics
+        lockout.playerDamageTaken.putIfAbsent(player.getUuid(), 0d);
+        lockout.playerDamageTaken.merge(player.getUuid(), (double)amount, Double::sum);
+        
+        // Track damage types per-player for statistics
+        lockout.playerDamageTypesTaken.computeIfAbsent(player.getUuid(), p -> new LinkedHashSet<>());
+        lockout.playerDamageTypesTaken.get(player.getUuid()).add(source.getTypeRegistryEntry().getKey().orElse(null));
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;
@@ -200,6 +209,10 @@ public abstract class PlayerMixin {
                     if (added) {
                         lockout.damageByUniqueSources.putIfAbsent(team, 0);
                         lockout.damageByUniqueSources.merge(team, 1, Integer::sum);
+                        
+                        // Track first contributor
+                        lockout.firstDamageTypeContributor.putIfAbsent(team, new java.util.HashMap<>());
+                        lockout.firstDamageTypeContributor.get(team).put(damageTypeKey, player.getUuid());
                     }
                     
                     // Send tooltip update for this goal (whether damage was newly added or not)

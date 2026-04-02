@@ -1335,6 +1335,40 @@ public class LockoutServer {
         return 1;
     }
 
+    public static int viewStatistics(CommandContext<ServerCommandSource> context) {
+        if (lockout != null && lockout.getStatistics() != null) {
+            lockout.getStatistics().showFullStatistics();
+            return 1;
+        } else {
+            context.getSource().sendError(Text.literal("No statistics available."));
+            return 0;
+        }
+    }
+
+    public static int downloadStatistics(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("This is a player-only command."));
+            return 0;
+        }
+
+        if (lockout != null && lockout.getStatistics() != null) {
+            // Generate statistics content and send to client for local saving
+            String[] fileData = lockout.getStatistics().generateStatisticsContent();
+            String filename = fileData[0];
+            String content = fileData[1];
+            
+            me.marin.lockout.network.DownloadStatisticsPayload payload = 
+                new me.marin.lockout.network.DownloadStatisticsPayload(filename, content);
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, payload);
+            
+            return 1;
+        } else {
+            context.getSource().sendError(Text.literal("No statistics available."));
+            return 0;
+        }
+    }
+
     public static int giveGoal(CommandContext<ServerCommandSource> context) {
         try {
             if (!Lockout.isLockoutRunning(lockout)) {

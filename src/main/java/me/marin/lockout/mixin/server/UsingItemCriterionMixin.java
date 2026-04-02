@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -95,7 +96,17 @@ public class UsingItemCriterionMixin {
 
             if (goal instanceof LookAtUniqueMobsGoal lookAtGoal) {
                 lockout.lookedAtMobTypes.computeIfAbsent(team, t -> new LinkedHashSet<>());
-                lockout.lookedAtMobTypes.get(team).add(entity.getType());
+                boolean newMob = lockout.lookedAtMobTypes.get(team).add(entity.getType());
+
+                // Track per-player for statistics
+                lockout.playerLookedAtMobs.computeIfAbsent(player.getUuid(), p -> new LinkedHashSet<>());
+                lockout.playerLookedAtMobs.get(player.getUuid()).add(entity.getType());
+                
+                // Track first contributor
+                if (newMob) {
+                    lockout.firstLookedAtMobContributor.putIfAbsent(team, new HashMap<>());
+                    lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUuid());
+                }
 
                 int size = lockout.lookedAtMobTypes.get(team).size();
 

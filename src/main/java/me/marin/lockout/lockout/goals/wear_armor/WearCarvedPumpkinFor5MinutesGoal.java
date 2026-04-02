@@ -46,17 +46,28 @@ public class WearCarvedPumpkinFor5MinutesGoal extends WearArmorPieceGoal impleme
     @Override
     public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
         List<String> tooltip = new ArrayList<>();
-        long timeWorn = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(player.getUuid(), 0L));
         LockoutTeamServer serverTeam = ((LockoutTeamServer) team);
 
+        // Calculate total team time
+        long totalTeamTime = 0;
+        for (UUID uuid : serverTeam.getPlayers()) {
+            totalTeamTime += LockoutServer.lockout.pumpkinWearTime.getOrDefault(uuid, 0L);
+        }
+        totalTeamTime = Math.min(FIVE_MINUTES_TICKS, totalTeamTime);
+
         tooltip.add(" ");
-        tooltip.add("Time worn: " + Utility.ticksToTimer(timeWorn));
-        if (serverTeam.getPlayers().size() > 1) {
-            tooltip.add(" ");
-            for (UUID uuid : ((LockoutTeamServer) team).getPlayers()) {
-                if (!Objects.equals(uuid, player.getUuid())) {
-                    tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWorn));
-                }
+        tooltip.add("Total Time: " + Utility.ticksToTimer(totalTeamTime));
+        tooltip.add(" ");
+        
+        // Show player's time first
+        long playerTime = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(player.getUuid(), 0L));
+        tooltip.add("You: " + Utility.ticksToTimer(playerTime));
+        
+        // Then show teammates' times
+        for (UUID uuid : serverTeam.getPlayers()) {
+            if (!Objects.equals(uuid, player.getUuid())) {
+                long timeWorn = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(uuid, 0L));
+                tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWorn));
             }
         }
         tooltip.add(" ");

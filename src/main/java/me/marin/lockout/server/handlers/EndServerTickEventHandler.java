@@ -150,34 +150,34 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                         .map(t -> (LockoutTeamServer) t)
                         .toList()) {
                     
-                    // Count how many team members currently have status effects
-                    int playersWithEffects = 0;
+                    // Track individual player times and calculate team total
+                    long totalTeamTime = 0;
+                    boolean anyProgress = false;
                     for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                        if (team.getPlayers().contains(player.getUuid()) && !player.getStatusEffects().isEmpty()) {
-                            playersWithEffects++;
-                        }
-                    }
-
-                    // Increment time for each team member based on how many have effects
-                    if (playersWithEffects > 0) {
-                        for (UUID uuid : team.getPlayers()) {
+                        UUID uuid = player.getUuid();
+                        if (team.getPlayers().contains(uuid)) {
                             var map = lockout.appliedEffectsTime;
                             long appliedTime = map.getOrDefault(uuid, 0L);
                             
-                            appliedTime += playersWithEffects;
-                            map.put(uuid, appliedTime);
-
-                            if (appliedTime >= (20 * 60 * haveEffectsGoal.getMinutes())) {
-                                // Complete for the team instead of individual player
-                                lockout.completeGoal(goal, team);
-                                break; // Only need to complete once for the team
+                            // Only increment if THIS player has status effects
+                            if (!player.getStatusEffects().isEmpty()) {
+                                appliedTime++;
+                                map.put(uuid, appliedTime);
+                                anyProgress = true;
                             }
+                            
+                            totalTeamTime += appliedTime;
                         }
+                    }
 
-                        // Send tooltip update once per second
-                        if (lockout.getTicks() % 20 == 0) {
-                            team.sendTooltipUpdate(haveEffectsGoal, true);
-                        }
+                    // Complete goal when team's total time reaches threshold
+                    if (totalTeamTime >= (20 * 60 * haveEffectsGoal.getMinutes())) {
+                        lockout.completeGoal(goal, team);
+                    }
+
+                    // Send tooltip update whenever progress is made
+                    if (anyProgress) {
+                        team.sendTooltipUpdate(haveEffectsGoal, true);
                     }
                 }
             }
@@ -189,38 +189,35 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
                         .map(t -> (LockoutTeamServer) t)
                         .toList()) {
                     
-                    // Count how many team members currently wearing pumpkins
-                    int playersWearingPumpkin = 0;
+                    // Track individual player times and calculate team total
+                    long totalTeamTime = 0;
+                    boolean anyProgress = false;
                     for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                        if (team.getPlayers().contains(player.getUuid())) {
-                            ItemStack helmet = ((PlayerInventoryAccessor) player.getInventory()).getEquipment().get(EquipmentSlot.HEAD);
-                            if (helmet != null && helmet.getItem() == Items.CARVED_PUMPKIN) {
-                                playersWearingPumpkin++;
-                            }
-                        }
-                    }
-
-                    // Increment time for each team member based on how many are wearing pumpkins
-                    if (playersWearingPumpkin > 0) {
-                        for (UUID uuid : team.getPlayers()) {
+                        UUID uuid = player.getUuid();
+                        if (team.getPlayers().contains(uuid)) {
                             var map = lockout.pumpkinWearTime;
                             long wornTime = map.getOrDefault(uuid, 0L);
                             
-                            wornTime += playersWearingPumpkin;
-                            map.put(uuid, wornTime);
-
-                            if (wornTime >= (20 * 60 * 5)) {
-                                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
-                                if (player != null) {
-                                    lockout.completeGoal(goal, player);
-                                }
+                            // Only increment if THIS player is wearing a pumpkin
+                            ItemStack helmet = ((PlayerInventoryAccessor) player.getInventory()).getEquipment().get(EquipmentSlot.HEAD);
+                            if (helmet != null && helmet.getItem() == Items.CARVED_PUMPKIN) {
+                                wornTime++;
+                                map.put(uuid, wornTime);
+                                anyProgress = true;
                             }
+                            
+                            totalTeamTime += wornTime;
                         }
+                    }
 
-                        // Send tooltip update once per second
-                        if (lockout.getTicks() % 20 == 0) {
-                            team.sendTooltipUpdate(pumpkinGoal, true);
-                        }
+                    // Complete goal when team's total time reaches threshold
+                    if (totalTeamTime >= (20 * 60 * 5)) {
+                        lockout.completeGoal(goal, team);
+                    }
+
+                    // Send tooltip update whenever progress is made
+                    if (anyProgress) {
+                        team.sendTooltipUpdate(pumpkinGoal, true);
                     }
                 }
             }
