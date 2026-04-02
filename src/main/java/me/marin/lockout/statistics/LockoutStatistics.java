@@ -17,6 +17,7 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.Item;
 import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -631,23 +632,26 @@ public class LockoutStatistics {
      * Display full statistics in chat
      */
     public void showFullStatistics() {
+        showFullStatistics(null);
+    }
+    
+    public void showFullStatistics(ServerPlayerEntity targetPlayer) {
         calculateGoalContributions();
         
         PlayerManager playerManager = LockoutServer.server.getPlayerManager();
         
         // Header
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
-        playerManager.broadcast(Text.literal("========== Game Statistics ==========").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Text.literal("========== Game Statistics ==========").formatted(Formatting.GOLD, Formatting.BOLD));
+        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
         
         // Winner(s)
         if (!winners.isEmpty()) {
             if (winners.size() == 1) {
                 LockoutTeam winner = winners.get(0);
-                playerManager.broadcast(
+                sendMessage(playerManager, targetPlayer,
                     Text.literal("Winner: ").formatted(Formatting.YELLOW, Formatting.BOLD)
-                        .append(Text.literal(winner.getDisplayName()).formatted(winner.getColor(), Formatting.BOLD)),
-                    false
+                        .append(Text.literal(winner.getDisplayName()).formatted(winner.getColor(), Formatting.BOLD))
                 );
             } else {
                 StringBuilder winnerNames = new StringBuilder();
@@ -655,51 +659,63 @@ public class LockoutStatistics {
                     if (i > 0) winnerNames.append(", ");
                     winnerNames.append(winners.get(i).getDisplayName());
                 }
-                playerManager.broadcast(
+                sendMessage(playerManager, targetPlayer,
                     Text.literal("Winners (Tie): ").formatted(Formatting.YELLOW, Formatting.BOLD)
-                        .append(Text.literal(winnerNames.toString()).formatted(Formatting.GOLD, Formatting.BOLD)),
-                    false
+                        .append(Text.literal(winnerNames.toString()).formatted(Formatting.GOLD, Formatting.BOLD))
                 );
             }
             
             // Display score
-            StringBuilder scoreText = new StringBuilder("Score: ");
-            for (int i = 0; i < lockout.getTeams().size(); i++) {
-                LockoutTeam team = lockout.getTeams().get(i);
-                if (i > 0) scoreText.append(" - ");
-                scoreText.append(team.getDisplayName()).append(": ").append(team.getPoints());
-            }
-            playerManager.broadcast(
-                Text.literal(scoreText.toString()).formatted(Formatting.GRAY),
-                false
-            );
+            // Find winning team (highest score)
+            int maxScore = lockout.getTeams().stream().mapToInt(LockoutTeam::getPoints).max().orElse(0);
+            LockoutTeam winningTeam = null;
+            LockoutTeam losingTeam = null;
             
-            playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
+            for (LockoutTeam team : lockout.getTeams()) {
+                if (team.getPoints() == maxScore) {
+                    winningTeam = team;
+                } else {
+                    losingTeam = team;
+                }
+            }
+            
+            if (winningTeam != null && losingTeam != null) {
+                Text scoreText = Text.literal("Score: ").formatted(Formatting.YELLOW)
+                    .append(Text.literal(winningTeam.getDisplayName() + " ").formatted(winningTeam.getColor()))
+                    .append(Text.literal(String.valueOf(winningTeam.getPoints())).formatted(Formatting.GREEN))
+                    .append(Text.literal(" - ").formatted(Formatting.GRAY))
+                    .append(Text.literal(String.valueOf(losingTeam.getPoints())).formatted(Formatting.RED))
+                    .append(Text.literal(" " + losingTeam.getDisplayName()).formatted(losingTeam.getColor()));
+                
+                sendMessage(playerManager, targetPlayer, scoreText);
+            }
+            
+            sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
         }
         
         // Game Time
-        playerManager.broadcast(Text.literal("Final Game Time: ").formatted(Formatting.YELLOW)
-                .append(Text.literal(getGameTimeFormatted()).formatted(Formatting.WHITE)), false);
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("Final Game Time: ").formatted(Formatting.YELLOW)
+                .append(Text.literal(getGameTimeFormatted()).formatted(Formatting.WHITE)));
+        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
         
         // Goals Completed by Team
-        playerManager.broadcast(Text.literal("Goals Completed:").formatted(Formatting.YELLOW, Formatting.BOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("Goals Completed:").formatted(Formatting.YELLOW, Formatting.BOLD));
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal != null && goal.isCompleted()) {
                 LockoutTeam team = goal.getCompletedTeam();
                 String teamDisplay = team != null ? team.getDisplayName() : "Unknown";
                 Formatting teamColor = team != null ? team.getColor() : Formatting.WHITE;
                 
-                playerManager.broadcast(Text.literal("  • ").formatted(Formatting.GRAY)
+                sendMessage(playerManager, targetPlayer, Text.literal("  • ").formatted(Formatting.GRAY)
                         .append(Text.literal(goal.getGoalName()).formatted(Formatting.WHITE))
                         .append(Text.literal(" - ").formatted(Formatting.GRAY))
-                        .append(Text.literal(teamDisplay).formatted(teamColor)), false);
+                        .append(Text.literal(teamDisplay).formatted(teamColor)));
             }
         }
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
         
         // Player Statistics
-        playerManager.broadcast(Text.literal("Player Statistics:").formatted(Formatting.YELLOW, Formatting.BOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("Player Statistics:").formatted(Formatting.YELLOW, Formatting.BOLD));
         
         for (LockoutTeam team : lockout.getTeams()) {
             if (!(team instanceof LockoutTeamServer serverTeam)) continue;
@@ -710,18 +726,29 @@ public class LockoutStatistics {
                 int kills = playerKills.getOrDefault(playerId, 0);
                 double contribution = getPlayerTotalContribution(playerId);
                 
-                playerManager.broadcast(Text.literal("  " + playerName + ":").formatted(team.getColor(), Formatting.BOLD), false);
-                playerManager.broadcast(Text.literal("    Deaths: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.valueOf(deaths)).formatted(Formatting.WHITE)), false);
-                playerManager.broadcast(Text.literal("    Player Kills: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.valueOf(kills)).formatted(Formatting.WHITE)), false);
-                playerManager.broadcast(Text.literal("    Goal Contribution: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.format("%.2f", contribution)).formatted(Formatting.WHITE)), false);
+                sendMessage(playerManager, targetPlayer, Text.literal("  " + playerName + ":").formatted(team.getColor(), Formatting.BOLD));
+                sendMessage(playerManager, targetPlayer, Text.literal("    Deaths: ").formatted(Formatting.GRAY)
+                        .append(Text.literal(String.valueOf(deaths)).formatted(Formatting.WHITE)));
+                sendMessage(playerManager, targetPlayer, Text.literal("    Player Kills: ").formatted(Formatting.GRAY)
+                        .append(Text.literal(String.valueOf(kills)).formatted(Formatting.WHITE)));
+                sendMessage(playerManager, targetPlayer, Text.literal("    Goal Contribution: ").formatted(Formatting.GRAY)
+                        .append(Text.literal(String.format("%.2f", contribution)).formatted(Formatting.WHITE)));
             }
         }
         
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
-        playerManager.broadcast(Text.literal("====================================").formatted(Formatting.GOLD, Formatting.BOLD), false);
+        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Text.literal("====================================").formatted(Formatting.GOLD, Formatting.BOLD));
+    }
+    
+    /**
+     * Helper method to send message to a specific player or broadcast to all
+     */
+    private void sendMessage(PlayerManager playerManager, ServerPlayerEntity targetPlayer, Text message) {
+        if (targetPlayer != null) {
+            targetPlayer.sendMessage(message, false);
+        } else {
+            playerManager.broadcast(message, false);
+        }
     }
     
     /**

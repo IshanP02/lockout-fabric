@@ -1336,8 +1336,14 @@ public class LockoutServer {
     }
 
     public static int viewStatistics(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("This is a player-only command."));
+            return 0;
+        }
+        
         if (lockout != null && lockout.getStatistics() != null) {
-            lockout.getStatistics().showFullStatistics();
+            lockout.getStatistics().showFullStatistics(player);
             return 1;
         } else {
             context.getSource().sendError(Text.literal("No statistics available."));
