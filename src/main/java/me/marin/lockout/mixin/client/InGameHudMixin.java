@@ -42,11 +42,13 @@ public abstract class InGameHudMixin {
             return width;
         }
 
-        if (LockoutConfig.getInstance().boardPosition != LockoutConfig.BoardPosition.RIGHT) {
+        if (Utility.getEffectiveBoardPosition() != LockoutConfig.BoardPosition.RIGHT) {
             return width;
         }
 
-        return width - 2 * GUI_PADDING - LockoutClient.lockout.getBoard().size() * GUI_SLOT_SIZE;
+        float boardScale = Utility.getSafeBoardScale();
+        int scaledBoardWidth = Math.max(1, Math.round((2 * GUI_PADDING + LockoutClient.lockout.getBoard().size() * GUI_SLOT_SIZE) * boardScale));
+        return width - scaledBoardWidth;
     }
 
 }

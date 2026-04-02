@@ -59,6 +59,7 @@ public class LockoutClient implements ClientModInitializer {
     private static KeyBinding nextSectionKeyBinding;
     private static KeyBinding toggleAutoCycleSectionKeyBinding;
     public static boolean boardVisible = true;
+    public static boolean lockoutDebugHudOpen = false;  // mirrors debug HUD open state, updated only on pure F3 (no combo)
     public static boolean sectionViewEnabled = false;
     public static int currentSection = 1;  // 1-4, which section to display
     public static boolean autoCycleSectionEnabled = false;
