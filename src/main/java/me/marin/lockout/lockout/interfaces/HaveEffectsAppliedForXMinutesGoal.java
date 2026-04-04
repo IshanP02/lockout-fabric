@@ -24,17 +24,29 @@ public abstract class HaveEffectsAppliedForXMinutesGoal extends Goal implements 
     @Override
     public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
         List<String> tooltip = new ArrayList<>();
-        long timeWithEffects = Math.min(getMinutes() * 60 * 20, LockoutServer.lockout.appliedEffectsTime.getOrDefault(player.getUuid(), 0L));
         LockoutTeamServer serverTeam = ((LockoutTeamServer) team);
+        int requiredTicks = getMinutes() * 60 * 20;
+
+        // Calculate total team time
+        long totalTeamTime = 0;
+        for (UUID uuid : serverTeam.getPlayers()) {
+            totalTeamTime += LockoutServer.lockout.appliedEffectsTime.getOrDefault(uuid, 0L);
+        }
+        totalTeamTime = Math.min(requiredTicks, totalTeamTime);
 
         tooltip.add(" ");
-        tooltip.add("Time with Effects Applied: " + Utility.ticksToTimer(timeWithEffects));
-        if (serverTeam.getPlayers().size() > 1) {
-            tooltip.add(" ");
-            for (UUID uuid : ((LockoutTeamServer) team).getPlayers()) {
-                if (!Objects.equals(uuid, player.getUuid())) {
-                    tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWithEffects));
-                }
+        tooltip.add("Total Team Time: " + Utility.ticksToTimer(totalTeamTime));
+        tooltip.add(" ");
+        
+        // Show player's time first
+        long playerTime = Math.min(requiredTicks, LockoutServer.lockout.appliedEffectsTime.getOrDefault(player.getUuid(), 0L));
+        tooltip.add("You: " + Utility.ticksToTimer(playerTime));
+        
+        // Then show teammates' times
+        for (UUID uuid : serverTeam.getPlayers()) {
+            if (!Objects.equals(uuid, player.getUuid())) {
+                long timeWithEffects = Math.min(requiredTicks, LockoutServer.lockout.appliedEffectsTime.getOrDefault(uuid, 0L));
+                tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWithEffects));
             }
         }
         tooltip.add(" ");

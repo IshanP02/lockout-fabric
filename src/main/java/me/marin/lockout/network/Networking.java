@@ -20,6 +20,7 @@ public class Networking {
         PayloadTypeRegistry.playS2C().register(EndPickBanSessionPayload.ID, EndPickBanSessionPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(SyncLocateDataPayload.ID, SyncLocateDataPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(GoalDetailsPayload.ID, GoalDetailsPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(DownloadStatisticsPayload.ID, DownloadStatisticsPayload.CODEC);
 
         PayloadTypeRegistry.playC2S().register(CustomBoardPayload.ID, CustomBoardPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(LockoutVersionPayload.ID, LockoutVersionPayload.CODEC);

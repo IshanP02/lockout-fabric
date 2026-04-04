@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 @Mixin(BredAnimalsCriterion.class)
@@ -37,7 +38,18 @@ public class BredAnimalsCriterionMixin {
             } else if (goal instanceof BreedUniqueAnimalsGoal breedUniqueAnimalsGoal) {
                 LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
                 lockout.bredAnimalTypes.computeIfAbsent(team, t -> new LinkedHashSet<>());
-                lockout.bredAnimalTypes.get(team).add(parent.getType());
+                boolean newAnimal = lockout.bredAnimalTypes.get(team).add(parent.getType());
+                
+                // Track per-player for statistics
+                lockout.playerBredAnimals.computeIfAbsent(player.getUuid(), p -> new LinkedHashSet<>());
+                lockout.playerBredAnimals.get(player.getUuid()).add(parent.getType());
+                
+                // Track first contributor
+                if (newAnimal) {
+                    lockout.firstBredAnimalContributor.putIfAbsent(team, new HashMap<>());
+                    lockout.firstBredAnimalContributor.get(team).put(parent.getType(), player.getUuid());
+                }
+                
                 int size = lockout.bredAnimalTypes.get(team).size();
 
                 team.sendTooltipUpdate(breedUniqueAnimalsGoal);
