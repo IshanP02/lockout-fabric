@@ -60,7 +60,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
 
             if (goal instanceof HaveMostXPLevelsGoal) {
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    lockout.levels.put(player.getUuid(), player.isDead() ? 0 : player.experienceLevel);
+                    // Only track lockout players, not spectators
+                    if (lockout.isLockoutPlayer(player.getUuid())) {
+                        lockout.levels.put(player.getUuid(), player.isDead() ? 0 : player.experienceLevel);
+                    }
                 }
                 lockout.recalculateXPGoal(goal);
                 // Send tooltip updates to all teams
@@ -71,8 +74,11 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
 
             if (goal instanceof HaveMostCreeperKillsGoal) {
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    int creeperKills = player.getStatHandler().getStat(net.minecraft.stat.Stats.KILLED.getOrCreateStat(net.minecraft.entity.EntityType.CREEPER));
-                    lockout.creeperKills.put(player.getUuid(), creeperKills);
+                    // Only track lockout players, not spectators
+                    if (lockout.isLockoutPlayer(player.getUuid())) {
+                        int creeperKills = player.getStatHandler().getStat(net.minecraft.stat.Stats.KILLED.getOrCreateStat(net.minecraft.entity.EntityType.CREEPER));
+                        lockout.creeperKills.put(player.getUuid(), creeperKills);
+                    }
                 }
                 lockout.recalculateCreeperKillsGoal(goal);
                 // Send tooltip updates to all teams
