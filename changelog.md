@@ -2,6 +2,7 @@
 - Added Post Game Statistics
 	- Can be viewed ingame or downloaded
 - Reworked how Time Based Goals are Calculated and Displayed
+- Fixed issue where tooltips for "Have More" goals were only updated on Leader change
 ## Lockout v0.11.9
 - Added lockout settings page with lockout symbol next to the options button in the pause menu
 - Added Board scale from 0.5x to 2.0x
