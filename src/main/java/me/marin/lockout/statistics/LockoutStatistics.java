@@ -6,8 +6,11 @@ import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.*;
+import me.marin.lockout.lockout.goals.have_more.HaveMostAdvancementsGoal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueCraftsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostUniqueSmeltsGoal;
+import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
 import me.marin.lockout.lockout.goals.opponent.*;
 import me.marin.lockout.lockout.goals.wear_armor.WearCarvedPumpkinFor5MinutesGoal;
 import me.marin.lockout.lockout.goals.misc.*;
@@ -214,125 +217,126 @@ public class LockoutStatistics {
         
         // Check for goals with individual player tracking
         
+        // "Have More" goals - only the leader gets 1.0 contribution, everyone else gets 0.0
+        if (goal instanceof HaveMostXPLevelsGoal) {
+            UUID leader = lockout.mostLevelsPlayer;
+            if (leader != null && teamPlayers.contains(leader)) {
+                contributions.put(leader, 1.0);
+            }
+            return contributions;
+        }
+        
+        if (goal instanceof HaveMostCreeperKillsGoal) {
+            UUID leader = lockout.mostCreeperKillsPlayer;
+            if (leader != null && teamPlayers.contains(leader)) {
+                contributions.put(leader, 1.0);
+            }
+            return contributions;
+        }
+        
+        if (goal instanceof HaveMostAdvancementsGoal) {
+            UUID leader = lockout.mostAdvancementsPlayer;
+            if (leader != null && teamPlayers.contains(leader)) {
+                contributions.put(leader, 1.0);
+            }
+            return contributions;
+        }
+        
+        if (goal instanceof HaveMostUniqueCraftsGoal) {
+            UUID leader = lockout.mostUniqueCraftsPlayer;
+            if (leader != null && teamPlayers.contains(leader)) {
+                contributions.put(leader, 1.0);
+            }
+            return contributions;
+        }
+        
+        if (goal instanceof HaveMostUniqueSmeltsGoal) {
+            UUID leader = lockout.mostUniqueSmeltsPlayer;
+            if (leader != null && teamPlayers.contains(leader)) {
+                contributions.put(leader, 1.0);
+            }
+            return contributions;
+        }
+        
         // 1. Advancement-based goals - use playerUniqueAdvancements with first contributor tracking
         if (goal instanceof GetUniqueAdvancementsGoal) {
             Map<Identifier, UUID> firstContributor = lockout.firstAdvancementContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerUniqueAdvancements, firstContributor);
         }
         
-        // 2. Craft-based goals - use uniqueCrafts size
-        if (goal instanceof HaveMostUniqueCraftsGoal) {
-            int totalCrafts = 0;
-            Map<UUID, Integer> playerCounts = new HashMap<>();
-            
-            for (UUID playerId : teamPlayers) {
-                int count = lockout.uniqueCrafts.getOrDefault(playerId, new HashSet<>()).size();
-                playerCounts.put(playerId, count);
-                totalCrafts += count;
-            }
-            
-            if (totalCrafts > 0) {
-                for (UUID playerId : teamPlayers) {
-                    double contribution = (double) playerCounts.get(playerId) / totalCrafts;
-                    contributions.put(playerId, contribution);
-                }
-                return contributions;
-            }
-        }
-        
-        // 3. Smelt-based goals - use uniqueSmelts size
-        if (goal instanceof HaveMostUniqueSmeltsGoal) {
-            int totalSmelts = 0;
-            Map<UUID, Integer> playerCounts = new HashMap<>();
-            
-            for (UUID playerId : teamPlayers) {
-                int count = lockout.uniqueSmelts.getOrDefault(playerId, new HashSet<>()).size();
-                playerCounts.put(playerId, count);
-                totalSmelts += count;
-            }
-            
-            if (totalSmelts > 0) {
-                for (UUID playerId : teamPlayers) {
-                    double contribution = (double) playerCounts.get(playerId) / totalSmelts;
-                    contributions.put(playerId, contribution);
-                }
-                return contributions;
-            }
-        }
-        
-        // 4. Food-based goals - use playerFoodsEaten size
+        // 2. Food-based goals - use playerFoodsEaten size
         if (goal instanceof EatUniqueFoodsGoal) {
             Map<Item, UUID> firstContributor = lockout.firstFoodContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerFoodsEaten, firstContributor);
         }
         
-        // 5. Biome visiting goals
+        // 3. Biome visiting goals
         if (goal instanceof VisitUniqueBiomesGoal || goal instanceof VisitAllSpecificBiomesGoal) {
             Map<Identifier, UUID> firstContributor = lockout.firstBiomeContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerBiomesVisited, firstContributor);
         }
         
-        // 6. Breeding animals goals
+        // 4. Breeding animals goals
         if (goal instanceof BreedUniqueAnimalsGoal) {
             Map<EntityType<?>, UUID> firstContributor = lockout.firstBredAnimalContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerBredAnimals, firstContributor);
         }
         
-        // 7. Looking at mobs goals
+        // 5. Looking at mobs goals
         if (goal instanceof LookAtUniqueMobsGoal) {
             Map<EntityType<?>, UUID> firstContributor = lockout.firstLookedAtMobContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerLookedAtMobs, firstContributor);
         }
         
-        // 8. Killing hostile mobs goals
+        // 6. Killing hostile mobs goals
         if (goal instanceof KillUniqueHostileMobsGoal) {
             Map<EntityType<?>, UUID> firstContributor = lockout.firstHostileKillContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerKilledHostileMobs, firstContributor);
         }
         
-        // 9. Killing arthropods goal
+        // 7. Killing arthropods goal
         if (goal.getGoalName().contains("Arthropod")) {
             return calculateProportionalContributionFromInt(teamPlayers, lockout.playerKilledArthropods);
         }
         
-        // 10. Killing undead mobs goal
+        // 8. Killing undead mobs goal
         if (goal.getGoalName().contains("Undead Mobs")) {
             return calculateProportionalContributionFromInt(teamPlayers, lockout.playerKilledUndeadMobs);
         }
         
-        // 11. Kill 100 Mobs goal
+        // 9. Kill 100 Mobs goal
         if (goal.getGoalName().equals("Kill 100 Mobs")) {
             return calculateProportionalContributionFromInt(teamPlayers, lockout.playerMobsKilled);
         }
         
-        // 12. Pumpkin wearing goal (5 minutes = 6000 ticks)
+        // 10. Pumpkin wearing goal (5 minutes = 6000 ticks)
         if (goal instanceof WearCarvedPumpkinFor5MinutesGoal) {
             return calculateProportionalContributionFromTime(teamPlayers, lockout.pumpkinWearTime, 5 * 60 * 20L);
         }
         
-        // 13. Effects applied goal  
+        // 11. Effects applied goal  
         if (goal instanceof HaveEffectsAppliedForXMinutesGoal effectsGoal) {
             long requiredTicks = effectsGoal.getMinutes() * 60 * 20L;
             return calculateProportionalContributionFromTime(teamPlayers, lockout.appliedEffectsTime, requiredTicks);
         }
         
-        // 14. Damage taken goal
+        // 12. Damage taken goal
         if (goal instanceof Take200DamageGoal) {
             return calculateProportionalContributionFromDouble(teamPlayers, lockout.playerDamageTaken);
         }
         
-        // 15. Damage dealt goal
+        // 13. Damage dealt goal
         if (goal instanceof Deal400DamageGoal) {
             return calculateProportionalContributionFromDouble(teamPlayers, lockout.playerDamageDealt);
         }
         
-        // 16. Damage types taken goal
+        // 14. Damage types taken goal
         if (goal instanceof DamagedByUniqueSourcesGoal) {
             Map<RegistryKey<DamageType>, UUID> firstContributor = lockout.firstDamageTypeContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerDamageTypesTaken, firstContributor);
         }
         
-        // 17. Opponent goals - each player on winning team gets 0.5
+        // 15. Opponent goals - each player on winning team gets 0.5
         if (isOpponentGoalWithEqualCredit(goal)) {
             for (UUID playerId : teamPlayers) {
                 contributions.put(playerId, 0.5);
@@ -340,7 +344,7 @@ public class LockoutStatistics {
             return contributions;
         }
         
-        // 18. For other goals, check completedMessage for single contributor
+        // 16. For other goals, check completedMessage for single contributor
         String completedMessage = goal.getCompletedMessage();
         if (completedMessage != null && !completedMessage.isEmpty()) {
             boolean foundPlayer = false;
