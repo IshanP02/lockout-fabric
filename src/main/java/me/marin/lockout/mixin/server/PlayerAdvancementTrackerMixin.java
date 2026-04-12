@@ -101,10 +101,10 @@ public abstract class PlayerAdvancementTrackerMixin {
                         }
                         lockout.mostAdvancementsPlayer = owner.getUuid();
                         lockout.mostAdvancements = playerAdvancements;
-                        // Send tooltip updates to all teams
-                        for (LockoutTeam teamToUpdate : lockout.getTeams()) {
-                            ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostAdvancementsGoal) goal, true);
-                        }
+                    }
+                    // Send tooltip updates to all teams whenever anyone makes progress
+                    for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                        ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostAdvancementsGoal) goal, true);
                     }
                 }
             }

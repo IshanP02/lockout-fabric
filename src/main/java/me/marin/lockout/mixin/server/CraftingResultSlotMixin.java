@@ -44,6 +44,7 @@ public class CraftingResultSlotMixin {
         if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (!lockout.isLockoutPlayer(player.getUuid())) return;
 
         if (amount < 0 || stack.isEmpty()) {
             return;
@@ -89,10 +90,10 @@ public class CraftingResultSlotMixin {
 
                     lockout.mostUniqueCraftsPlayer = player.getUuid();
                     lockout.mostUniqueCrafts = crafts.size();
-                    // Send tooltip updates to all teams
-                    for (LockoutTeam teamToUpdate : lockout.getTeams()) {
-                        ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostUniqueCraftsGoal) goal, true);
-                    }
+                }
+                // Send tooltip updates to all teams whenever anyone makes progress
+                for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                    ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostUniqueCraftsGoal) goal, true);
                 }
             }
         }

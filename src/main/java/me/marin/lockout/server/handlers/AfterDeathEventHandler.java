@@ -50,19 +50,39 @@ public class AfterDeathEventHandler implements ServerLivingEntityEvents.AfterDea
             lockout.deaths.putIfAbsent(team, 0);
             lockout.deaths.merge(team, 1, Integer::sum);
             
-            // Track this death for statistics (we'll check if it's a task death later)
+            // Track this death for statistics - only mark as task death if it actually completes a death goal
             boolean isTaskDeath = false;
             
-            // Check if this death is for a task/goal
+            // Check if this death actually completes a death-related goal
             for (Goal goal : lockout.getBoard().getGoals()) {
                 if (goal == null || goal.isCompleted()) continue;
                 
-                // Check if this is a death-related goal
-                if (goal instanceof DieToDamageTypeGoal || goal instanceof DieToEntityGoal || 
-                    goal instanceof DieToFallingOffVinesGoal || goal instanceof DieToTNTMinecartGoal) {
-                    isTaskDeath = true;
-                    break;
+                // Check if this specific death matches and would complete a death goal
+                if (goal instanceof DieToDamageTypeGoal dieToDamageTypeGoal) {
+                    for (RegistryKey<DamageType> key : dieToDamageTypeGoal.getDamageRegistryKeys()) {
+                        if (source.getTypeRegistryEntry().matchesKey(key)) {
+                            isTaskDeath = true;
+                            break;
+                        }
+                    }
+                } else if (goal instanceof DieToEntityGoal dieToEntityGoal) {
+                    if (source.getAttacker() != null && source.getAttacker().getType() == dieToEntityGoal.getEntityType()) {
+                        isTaskDeath = true;
+                    }
+                } else if (goal instanceof DieToFallingOffVinesGoal) {
+                    if (source.getTypeRegistryEntry().matchesKey(DamageTypes.FALL)) {
+                        FallLocation fallLocation = FallLocation.fromEntity((PlayerEntity) entity);
+                        if (fallLocation != null && List.of(FallLocation.VINES, FallLocation.TWISTING_VINES, FallLocation.WEEPING_VINES).contains(fallLocation)) {
+                            isTaskDeath = true;
+                        }
+                    }
+                } else if (goal instanceof DieToTNTMinecartGoal) {
+                    if (source.getSource() instanceof TntMinecartEntity) {
+                        isTaskDeath = true;
+                    }
                 }
+                
+                if (isTaskDeath) break;
             }
             
             // Record death in statistics
@@ -83,12 +103,18 @@ public class AfterDeathEventHandler implements ServerLivingEntityEvents.AfterDea
             }
         }
         
-        // Track player kills for statistics
+        // Track player kills for statistics (only PvP between different teams)
         if (playerDied && killedByPlayer) {
             PlayerEntity killer = (PlayerEntity) entity.getPrimeAdversary();
-            if (lockout.isLockoutPlayer(killer.getUuid())) {
-                if (lockout.getStatistics() != null) {
-                    lockout.getStatistics().recordPlayerKill(killer.getUuid());
+            PlayerEntity victim = (PlayerEntity) entity;
+            if (lockout.isLockoutPlayer(killer.getUuid()) && lockout.isLockoutPlayer(victim.getUuid())) {
+                // Only count as player kill if they're on different teams
+                LockoutTeam killerTeam = lockout.getPlayerTeam(killer.getUuid());
+                LockoutTeam victimTeam = lockout.getPlayerTeam(victim.getUuid());
+                if (!Objects.equals(killerTeam, victimTeam)) {
+                    if (lockout.getStatistics() != null) {
+                        lockout.getStatistics().recordPlayerKill(killer.getUuid());
+                    }
                 }
             }
         }

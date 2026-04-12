@@ -44,6 +44,7 @@ public class SlotMixin {
         if (player.getEntityWorld().isClient()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (!lockout.isLockoutPlayer(player.getUuid())) return;
 
         Slot slot = (Slot) (Object) this;
 
@@ -89,10 +90,10 @@ public class SlotMixin {
 
                                         lockout.mostUniqueSmeltsPlayer = serverPlayer.getUuid();
                                         lockout.mostUniqueSmelts = smelts.size();
-                                        // Send tooltip updates to all teams
-                                        for (LockoutTeam teamToUpdate : lockout.getTeams()) {
-                                            ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostUniqueSmeltsGoal) goal, true);
-                                        }
+                                    }
+                                    // Send tooltip updates to all teams whenever anyone makes progress
+                                    for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                                        ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostUniqueSmeltsGoal) goal, true);
                                     }
                                 }
                             }
