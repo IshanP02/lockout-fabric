@@ -92,6 +92,9 @@ public class LockoutServer {
     private static final int MAX_PINGS = 4;
     private static final long COOLDOWN_WINDOW_MS = 15000; // 15 seconds
     private static final Map<UUID, List<Long>> playerPingTimestamps = new HashMap<>();
+    private static final Map<UUID, PausedPlayerState> pausedPlayerStates = new HashMap<>();
+    private static final Map<UUID, Boolean> pausedPlayerInvulnerableState = new HashMap<>();
+    private static final double PAUSE_POSITION_EPSILON_SQ = 0.0001D;
 
     public static Lockout lockout;
     public static MinecraftServer server;
@@ -122,7 +125,10 @@ public class LockoutServer {
     // Track player death times for respawn grace period (30 seconds)
     public static Map<UUID, Long> playerDeathTimes = new ConcurrentHashMap<>();
 
+    private record PausedPlayerState(double x, double y, double z, float yaw, float pitch) {}
+
     public static void initializeServer() {
+        releasePausedPlayers(server);
         lockout = null;
         compassHandler = null;
         gameStartRunnables.clear();
@@ -946,6 +952,7 @@ public class LockoutServer {
 
     private static void startLockout(List<LockoutTeamServer> teams) {
         LockoutStateStore.enablePersistence();
+        releasePausedPlayers(server);
 
         // Clear old runnables
         gameStartRunnables.clear();
@@ -1414,6 +1421,7 @@ public class LockoutServer {
             // End the active match immediately when state is cleared.
             lockout.setPaused(false);
             lockout.setRunning(false);
+            releasePausedPlayers(context.getSource().getServer());
 
             var payload = new EndLockoutPayload(new int[0], System.currentTimeMillis());
             for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
@@ -1444,6 +1452,22 @@ public class LockoutServer {
         return setPauseState(context, !lockout.isPaused());
     }
 
+    public static int pauseLockout(CommandContext<ServerCommandSource> context) {
+        if (!Lockout.isLockoutRunning(lockout)) {
+            context.getSource().sendError(Text.literal("There's no active lockout match."));
+            return 0;
+        }
+        return setPauseState(context, true);
+    }
+
+    public static int unpauseLockout(CommandContext<ServerCommandSource> context) {
+        if (!Lockout.isLockoutRunning(lockout)) {
+            context.getSource().sendError(Text.literal("There's no active lockout match."));
+            return 0;
+        }
+        return setPauseState(context, false);
+    }
+
     public static int setPauseLockout(CommandContext<ServerCommandSource> context) {
         if (!Lockout.isLockoutRunning(lockout)) {
             context.getSource().sendError(Text.literal("There's no active lockout match."));
@@ -1461,6 +1485,11 @@ public class LockoutServer {
         }
 
         lockout.setPaused(paused);
+        if (paused) {
+            enforcePausedPlayers(context.getSource().getServer());
+        } else {
+            releasePausedPlayers(context.getSource().getServer());
+        }
 
         String tickCommand = paused ? "tick freeze" : "tick unfreeze";
         var parseResults = server.getCommandManager().getDispatcher().parse(tickCommand, server.getCommandSource());
@@ -1473,6 +1502,48 @@ public class LockoutServer {
 
         LockoutStateStore.save(context.getSource().getServer());
         return 1;
+    }
+
+    public static void enforcePausedPlayers(MinecraftServer server) {
+        if (server == null) return;
+        if (!Lockout.isLockoutRunning(lockout) || !lockout.isPaused()) return;
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (!lockout.isLockoutPlayer(player.getUuid())) continue;
+
+            UUID uuid = player.getUuid();
+            pausedPlayerInvulnerableState.putIfAbsent(uuid, player.isInvulnerable());
+            pausedPlayerStates.putIfAbsent(uuid, new PausedPlayerState(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch()));
+
+            PausedPlayerState state = pausedPlayerStates.get(uuid);
+            player.setInvulnerable(true);
+            player.setVelocity(0.0, 0.0, 0.0);
+
+            double dx = player.getX() - state.x;
+            double dy = player.getY() - state.y;
+            double dz = player.getZ() - state.z;
+            if ((dx * dx + dy * dy + dz * dz) > PAUSE_POSITION_EPSILON_SQ) {
+                player.networkHandler.requestTeleport(state.x, state.y, state.z, state.yaw, state.pitch);
+            }
+        }
+    }
+
+    public static void releasePausedPlayers(MinecraftServer server) {
+        if (server == null) {
+            pausedPlayerStates.clear();
+            pausedPlayerInvulnerableState.clear();
+            return;
+        }
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            Boolean previousInvulnerable = pausedPlayerInvulnerableState.get(player.getUuid());
+            if (previousInvulnerable != null) {
+                player.setInvulnerable(previousInvulnerable);
+            }
+        }
+
+        pausedPlayerStates.clear();
+        pausedPlayerInvulnerableState.clear();
     }
 
 }
