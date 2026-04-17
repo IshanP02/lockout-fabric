@@ -46,16 +46,19 @@ public class ServerPlayerEntityMixin {
             LockoutServer.playerDeathTimes.put(player.getUuid(), lockout.getTicks());
         }
 
+        CompassItemHandler handler = LockoutServer.getOrInitCompassHandler();
+        if (handler == null) return;
+
         int i = 0;
         for (ItemStack item : player.getInventory().getMainStacks()) {
             if (CompassItemHandler.isCompass(item)) {
-                LockoutServer.compassHandler.compassSlots.put(player.getUuid(), i);
+                handler.compassSlots.put(player.getUuid(), i);
                 return;
             }
             i++;
         }
         if (CompassItemHandler.isCompass(((PlayerInventoryAccessor)player.getInventory()).getEquipment().get(EquipmentSlot.OFFHAND))) {
-            LockoutServer.compassHandler.compassSlots.put(player.getUuid(), 40);
+            handler.compassSlots.put(player.getUuid(), 40);
         }
     }
 }

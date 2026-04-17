@@ -4,6 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalRequirements;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.server.LockoutServer;
+import me.marin.lockout.server.LockoutStateStore;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
@@ -21,6 +22,7 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
         server.execute(() -> {
             Lockout.log("Locating all required Structures and Biomes");
             LockoutServer.server = server;
+            LockoutStateStore.load(server);
             long start = System.currentTimeMillis();
 
             AVAILABLE_DYE_COLORS.add(DyeColor.BLACK);
@@ -73,10 +75,12 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
             long end = System.currentTimeMillis();
             Lockout.log("Located " + BIOME_LOCATE_DATA.size() + " biomes and " + STRUCTURE_LOCATE_DATA.size() + " structures in " + String.format("%.2f", ((end-start)/1000.0)) + "s!");
 
-            // Freeze ticks until lockout/blackout game starts
-            var freezeCommand = "tick freeze";
-            var parseResults = server.getCommandManager().getDispatcher().parse(freezeCommand, server.getCommandSource());
-            server.getCommandManager().execute(parseResults, freezeCommand);
+            // Freeze ticks until a game starts, and keep paused restored games frozen.
+            if (!Lockout.isLockoutRunning(LockoutServer.lockout) || LockoutServer.lockout.isPaused()) {
+                var freezeCommand = "tick freeze";
+                var parseResults = server.getCommandManager().getDispatcher().parse(freezeCommand, server.getCommandSource());
+                server.getCommandManager().execute(parseResults, freezeCommand);
+            }
             
             // Send locate data to all connected clients
             me.marin.lockout.network.SyncLocateDataPayload payload = new me.marin.lockout.network.SyncLocateDataPayload(

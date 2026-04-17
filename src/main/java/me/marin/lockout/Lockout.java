@@ -101,6 +101,7 @@ public class Lockout {
     private final List<? extends LockoutTeam> teams;
     private boolean hasStarted = false;
     private boolean isRunning = true;
+    private boolean isPaused = false;
 
     /**
      * Amount of *server* ticks the game has been running for.
@@ -371,6 +372,17 @@ public class Lockout {
 
     public void setRunning(boolean running) {
         isRunning = running;
+        if (!running) {
+            isPaused = false;
+        }
+    }
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
+    public void setPaused(boolean paused) {
+        isPaused = paused;
     }
 
     private static String getWinnerTeamsString(List<? extends LockoutTeam> teams) {

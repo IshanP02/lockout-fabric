@@ -1,3 +1,7 @@
+## Lockout v0.11.11
+- Added /Pause & /Unpause commands
+- Added /LockoutState clear command which ends a lockout/blackout session
+- Fixed it so the Blackout continues if you leave a singleplayer world and join back
 ## Lockout v0.11.10
 - Added Post Game Statistics
 	- Can be viewed ingame or downloaded

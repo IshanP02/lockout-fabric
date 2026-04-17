@@ -178,6 +178,24 @@ public class LockoutInitializer implements ModInitializer {
             }
 
             {
+                // Pause/Unpause commands
+                var pauseRoot = CommandManager.literal("Pause").requires(PERMISSIONS).executes(LockoutServer::pauseLockout).build();
+                var unpauseRoot = CommandManager.literal("Unpause").requires(PERMISSIONS).executes(LockoutServer::unpauseLockout).build();
+
+                dispatcher.getRoot().addChild(pauseRoot);
+                dispatcher.getRoot().addChild(unpauseRoot);
+            }
+
+            {
+                // LockoutState command
+                var stateRoot = CommandManager.literal("LockoutState").requires(PERMISSIONS).build();
+                var clearNode = CommandManager.literal("clear").executes(LockoutServer::clearSavedState).build();
+
+                dispatcher.getRoot().addChild(stateRoot);
+                stateRoot.addChild(clearNode);
+            }
+
+            {
                 // RemovePicks command
                 dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
                     // Remove goal-to-player mappings for picks before clearing

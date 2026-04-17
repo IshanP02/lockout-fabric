@@ -4,6 +4,8 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.LockoutRunnable;
 import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.LockoutTeamServer;
+import me.marin.lockout.server.LockoutServer;
+import me.marin.lockout.server.LockoutStateStore;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostCreeperKillsGoal;
 import me.marin.lockout.lockout.goals.have_more.HaveMostXPLevelsGoal;
@@ -45,6 +47,10 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
     @Override
     public void onEndTick(MinecraftServer server) {
         if (!Lockout.isLockoutRunning(lockout)) return;
+        if (lockout.isPaused()) {
+            LockoutServer.enforcePausedPlayers(server);
+            return;
+        }
 
         for (LockoutRunnable runnable : new HashSet<>(gameStartRunnables.keySet())) {
             if (gameStartRunnables.get(runnable) <= 0) {
@@ -254,6 +260,7 @@ public class EndServerTickEventHandler implements ServerTickEvents.EndTick {
         }
         
         if (lockout.getTicks() % 20 == 0) {
+            LockoutStateStore.save(server);
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(player, lockout.getUpdateTimerPacket());
             }
