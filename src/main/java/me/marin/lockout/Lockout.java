@@ -53,6 +53,29 @@ public class Lockout {
     public final Map<UUID, Set<Item>> uniqueCrafts = new HashMap<>();
     public final Map<UUID, Set<Item>> uniqueSmelts = new HashMap<>();
     public final Map<UUID, Integer> playerAdvancements = new HashMap<>();
+    public final Map<UUID, Set<Item>> playerFoodsEaten = new HashMap<>();
+    public final Map<UUID, Set<Identifier>> playerUniqueAdvancements = new HashMap<>();
+
+    // Per-player tracking for proportional contribution
+    public final Map<UUID, Set<Identifier>> playerBiomesVisited = new HashMap<>();
+    public final Map<UUID, Set<EntityType<?>>> playerBredAnimals = new HashMap<>();
+    public final Map<UUID, Set<EntityType<?>>> playerLookedAtMobs = new HashMap<>();
+    public final Map<UUID, Set<EntityType<?>>> playerKilledHostileMobs = new HashMap<>();
+    public final Map<UUID, Integer> playerKilledArthropods = new HashMap<>();
+    public final Map<UUID, Integer> playerKilledUndeadMobs = new HashMap<>();
+    public final Map<UUID, Integer> playerMobsKilled = new HashMap<>();
+    public final Map<UUID, Double> playerDamageTaken = new HashMap<>();
+    public final Map<UUID, Double> playerDamageDealt = new HashMap<>();
+    public final Map<UUID, Set<RegistryKey<DamageType>>> playerDamageTypesTaken = new HashMap<>();
+
+    // First contributor tracking (team -> item -> first player UUID who contributed it)
+    public final Map<LockoutTeam, Map<Identifier, UUID>> firstBiomeContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<Identifier, UUID>> firstAdvancementContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstBredAnimalContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstLookedAtMobContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstHostileKillContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<Item, UUID>> firstFoodContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<RegistryKey<DamageType>, UUID>> firstDamageTypeContributor = new HashMap<>();
 
     public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
     public final Map<UUID, Integer> distanceSwam = new HashMap<>();
@@ -88,10 +111,14 @@ public class Lockout {
     @Setter
     @Getter
     private long ticks;
+    
+    @Getter
+    private me.marin.lockout.statistics.LockoutStatistics statistics;
 
     public Lockout(LockoutBoard board, List<? extends LockoutTeam> teams) {
         this.board = board;
         this.teams = teams;
+        this.statistics = new me.marin.lockout.statistics.LockoutStatistics(this);
     }
 
     public static void log(String message) {
@@ -146,6 +173,11 @@ public class Lockout {
 
         team.addPoint();
         goal.setCompleted(true, team);
+        
+        // Capture contribution snapshot at the moment of completion
+        if (statistics != null && team instanceof LockoutTeamServer serverTeam) {
+            statistics.captureGoalContribution(goal, serverTeam);
+        }
 
         for (LockoutTeam lockoutTeam : teams) {
             if (!(lockoutTeam instanceof LockoutTeamServer lockoutTeamServer)) continue;
@@ -172,6 +204,11 @@ public class Lockout {
         if (!hasStarted()) return;
 
         LockoutTeamServer team = (LockoutTeamServer) getPlayerTeam(playerId);
+        
+        // Set completed message to the player who triggered it for statistics tracking
+        if (isWinner) {
+            goal.setCompletedMessage(team.getPlayerName(playerId));
+        }
 
         complete1v1Goal(goal, team, isWinner, message);
     }
@@ -186,6 +223,11 @@ public class Lockout {
 
         goal.setCompleted(true, winnerTeam);
         winnerTeam.addPoint();
+        
+        // Capture contribution snapshot at the moment of completion
+        if (statistics != null) {
+            statistics.captureGoalContribution(goal, winnerTeam);
+        }
 
         winnerTeam.sendMessage(Formatting.GREEN + message);
         loserTeam.sendMessage(Formatting.RED + message);
@@ -199,6 +241,10 @@ public class Lockout {
 
     public void updateGoalCompletion(Goal goal, UUID playerId) {
         if (goal.isCompleted()) {
+            // Clear previous contributions before updating ownership
+            if (statistics != null) {
+                statistics.clearGoalContribution(goal);
+            }
             clearGoalCompletion(goal, false);
         }
         completeGoal(goal, playerId);
@@ -247,6 +293,12 @@ public class Lockout {
             var payload = new EndLockoutPayload(winners.stream().mapToInt(winner -> teams.indexOf(winner)).toArray(), System.currentTimeMillis());
             for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(serverPlayer, payload);
+            }
+            
+            // Display clickable statistics buttons
+            if (statistics != null) {
+                statistics.setWinners(winners);
+                statistics.displayInChat();
             }
         }
     }

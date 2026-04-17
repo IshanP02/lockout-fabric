@@ -59,6 +59,7 @@ public class LockoutClient implements ClientModInitializer {
     private static KeyBinding nextSectionKeyBinding;
     private static KeyBinding toggleAutoCycleSectionKeyBinding;
     public static boolean boardVisible = true;
+    public static boolean lockoutDebugHudOpen = false;  // mirrors debug HUD open state, updated only on pure F3 (no combo)
     public static boolean sectionViewEnabled = false;
     public static int currentSection = 1;  // 1-4, which section to display
     public static boolean autoCycleSectionEnabled = false;
@@ -159,6 +160,46 @@ public class LockoutClient implements ClientModInitializer {
                     String[] lines = payload.details().split("\\\\n");
                     for (String line : lines) {
                         client.player.sendMessage(Text.literal(line), false);
+                    }
+                }
+            });
+        });
+        
+        ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.DownloadStatisticsPayload.ID, (payload, context) -> {
+            MinecraftClient client = context.client();
+            client.execute(() -> {
+                try {
+                    // Create lockout-statistics directory in client's instance folder
+                    java.nio.file.Path statisticsDir = client.runDirectory.toPath().resolve("lockout-statistics");
+                    if (!java.nio.file.Files.exists(statisticsDir)) {
+                        java.nio.file.Files.createDirectories(statisticsDir);
+                    }
+                    
+                    // Save the file
+                    java.nio.file.Path statsFile = statisticsDir.resolve(payload.filename());
+                    java.nio.file.Files.writeString(statsFile, payload.content());
+                    
+                    // Send success message with clickable link
+                    if (client.player != null) {
+                        net.minecraft.text.Text message = net.minecraft.text.Text.literal("Statistics saved! ")
+                            .formatted(net.minecraft.util.Formatting.GREEN)
+                            .append(
+                                net.minecraft.text.Text.literal("[Open File]")
+                                    .formatted(net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.BOLD)
+                                    .styled(style -> style
+                                        .withClickEvent(new net.minecraft.text.ClickEvent.OpenFile(statsFile.toFile().getAbsolutePath()))
+                                        .withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(net.minecraft.text.Text.literal("Click to open: " + statsFile.toFile().getAbsolutePath())))
+                                    )
+                            );
+                        client.player.sendMessage(message, false);
+                    }
+                } catch (java.io.IOException e) {
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                            net.minecraft.text.Text.literal("Failed to save statistics file: " + e.getMessage())
+                                .formatted(net.minecraft.util.Formatting.RED),
+                            false
+                        );
                     }
                 }
             });

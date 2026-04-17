@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 @Mixin(FoodComponent.class)
@@ -68,7 +69,17 @@ public class FoodComponentMixin {
                 FoodComponent foodComponent = itemStack.get(DataComponentTypes.FOOD);
                 if (foodComponent != null) {
                     eatUniqueFoodsGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
-                    eatUniqueFoodsGoal.getTrackerMap().get(team).add(itemStack.getItem());
+                    boolean newFood = eatUniqueFoodsGoal.getTrackerMap().get(team).add(itemStack.getItem());
+
+                    // Track per-player food consumption for statistics
+                    lockout.playerFoodsEaten.putIfAbsent(player.getUuid(), new LinkedHashSet<>());
+                    lockout.playerFoodsEaten.get(player.getUuid()).add(itemStack.getItem());
+                    
+                    // Track first contributor
+                    if (newFood) {
+                        lockout.firstFoodContributor.putIfAbsent(team, new HashMap<>());
+                        lockout.firstFoodContributor.get(team).put(itemStack.getItem(), player.getUuid());
+                    }
 
                     int size = eatUniqueFoodsGoal.getTrackerMap().get(team).size();
 

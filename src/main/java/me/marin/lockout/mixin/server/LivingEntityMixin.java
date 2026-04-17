@@ -28,6 +28,10 @@ public class LivingEntityMixin {
         LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
         lockout.damageDealt.putIfAbsent(team, 0d);
         lockout.damageDealt.merge(team, (double)amount, Double::sum);
+        
+        // Track per-player for statistics
+        lockout.playerDamageDealt.putIfAbsent(player.getUuid(), 0d);
+        lockout.playerDamageDealt.merge(player.getUuid(), (double)amount, Double::sum);
 
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal == null) continue;

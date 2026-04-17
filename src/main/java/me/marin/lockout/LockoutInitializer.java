@@ -117,6 +117,17 @@ public class LockoutInitializer implements ModInitializer {
                 chatCommandNode.addChild(chatLocalNode);
             }
 
+            {
+                // Game statistics command
+                var lockoutStatsRoot = CommandManager.literal("GameStatistics").build();
+                var viewNode = CommandManager.literal("view").executes((context) -> LockoutServer.viewStatistics(context)).build();
+                var downloadNode = CommandManager.literal("download").executes((context) -> LockoutServer.downloadStatistics(context)).build();
+
+                dispatcher.getRoot().addChild(lockoutStatsRoot);
+                lockoutStatsRoot.addChild(viewNode);
+                lockoutStatsRoot.addChild(downloadNode);
+            }
+
 
             {
                 // GiveGoal command

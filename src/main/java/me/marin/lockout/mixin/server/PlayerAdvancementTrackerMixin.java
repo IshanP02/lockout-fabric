@@ -32,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Objects;
@@ -100,10 +101,10 @@ public abstract class PlayerAdvancementTrackerMixin {
                         }
                         lockout.mostAdvancementsPlayer = owner.getUuid();
                         lockout.mostAdvancements = playerAdvancements;
-                        // Send tooltip updates to all teams
-                        for (LockoutTeam teamToUpdate : lockout.getTeams()) {
-                            ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostAdvancementsGoal) goal, true);
-                        }
+                    }
+                    // Send tooltip updates to all teams whenever anyone makes progress
+                    for (LockoutTeam teamToUpdate : lockout.getTeams()) {
+                        ((LockoutTeamServer) teamToUpdate).sendTooltipUpdate((HaveMostAdvancementsGoal) goal, true);
                     }
                 }
             }
@@ -119,7 +120,21 @@ public abstract class PlayerAdvancementTrackerMixin {
                 Optional<AdvancementDisplay> advancementDisplay = advancement.value().display();
                 if (advancementDisplay.isPresent()) {
                     getUniqueAdvancementsGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
-                    getUniqueAdvancementsGoal.getTrackerMap().get(team).add(advancement.id());
+                    boolean newAdvancement = getUniqueAdvancementsGoal.getTrackerMap().get(team).add(advancement.id());
+                    
+                    // Track per-player unique advancements for statistics
+                    lockout.playerUniqueAdvancements.putIfAbsent(owner.getUuid(), new LinkedHashSet<>());
+                    lockout.playerUniqueAdvancements.get(owner.getUuid()).add(advancement.id());
+                    
+                    // Track first contributor
+                    if (newAdvancement) {
+                        lockout.firstAdvancementContributor.putIfAbsent(team, new HashMap<>());
+                        lockout.firstAdvancementContributor.get(team).put(advancement.id(), owner.getUuid());
+                    }
+                    
+                    // Also increment global counter for HaveMostAdvancementsGoal compatibility
+                    lockout.playerAdvancements.putIfAbsent(owner.getUuid(), 0);
+                    lockout.playerAdvancements.merge(owner.getUuid(), 1, Integer::sum);
 
                     int size = getUniqueAdvancementsGoal.getTrackerMap().get(team).size();
 
@@ -150,6 +165,16 @@ public abstract class PlayerAdvancementTrackerMixin {
         if (advancement.id().equals(HOT_TOURIST_DESTINATIONS)) {
             lockout.biomesVisited.putIfAbsent(team, new LinkedHashSet<>());
             wasNewBiomeForNether = lockout.biomesVisited.get(team).add(biomeId);
+            
+            // Track per-player for statistics
+            lockout.playerBiomesVisited.computeIfAbsent(owner.getUuid(), p -> new LinkedHashSet<>());
+            lockout.playerBiomesVisited.get(owner.getUuid()).add(biomeId);
+            
+            // Track first contributor for this biome
+            if (wasNewBiomeForNether) {
+                lockout.firstBiomeContributor.putIfAbsent(team, new HashMap<>());
+                lockout.firstBiomeContributor.get(team).put(biomeId, owner.getUuid());
+            }
         }
 
         for (Goal goal : lockout.getBoard().getGoals()) {
@@ -186,6 +211,18 @@ public abstract class PlayerAdvancementTrackerMixin {
                 boolean added = advancement.id().equals(HOT_TOURIST_DESTINATIONS) 
                     ? wasNewBiomeForNether 
                     : set.add(biomeId);
+                
+                // Track per-player for statistics (overworld biomes)
+                if (advancement.id().equals(ADVENTURING_TIME)) {
+                    lockout.playerBiomesVisited.computeIfAbsent(owner.getUuid(), p -> new LinkedHashSet<>());
+                    lockout.playerBiomesVisited.get(owner.getUuid()).add(biomeId);
+                    
+                    // Track first contributor for overworld biomes
+                    if (added) {
+                        lockout.firstBiomeContributor.putIfAbsent(team, new HashMap<>());
+                        lockout.firstBiomeContributor.get(team).putIfAbsent(biomeId, owner.getUuid());
+                    }
+                }
 
                 int size = set.size();
 
