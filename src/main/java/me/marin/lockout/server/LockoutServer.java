@@ -1456,6 +1456,41 @@ public class LockoutServer {
         return 1;
     }
 
+    public static CompassItemHandler getOrInitCompassHandler() {
+        if (compassHandler != null) {
+            return compassHandler;
+        }
+        if (!Lockout.isLockoutRunning(lockout) || lockout.isSoloBlackout() || server == null) {
+            return null;
+        }
+
+        List<UUID> lockoutPlayers = new ArrayList<>();
+        for (LockoutTeam team : lockout.getTeams()) {
+            if (!(team instanceof LockoutTeamServer teamServer)) continue;
+            lockoutPlayers.addAll(teamServer.getPlayers());
+        }
+
+        // Fallback for old/partial restored data where UUID lists may be empty.
+        if (lockoutPlayers.isEmpty()) {
+            for (LockoutTeam team : lockout.getTeams()) {
+                for (String playerName : team.getPlayerNames()) {
+                    ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerName);
+                    if (player != null) {
+                        lockoutPlayers.add(player.getUuid());
+                    }
+                }
+            }
+        }
+
+        if (lockoutPlayers.isEmpty()) {
+            return null;
+        }
+
+        lockoutPlayers = lockoutPlayers.stream().distinct().toList();
+        compassHandler = new CompassItemHandler(lockoutPlayers, server.getPlayerManager());
+        return compassHandler;
+    }
+
     public static int clearSavedState(CommandContext<ServerCommandSource> context) {
         if (Lockout.isLockoutRunning(lockout)) {
             // End the active match immediately when state is cleared.

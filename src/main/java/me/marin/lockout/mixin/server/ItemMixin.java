@@ -1,6 +1,7 @@
 package me.marin.lockout.mixin.server;
 
 import me.marin.lockout.Lockout;
+import me.marin.lockout.CompassItemHandler;
 import me.marin.lockout.server.LockoutServer;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
@@ -32,7 +33,10 @@ public class ItemMixin {
 
         NbtComponent customData = stack.get(DataComponentTypes.CUSTOM_DATA);
         if (customData != null && customData.copyNbt().contains("PlayerTracker")) {
-            LockoutServer.compassHandler.cycle(player);
+            CompassItemHandler handler = LockoutServer.getOrInitCompassHandler();
+            if (handler != null) {
+                handler.cycle(player);
+            }
         }
     }
 

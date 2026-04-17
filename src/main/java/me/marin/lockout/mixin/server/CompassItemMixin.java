@@ -36,11 +36,13 @@ public class CompassItemMixin {
         if (!lockout.isLockoutPlayer(player)) return;
 
         if (!CompassItemHandler.isCompass(stack)) return;
+        CompassItemHandler handler = LockoutServer.getOrInitCompassHandler();
+        if (handler == null) return;
 
-        CompassItem item = (CompassItem) stack.getItem();
-        int selectionNum = LockoutServer.compassHandler.currentSelection.getOrDefault(player.getUuid(), -1);
+        int selectionNum = handler.currentSelection.getOrDefault(player.getUuid(), -1);
         if (selectionNum < 0) return;
-        UUID selectedId = LockoutServer.compassHandler.players.get(selectionNum);
+        if (selectionNum >= handler.players.size()) return;
+        UUID selectedId = handler.players.get(selectionNum);
         PlayerEntity selectedPlayer = world.getServer().getPlayerManager().getPlayer(selectedId);
         if (selectedPlayer != null) {
             if (selectedPlayer.getEntityWorld().equals(player.getEntityWorld())) {
@@ -51,8 +53,10 @@ public class CompassItemMixin {
             stack.remove(DataComponentTypes.LODESTONE_TRACKER);
         }
 
-        CompassItemHandler cih = LockoutServer.compassHandler;
-        String trackingPlayerName = cih.playerNames.get(cih.players.get(cih.currentSelection.get(player.getUuid())));
+        Integer trackingIndex = handler.currentSelection.get(player.getUuid());
+        if (trackingIndex == null || trackingIndex < 0 || trackingIndex >= handler.players.size()) return;
+        UUID trackingUuid = handler.players.get(trackingIndex);
+        String trackingPlayerName = handler.playerNames.getOrDefault(trackingUuid, "Unknown");
 
         stack.set(DataComponentTypes.CUSTOM_NAME, Text.of(Formatting.RESET + "Tracking: " +  trackingPlayerName));
     }

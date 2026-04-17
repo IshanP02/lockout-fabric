@@ -30,7 +30,8 @@ public class CompassItemHandler {
         for (int i = 0; i < players.size(); i++) {
             UUID playerId = players.get(i);
             this.players.add(playerId);
-            this.playerNames.put(playerId, playerManager.getPlayer(playerId).getName().getString());
+            var p = playerManager.getPlayer(playerId);
+            this.playerNames.put(playerId, p != null ? p.getName().getString() : playerId.toString());
 
             this.currentSelection.put(playerId, i == 0 ? 1 : 0);
         }
