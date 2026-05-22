@@ -23,7 +23,7 @@ public class ZombifiedPiglinEntityMixin {
     @Inject(method = "setAngryAt", at = @At("HEAD"))
     public void setAngryAt(@Nullable LazyEntityReference<LivingEntity> angryAt, CallbackInfo ci) {
         ZombifiedPiglinEntity pigman = (ZombifiedPiglinEntity) (Object) this;
-        if (pigman.getEntityWorld().isClient()) return;
+        if (angryAt == null || pigman.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) {
