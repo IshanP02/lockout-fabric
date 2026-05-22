@@ -20,7 +20,7 @@ public class EndermanEntityMixin {
     @Inject(method = "setAngryAt", at = @At("HEAD"))
     public void setAngryAt(@Nullable LazyEntityReference<LivingEntity> angryAt, CallbackInfo ci) {
         EndermanEntity enderman = (EndermanEntity) (Object) this;
-        if (enderman.getEntityWorld().isClient()) return;
+        if (angryAt == null || enderman.getEntityWorld().isClient()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) {
