@@ -13,7 +13,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -106,6 +111,27 @@ public class UsingItemCriterionMixin {
                 if (newMob) {
                     lockout.firstLookedAtMobContributor.putIfAbsent(team, new HashMap<>());
                     lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUuid());
+                    
+                    if (player instanceof ServerPlayerEntity serverPlayer) {
+                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_CHIME;
+                    serverPlayer.networkHandler.sendPacket(
+                        new PlaySoundS2CPacket(
+                            soundEntry,
+                            SoundCategory.MASTER,
+                            serverPlayer.getX(),
+                            serverPlayer.getY(),
+                            serverPlayer.getZ(),
+                            2f,
+                            2f,
+                            player.getEntityWorld().random.nextLong()
+                        )
+                    );
+                }
+                
+                    int size = lockout.lookedAtMobTypes.get(team).size();
+                    
+                    // Display count above action bar
+                    player.sendMessage(Text.of("Mobs Looked at: " + size), true);
                 }
 
                 int size = lockout.lookedAtMobTypes.get(team).size();
