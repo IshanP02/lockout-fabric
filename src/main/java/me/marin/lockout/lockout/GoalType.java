@@ -285,6 +285,7 @@ public class GoalType {
     public static final String OBTAIN_COLORED_HARNESS = "OBTAIN_COLORED_HARNESS";
     public static final String KILL_BOGGED = "KILL_BOGGED";
     public static final String OBTAIN_64_GLOW_LICHEN = "OBTAIN_64_GLOW_LICHEN";
+    public static final String OBTAIN_64_NAME_TAG = "OBTAIN_64_NAME_TAG";
     public static final String GET_INFESTED_STATUS_EFFECT = "GET_INFESTED_STATUS_EFFECT";
     public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
     public static final String OBTAIN_6_UNIQUE_BRICK_TYPES = "OBTAIN_6_UNIQUE_BRICK_TYPES";
@@ -335,7 +336,13 @@ public class GoalType {
     public static final String OBTAIN_NAUTILUS_ARMOR = "OBTAIN_ANY_NAUTILUS_ARMOR";
     public static final String GET_REMOTE_GATEWAY_ADVANCEMENT = "GET_REMOTE_GATEWAY_ADVANCEMENT";
     public static final String ENRAGE_ENDERMAN = "ENRAGE_ENDERMAN";
+    public static final String ENRAGE_WOLF = "ENRAGE_WOLF";
     public static final String GET_STAR_TRADER_ADVANCEMENT = "GET_STAR_TRADER_ADVANCEMENT";
     public static final String TAME_NAUTILUS = "TAME_NAUTILUS";
+    public static final String NAME_SHEEP_JEB = "NAME_SHEEP_JEB";
+    public static final String NAME_RABBIT = "NAME_RABBIT";
+    public static final String NAME_IRON_GOLEM = "NAME_IRON_GOLEM";
+    public static final String NAME_VINDICATOR = "NAME_VINDICATOR";
+    public static final String USE_GOLDEN_DANDELION_ON_BABY_MOB = "USE_GOLDEN_DANDELION_ON_BABY_MOB";
 
 }

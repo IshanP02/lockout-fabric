@@ -1,3 +1,15 @@
+## Lockout v0.12.1
+- Added new Goals
+	- Obtain 64 Name Tags
+	- Enrage Wolf
+	- Name Sheep _jeb
+	- Name Iron Golem Dinnerbone
+	- Name Vindicator Johnny
+	- Name Rabbit Toast
+- Fixed Spyglass No. output
+- Added Sulfur & Cinnabar to bricks goal
+- Added Golden Dandelion to Flower goal
+- Added Sulfer Cube Bucket to bucket goal
 ## Lockout v0.12
 - Updated Mod to MC 26.2
 ## Lockout v0.11.10

@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "server.AbstractHorseEntityAccessor",
+    "server.AgeableMobMixin",
     "server.AbstractFurnaceBlockEntityMixin",
     "server.AnvilScreenHandlerMixin",
     "server.ArmorStandMixin",
@@ -33,6 +34,7 @@
     "server.ItemFrameEntityMixin",
     "server.ItemMixin",
     "server.LeashableMixin",
+    "server.NameTagItemMixin",
     "server.LivingEntityMixin",
     "server.PlayerAdvancementTrackerMixin",
     "server.PlayerInventoryAccessor",

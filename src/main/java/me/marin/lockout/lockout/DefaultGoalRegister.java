@@ -4,6 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalDataGenerator;
 import me.marin.lockout.generator.GoalRequirements;
 import me.marin.lockout.lockout.goals.attach_lead.*;
+import me.marin.lockout.lockout.goals.name.*;
 import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
@@ -131,6 +132,11 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
+        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJebGoal.class);
+        INSTANCE.register(GoalType.NAME_RABBIT, NameRabbitGoal.class);       
+        INSTANCE.register(GoalType.NAME_IRON_GOLEM, NameIronGolemGoal.class);
+        INSTANCE.register(GoalType.NAME_VINDICATOR, NameVindicatorGoal.class);
+        INSTANCE.register(GoalType.USE_GOLDEN_DANDELION_ON_BABY_MOB, UseGoldenDandelionOnBabyMobGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
@@ -460,6 +466,7 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.OBTAIN_64_FIREFLY_BUSHES, Obtain64FireflyBushesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_64_NAME_TAG, Obtain64NameTagsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_FURNACE_TYPES, ObtainAllFurnaceTypesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MINECARTS, ObtainAllMinecartsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MUSHROOMS, ObtainAllMushroomsGoal.class);
@@ -606,6 +613,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.PUT_BANNER_ON_SHIELD, ObtainShieldWithBannerGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ENDERMAN, AngerEndermanGoal.class);
+        INSTANCE.register(GoalType.ENRAGE_WOLF, AngerWolfGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ZOMBIFIED_PIGLIN, AngerZombifiedPiglinGoal.class);
         INSTANCE.register(GoalType.EXTINGUISH_CAMPFIRE_WITH_SHOVEL, ExtinguishCampfireWithShovelGoal.class);
         INSTANCE.register(GoalType.REACH_NETHER_ROOF, ReachNetherRoofGoal.class);

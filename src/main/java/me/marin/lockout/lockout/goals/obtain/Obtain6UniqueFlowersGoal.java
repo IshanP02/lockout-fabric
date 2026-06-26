@@ -33,7 +33,8 @@ public class Obtain6UniqueFlowersGoal extends ObtainSomeOfTheItemsGoal {
             Items.OPEN_EYEBLOSSOM,
             Items.CLOSED_EYEBLOSSOM,
             Items.WILDFLOWERS,
-            Items.PINK_PETALS
+            Items.PINK_PETALS,
+            Items.GOLDEN_DANDELION
     );
 
     public Obtain6UniqueFlowersGoal(String id, String data) {

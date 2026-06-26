@@ -324,6 +324,7 @@ public class BoardBuilderSearchWidget extends AbstractScrollArea {
         if (me.marin.lockout.generator.GoalGroup.STATUS_EFFECT_CATEGORY.getGoals().contains(goalId)) return "Status Effects";
         if (me.marin.lockout.generator.GoalGroup.STATISTICS_CATEGORY.getGoals().contains(goalId)) return "Statistics";
         if (me.marin.lockout.generator.GoalGroup.MISCELLANEOUS_CATEGORY.getGoals().contains(goalId)) return "Miscellaneous";
+        if (me.marin.lockout.generator.GoalGroup.NAME_CATEGORY.getGoals().contains(goalId)) return "Name";
         return "Uncategorized";
     }
 

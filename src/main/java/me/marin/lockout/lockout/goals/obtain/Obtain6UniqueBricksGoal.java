@@ -31,7 +31,9 @@ public class Obtain6UniqueBricksGoal extends ObtainSomeOfTheItemsGoal {
             Items.POLISHED_BLACKSTONE_BRICKS,
             Items.CRACKED_POLISHED_BLACKSTONE_BRICKS,
             Items.RESIN_BRICKS,
-            Items.CHISELED_RESIN_BRICKS
+            Items.CHISELED_RESIN_BRICKS,
+            Items.SULFUR_BRICKS,
+            Items.CINNABAR_BRICKS
     );
 
     public Obtain6UniqueBricksGoal(String id, String data) {
