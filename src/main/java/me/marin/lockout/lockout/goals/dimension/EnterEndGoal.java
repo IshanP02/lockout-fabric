@@ -1,12 +1,12 @@
 package me.marin.lockout.lockout.goals.dimension;
 
 import me.marin.lockout.lockout.interfaces.EnterDimensionGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 public class EnterEndGoal extends EnterDimensionGoal {
 
@@ -23,12 +23,12 @@ public class EnterEndGoal extends EnterDimensionGoal {
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
     @Override
-    public RegistryKey<World> getWorldRegistryKey() {
-        return ServerWorld.END;
+    public ResourceKey<Level> getWorldRegistryKey() {
+        return Level.END;
     }
 
 

@@ -2,9 +2,9 @@ package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -26,6 +26,6 @@ public abstract class ObtainItemsGoal extends Goal implements CycleItemTexturesP
         return getItems();
     }
 
-    public abstract boolean satisfiedBy(PlayerInventory playerInventory);
+    public abstract boolean satisfiedBy(Inventory playerInventory);
 
 }

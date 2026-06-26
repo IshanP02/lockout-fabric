@@ -3,25 +3,25 @@ package me.marin.lockout.mixin.server;
 import me.marin.lockout.CompassItemHandler;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ServerPlayerEntity.class)
+@Mixin(ServerPlayer.class)
 public class ServerPlayerEntityMixin {
 
-    @Inject(method = "dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At("HEAD"), cancellable = true)
     public void onDropItem(ItemStack stack, boolean throwRandomly, boolean retainOwnership, CallbackInfoReturnable<ItemEntity> cir) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getEntityWorld().isClient()) return;
+        Player player = (Player) (Object) this;
+        if (player.level().isClientSide()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
@@ -29,33 +29,32 @@ public class ServerPlayerEntityMixin {
 
         if (CompassItemHandler.isCompass(stack)) {
             cir.setReturnValue(null);
-            player.getInventory().insertStack(stack);
+            player.getInventory().add(stack);
         }
     }
 
-    @Inject(method = "onDeath", at = @At("HEAD"))
+    @Inject(method = "die", at = @At("HEAD"))
     public void onDeath(DamageSource damageSource, CallbackInfo ci) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        PlayerEntity player = (PlayerEntity) (Object) this;
-        if (player.getEntityWorld().isClient()) return;
+        Player player = (Player) (Object) this;
+        if (player.level().isClientSide()) return;
         
         // Track death time for respawn grace period
-        if (lockout.isLockoutPlayer(player.getUuid())) {
-            LockoutServer.playerDeathTimes.put(player.getUuid(), lockout.getTicks());
+        if (lockout.isLockoutPlayer(player.getUUID())) {
+            LockoutServer.playerDeathTimes.put(player.getUUID(), lockout.getTicks());
         }
 
-        int i = 0;
-        for (ItemStack item : player.getInventory().getMainStacks()) {
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = player.getInventory().getItem(i);
             if (CompassItemHandler.isCompass(item)) {
-                LockoutServer.compassHandler.compassSlots.put(player.getUuid(), i);
+                LockoutServer.compassHandler.compassSlots.put(player.getUUID(), i);
                 return;
             }
-            i++;
         }
         if (CompassItemHandler.isCompass(((PlayerInventoryAccessor)player.getInventory()).getEquipment().get(EquipmentSlot.OFFHAND))) {
-            LockoutServer.compassHandler.compassSlots.put(player.getUuid(), 40);
+            LockoutServer.compassHandler.compassSlots.put(player.getUUID(), 40);
         }
     }
 }

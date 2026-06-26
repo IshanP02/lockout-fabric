@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.opponent;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class OpponentHitByEggGoal extends Goal {
 
@@ -15,7 +15,7 @@ public class OpponentHitByEggGoal extends Goal {
         return "Opponent hit by Egg";
     }
 
-    private static final ItemStack ITEM_STACK = Items.EGG.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.EGG.getDefaultInstance();
     @Override
     public ItemStack getTextureItemStack() {
         return ITEM_STACK;

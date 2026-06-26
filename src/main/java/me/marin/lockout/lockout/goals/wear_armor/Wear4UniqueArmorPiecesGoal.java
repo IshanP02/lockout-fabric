@@ -3,12 +3,12 @@ package me.marin.lockout.lockout.goals.wear_armor;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.interfaces.WearArmorGoal;
 import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,7 +37,7 @@ public class Wear4UniqueArmorPiecesGoal extends WearArmorGoal {
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
 
         var armor = new ArrayList<ItemStack>();
         armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.HEAD));
@@ -83,7 +83,7 @@ public class Wear4UniqueArmorPiecesGoal extends WearArmorGoal {
     private int lastTickArmorChanged = -1;
     private Item armorPiece;
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         List<Item> itemType = ITEMS.get(tick % 240 / 60);
 
         int armorChange = tick / 60;
@@ -92,9 +92,9 @@ public class Wear4UniqueArmorPiecesGoal extends WearArmorGoal {
             armorPiece = itemType.get(Lockout.random.nextInt(itemType.size()));
         }
 
-        ItemStack stack = armorPiece.getDefaultStack();
+        ItemStack stack = armorPiece.getDefaultInstance();
 
-        context.drawItem(stack, x, y);
+        context.item(stack, x, y);
         return true;
     }
 

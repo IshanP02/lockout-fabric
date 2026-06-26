@@ -1,9 +1,9 @@
 package me.marin.lockout.lockout.goals.consume;
 
 import me.marin.lockout.lockout.interfaces.DrinkPotionGoal;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.core.Holder;
 
 public class DrinkWaterBottleGoal extends DrinkPotionGoal {
 
@@ -12,7 +12,7 @@ public class DrinkWaterBottleGoal extends DrinkPotionGoal {
     }
 
     @Override
-    public RegistryEntry<Potion> getPotion() {
+    public Holder<Potion> getPotion() {
         return Potions.WATER;
     }
 

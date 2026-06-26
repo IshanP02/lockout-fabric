@@ -9,8 +9,8 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.client.gui.BoardBuilderIO;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,7 +31,7 @@ public class CustomBoardFileArgumentType implements ArgumentType<String> {
         try {
             List<String> boardNames = BoardBuilderIO.INSTANCE.getSavedBoards();
             if (!boardNames.contains(s)) {
-                throw new SimpleCommandExceptionType(Text.of("Invalid board name.")).createWithContext(reader);
+                throw new SimpleCommandExceptionType(Component.literal("Invalid board name.")).createWithContext(reader);
             }
         } catch (IOException e) {
             Lockout.error(e);
@@ -43,7 +43,7 @@ public class CustomBoardFileArgumentType implements ArgumentType<String> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         try {
             List<String> boardNames = BoardBuilderIO.INSTANCE.getSavedBoards();
-            return CommandSource.suggestMatching(boardNames, builder);
+            return SharedSuggestionProvider.suggest(boardNames, builder);
         } catch (IOException e) {
             Lockout.error(e);
             return Suggestions.empty();

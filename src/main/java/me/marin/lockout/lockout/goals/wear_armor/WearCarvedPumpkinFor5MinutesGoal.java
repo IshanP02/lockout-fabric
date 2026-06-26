@@ -6,11 +6,11 @@ import me.marin.lockout.Utility;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.WearArmorPieceGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,14 +37,14 @@ public class WearCarvedPumpkinFor5MinutesGoal extends WearArmorPieceGoal impleme
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
         // This method is no longer used - logic moved to EndServerTickEventHandler for team-based additive behavior
         return false;
     }
 
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         LockoutTeamServer serverTeam = ((LockoutTeamServer) team);
 
@@ -60,12 +60,12 @@ public class WearCarvedPumpkinFor5MinutesGoal extends WearArmorPieceGoal impleme
         tooltip.add(" ");
         
         // Show player's time first
-        long playerTime = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(player.getUuid(), 0L));
+        long playerTime = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(player.getUUID(), 0L));
         tooltip.add("You: " + Utility.ticksToTimer(playerTime));
         
         // Then show teammates' times
         for (UUID uuid : serverTeam.getPlayers()) {
-            if (!Objects.equals(uuid, player.getUuid())) {
+            if (!Objects.equals(uuid, player.getUUID())) {
                 long timeWorn = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(uuid, 0L));
                 tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWorn));
             }
@@ -83,7 +83,7 @@ public class WearCarvedPumpkinFor5MinutesGoal extends WearArmorPieceGoal impleme
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             for (UUID uuid : ((LockoutTeamServer) team).getPlayers()) {
                 long timeWorn = Math.min(FIVE_MINUTES_TICKS, LockoutServer.lockout.pumpkinWearTime.getOrDefault(uuid, 0L));
-                tooltip.add(team.getColor() + ((LockoutTeamServer) team).getPlayerName(uuid) + Formatting.RESET + ": " + Utility.ticksToTimer(timeWorn));
+                tooltip.add(team.getColor() + ((LockoutTeamServer) team).getPlayerName(uuid) + ChatFormatting.RESET + ": " + Utility.ticksToTimer(timeWorn));
             }
         }
         tooltip.add(" ");

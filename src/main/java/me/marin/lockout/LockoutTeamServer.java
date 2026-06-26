@@ -7,10 +7,10 @@ import me.marin.lockout.network.UpdateTooltipPayload;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 
@@ -22,16 +22,16 @@ public class LockoutTeamServer extends LockoutTeam {
     @Getter
     private final MinecraftServer server;
 
-    public LockoutTeamServer(List<String> playerNames, Formatting formattingColor, MinecraftServer server) {
+    public LockoutTeamServer(List<String> playerNames, ChatFormatting formattingColor, MinecraftServer server) {
         super(playerNames, formattingColor);
         this.server = server;
 
-        PlayerManager manager = server.getPlayerManager();
+        PlayerList manager = server.getPlayerList();
 
         // All players from playerNames are online at this moment.
         for (String playerName : playerNames) {
-            this.players.add(manager.getPlayer(playerName).getUuid());
-            this.playerNameMap.put(manager.getPlayer(playerName).getUuid(), playerName);
+            this.players.add(manager.getPlayerByName(playerName).getUUID());
+            this.playerNameMap.put(manager.getPlayerByName(playerName).getUUID(), playerName);
         }
     }
 
@@ -41,9 +41,9 @@ public class LockoutTeamServer extends LockoutTeam {
 
     public void sendMessage(String message) {
         for (UUID uuid : players) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             if (player != null) {
-                player.sendMessage(Text.literal(message));
+                player.sendSystemMessage(Component.literal(message));
             }
         }
     }
@@ -53,7 +53,7 @@ public class LockoutTeamServer extends LockoutTeam {
     }
     public <T extends Goal & HasTooltipInfo> void sendTooltipUpdate(T goal, boolean updateSpectators) {
         for (UUID playerId : players) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerId);
+            ServerPlayer player = server.getPlayerList().getPlayer(playerId);
             if (player != null) {
                 List<String> tooltip = goal.getTooltip(this, player);
                 if (tooltip != null && !tooltip.isEmpty()) {
@@ -73,7 +73,7 @@ public class LockoutTeamServer extends LockoutTeam {
             return;
         }
         var payload = new UpdateTooltipPayload(goal.getId(), String.join("\n", spectatorTooltip));
-        for (ServerPlayerEntity spectator : Utility.getSpectators(LockoutServer.lockout, server)) {
+        for (ServerPlayer spectator : Utility.getSpectators(LockoutServer.lockout, server)) {
             ServerPlayNetworking.send(spectator, payload);
         }
     }

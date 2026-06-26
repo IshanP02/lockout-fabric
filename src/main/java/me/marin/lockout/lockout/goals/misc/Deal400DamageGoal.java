@@ -7,21 +7,21 @@ import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
 import me.marin.lockout.lockout.texture.TextureProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Deal400DamageGoal extends Goal implements TextureProvider, CustomTextureRenderer, HasTooltipInfo {
 
-    private final static ItemStack DISPLAY_ITEM_STACK = Items.RED_DYE.getDefaultStack();
+    private final static ItemStack DISPLAY_ITEM_STACK = Items.DYE.red().getDefaultInstance();
     static {
         DISPLAY_ITEM_STACK.setCount(64);
     }
@@ -39,21 +39,21 @@ public class Deal400DamageGoal extends Goal implements TextureProvider, CustomTe
         return DISPLAY_ITEM_STACK;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/deal_400_damage.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/deal_400_damage.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, DISPLAY_ITEM_STACK, x, y, "400");
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
+        context.itemDecorations(Minecraft.getInstance().font, DISPLAY_ITEM_STACK, x, y, "400");
         return true;
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         double damage = LockoutServer.lockout.damageDealt.getOrDefault(team, 0.0);
 
@@ -71,7 +71,7 @@ public class Deal400DamageGoal extends Goal implements TextureProvider, CustomTe
         tooltip.add(" ");
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             double damage = LockoutServer.lockout.damageDealt.getOrDefault(team, 0.0);
-            tooltip.add(team.getColor() + team.getDisplayName() + Formatting.RESET + ": " + Math.min(400, (int) damage) + "/400");
+            tooltip.add(team.getColor() + team.getDisplayName() + ChatFormatting.RESET + ": " + Math.min(400, (int) damage) + "/400");
         }
         tooltip.add(" ");
 

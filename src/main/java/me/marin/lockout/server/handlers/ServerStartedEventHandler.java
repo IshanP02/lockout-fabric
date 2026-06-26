@@ -5,12 +5,12 @@ import me.marin.lockout.generator.GoalRequirements;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.DyeColor;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.gen.structure.Structure;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 import static me.marin.lockout.server.LockoutServer.*;
 
@@ -36,24 +36,24 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
             AVAILABLE_DYE_COLORS.add(DyeColor.PINK);
             AVAILABLE_DYE_COLORS.add(DyeColor.PURPLE);
 
-            boolean hasCactus = locateBiome(server, BiomeKeys.DESERT).wasLocated();
-            hasCactus |= locateBiome(server, BiomeKeys.BADLANDS).wasLocated();
-            hasCactus |= locateBiome(server, BiomeKeys.ERODED_BADLANDS).wasLocated();
-            hasCactus |= locateBiome(server, BiomeKeys.WOODED_BADLANDS).wasLocated();
+            boolean hasCactus = locateBiome(server, Biomes.DESERT).wasLocated();
+            hasCactus |= locateBiome(server, Biomes.BADLANDS).wasLocated();
+            hasCactus |= locateBiome(server, Biomes.ERODED_BADLANDS).wasLocated();
+            hasCactus |= locateBiome(server, Biomes.WOODED_BADLANDS).wasLocated();
             if (hasCactus) {
                 AVAILABLE_DYE_COLORS.add(DyeColor.GREEN);
                 AVAILABLE_DYE_COLORS.add(DyeColor.LIME);
                 AVAILABLE_DYE_COLORS.add(DyeColor.CYAN);
             } else {
-                if (locateBiome(server, BiomeKeys.WARM_OCEAN).wasLocated()) {
+                if (locateBiome(server, Biomes.WARM_OCEAN).wasLocated()) {
                     AVAILABLE_DYE_COLORS.add(DyeColor.LIME);
                 }
             }
 
             boolean hasCocoaBeans;
-            hasCocoaBeans  = locateBiome(server, BiomeKeys.JUNGLE).wasLocated();
-            hasCocoaBeans |= locateBiome(server, BiomeKeys.BAMBOO_JUNGLE).wasLocated();
-            hasCocoaBeans |= locateBiome(server, BiomeKeys.JUNGLE).wasLocated();
+            hasCocoaBeans  = locateBiome(server, Biomes.JUNGLE).wasLocated();
+            hasCocoaBeans |= locateBiome(server, Biomes.BAMBOO_JUNGLE).wasLocated();
+            hasCocoaBeans |= locateBiome(server, Biomes.JUNGLE).wasLocated();
             if (hasCocoaBeans) {
                 AVAILABLE_DYE_COLORS.add(DyeColor.BROWN);
             }
@@ -62,11 +62,11 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
                 GoalRequirements goalRequirements = GoalRegistry.INSTANCE.getGoalGenerator(id);
                 if (goalRequirements == null) continue;
 
-                for (RegistryKey<Biome> biome : goalRequirements.getRequiredBiomes()) {
+                for (ResourceKey<Biome> biome : goalRequirements.getRequiredBiomes()) {
                     locateBiome(server, biome);
                 }
 
-                for (RegistryKey<Structure> structure : goalRequirements.getRequiredStructures()) {
+                for (ResourceKey<Structure> structure : goalRequirements.getRequiredStructures()) {
                     locateStructure(server, structure);
                 }
             }
@@ -74,16 +74,14 @@ public class ServerStartedEventHandler implements ServerLifecycleEvents.ServerSt
             Lockout.log("Located " + BIOME_LOCATE_DATA.size() + " biomes and " + STRUCTURE_LOCATE_DATA.size() + " structures in " + String.format("%.2f", ((end-start)/1000.0)) + "s!");
 
             // Freeze ticks until lockout/blackout game starts
-            var freezeCommand = "tick freeze";
-            var parseResults = server.getCommandManager().getDispatcher().parse(freezeCommand, server.getCommandSource());
-            server.getCommandManager().execute(parseResults, freezeCommand);
-            
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "tick freeze");
+
             // Send locate data to all connected clients
             me.marin.lockout.network.SyncLocateDataPayload payload = new me.marin.lockout.network.SyncLocateDataPayload(
                 new java.util.HashMap<>(BIOME_LOCATE_DATA),
                 new java.util.HashMap<>(STRUCTURE_LOCATE_DATA)
             );
-            for (net.minecraft.server.network.ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
                 net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, payload);
             }
         });

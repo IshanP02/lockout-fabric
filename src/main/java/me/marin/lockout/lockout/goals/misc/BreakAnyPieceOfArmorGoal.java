@@ -3,14 +3,14 @@ package me.marin.lockout.lockout.goals.misc;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.IncrementItemStatGoal;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.stat.Stat;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.stats.Stat;
+import net.minecraft.stats.Stats;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -52,35 +52,35 @@ public class BreakAnyPieceOfArmorGoal extends IncrementItemStatGoal implements C
     );
 
     private static final List<Stat<Item>> STATS = List.of(
-        Stats.BROKEN.getOrCreateStat(Items.LEATHER_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.LEATHER_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.LEATHER_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.LEATHER_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.COPPER_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.COPPER_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.COPPER_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.COPPER_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.CHAINMAIL_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.CHAINMAIL_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.CHAINMAIL_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.CHAINMAIL_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.IRON_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.IRON_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.IRON_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.IRON_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.GOLDEN_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.GOLDEN_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.GOLDEN_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.GOLDEN_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.DIAMOND_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.DIAMOND_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.DIAMOND_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.DIAMOND_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.NETHERITE_BOOTS),
-        Stats.BROKEN.getOrCreateStat(Items.NETHERITE_LEGGINGS),
-        Stats.BROKEN.getOrCreateStat(Items.NETHERITE_CHESTPLATE),
-        Stats.BROKEN.getOrCreateStat(Items.NETHERITE_HELMET),
-        Stats.BROKEN.getOrCreateStat(Items.TURTLE_HELMET)
+        Stats.ITEM_BROKEN.get(Items.LEATHER_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.LEATHER_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.LEATHER_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.LEATHER_HELMET),
+        Stats.ITEM_BROKEN.get(Items.COPPER_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.COPPER_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.COPPER_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.COPPER_HELMET),
+        Stats.ITEM_BROKEN.get(Items.CHAINMAIL_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.CHAINMAIL_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.CHAINMAIL_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.CHAINMAIL_HELMET),
+        Stats.ITEM_BROKEN.get(Items.IRON_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.IRON_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.IRON_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.IRON_HELMET),
+        Stats.ITEM_BROKEN.get(Items.GOLDEN_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.GOLDEN_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.GOLDEN_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.GOLDEN_HELMET),
+        Stats.ITEM_BROKEN.get(Items.DIAMOND_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.DIAMOND_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.DIAMOND_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.DIAMOND_HELMET),
+        Stats.ITEM_BROKEN.get(Items.NETHERITE_BOOTS),
+        Stats.ITEM_BROKEN.get(Items.NETHERITE_LEGGINGS),
+        Stats.ITEM_BROKEN.get(Items.NETHERITE_CHESTPLATE),
+        Stats.ITEM_BROKEN.get(Items.NETHERITE_HELMET),
+        Stats.ITEM_BROKEN.get(Items.TURTLE_HELMET)
         
     );
 
@@ -89,7 +89,7 @@ public class BreakAnyPieceOfArmorGoal extends IncrementItemStatGoal implements C
     }
 
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
      @Override
@@ -107,12 +107,12 @@ public class BreakAnyPieceOfArmorGoal extends IncrementItemStatGoal implements C
         return ITEMS;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/durability_bar.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/durability_bar.png");
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         int mod = tick % (60 * getItemsToDisplay().size());
-        context.drawItem(ITEMS.get(mod / 60).getDefaultStack(), x, y);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0,0, 16, 16, 16, 16);
+        context.item(ITEMS.get(mod / 60).getDefaultInstance(), x, y);
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0,0, 16, 16, 16, 16);
         return true;
     }
 

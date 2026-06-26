@@ -1,7 +1,7 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.world.effect.MobEffect;
 
 public abstract class StatusEffectGoal extends Goal {
 
@@ -9,6 +9,6 @@ public abstract class StatusEffectGoal extends Goal {
         super(id, data);
     }
 
-    public abstract StatusEffect getStatusEffect();
+    public abstract MobEffect getStatusEffect();
 
 }

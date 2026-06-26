@@ -10,8 +10,8 @@ import me.marin.lockout.LockoutTeamServer;
 import me.marin.lockout.Utility;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.ChatFormatting;
 
 public abstract class HaveEffectsAppliedForXMinutesGoal extends Goal implements HasTooltipInfo {
 
@@ -22,7 +22,7 @@ public abstract class HaveEffectsAppliedForXMinutesGoal extends Goal implements 
     public abstract int getMinutes();
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         LockoutTeamServer serverTeam = ((LockoutTeamServer) team);
         int requiredTicks = getMinutes() * 60 * 20;
@@ -39,12 +39,12 @@ public abstract class HaveEffectsAppliedForXMinutesGoal extends Goal implements 
         tooltip.add(" ");
         
         // Show player's time first
-        long playerTime = Math.min(requiredTicks, LockoutServer.lockout.appliedEffectsTime.getOrDefault(player.getUuid(), 0L));
+        long playerTime = Math.min(requiredTicks, LockoutServer.lockout.appliedEffectsTime.getOrDefault(player.getUUID(), 0L));
         tooltip.add("You: " + Utility.ticksToTimer(playerTime));
         
         // Then show teammates' times
         for (UUID uuid : serverTeam.getPlayers()) {
-            if (!Objects.equals(uuid, player.getUuid())) {
+            if (!Objects.equals(uuid, player.getUUID())) {
                 long timeWithEffects = Math.min(requiredTicks, LockoutServer.lockout.appliedEffectsTime.getOrDefault(uuid, 0L));
                 tooltip.add(serverTeam.getPlayerName(uuid) + ": " + Utility.ticksToTimer(timeWithEffects));
             }
@@ -62,7 +62,7 @@ public abstract class HaveEffectsAppliedForXMinutesGoal extends Goal implements 
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             for (UUID uuid : ((LockoutTeamServer) team).getPlayers()) {
                 long timeWithEffects = Math.min(getMinutes() * 60 * 20, LockoutServer.lockout.appliedEffectsTime.getOrDefault(uuid, 0L));
-                tooltip.add(team.getColor() + ((LockoutTeamServer) team).getPlayerName(uuid) + Formatting.RESET + ": " + Utility.ticksToTimer(timeWithEffects));
+                tooltip.add(team.getColor() + ((LockoutTeamServer) team).getPlayerName(uuid) + ChatFormatting.RESET + ": " + Utility.ticksToTimer(timeWithEffects));
             }
         }
         tooltip.add(" ");

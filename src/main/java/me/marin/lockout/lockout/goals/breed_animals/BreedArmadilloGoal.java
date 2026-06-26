@@ -3,8 +3,9 @@ package me.marin.lockout.lockout.goals.breed_animals;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.BreedAnimalGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.resources.Identifier;
 
 public class BreedArmadilloGoal extends BreedAnimalGoal implements TextureProvider {
 
@@ -19,10 +20,10 @@ public class BreedArmadilloGoal extends BreedAnimalGoal implements TextureProvid
 
     @Override
     public EntityType<?> getAnimal() {
-        return EntityType.ARMADILLO;
+        return EntityTypes.ARMADILLO;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/breed/breed_armadillo.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/breed/breed_armadillo.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

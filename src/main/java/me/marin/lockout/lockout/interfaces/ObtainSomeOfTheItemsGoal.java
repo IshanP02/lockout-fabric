@@ -1,10 +1,10 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public abstract class ObtainSomeOfTheItemsGoal extends ObtainItemsGoal implement
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
         List<Item> items = new ArrayList<>(getItems());
         int count = 0;
         for (ItemStack item : ((PlayerInventoryAccessor) playerInventory).getPlayerInventory()) {

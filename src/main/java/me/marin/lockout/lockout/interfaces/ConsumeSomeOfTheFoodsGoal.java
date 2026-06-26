@@ -2,8 +2,8 @@ package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public abstract class ConsumeSomeOfTheFoodsGoal extends Goal implements Requires
 
     @Override
     public ItemStack getTextureItemStack() {
-        return getItems().get(0).getDefaultStack();
+        return getItems().get(0).getDefaultInstance();
     }
 
     public abstract List<Item> getItems();

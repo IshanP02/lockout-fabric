@@ -1,10 +1,10 @@
 package me.marin.lockout.lockout.goals.advancement;
 
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class GetHiredHelpAdvancementGoal extends AdvancementGoal {
         super(id, data);
     }
 
-    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.of("minecraft", "adventure/summon_iron_golem"));
+    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.fromNamespaceAndPath("minecraft", "adventure/summon_iron_golem"));
     @Override
     public List<Identifier> getAdvancements() {
         return ADVANCEMENTS;
@@ -29,7 +29,7 @@ public class GetHiredHelpAdvancementGoal extends AdvancementGoal {
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
 }

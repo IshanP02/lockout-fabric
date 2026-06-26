@@ -10,21 +10,21 @@ import me.marin.lockout.network.LockoutGoalsTeamsPayload;
 import me.marin.lockout.network.UpdateTimerPayload;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import oshi.util.tuples.Pair;
 
-import net.minecraft.entity.damage.DamageType;
+import net.minecraft.world.damagesource.DamageType;
 
 import java.util.*;
 
@@ -32,7 +32,12 @@ public class Lockout {
 
     private static final Logger logger = LogManager.getLogger("Lockout");
     public static final Random random = new Random();
-    public static final int[] COLOR_ORDERS = new int[]{12, 9, 10, 14, 6, 13, 11, 5, 3, 2, 15, 4, 7, 1, 8, 0};
+    public static final ChatFormatting[] COLOR_ORDERS = {
+        ChatFormatting.RED, ChatFormatting.BLUE, ChatFormatting.GREEN, ChatFormatting.YELLOW,
+        ChatFormatting.GOLD, ChatFormatting.LIGHT_PURPLE, ChatFormatting.AQUA, ChatFormatting.DARK_PURPLE,
+        ChatFormatting.DARK_AQUA, ChatFormatting.DARK_GREEN, ChatFormatting.WHITE, ChatFormatting.DARK_RED,
+        ChatFormatting.GRAY, ChatFormatting.DARK_BLUE, ChatFormatting.DARK_GRAY, ChatFormatting.BLACK
+    };
 
     public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> bredAnimalTypes = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<EntityType<?>>> killedHostileTypes = new HashMap<>();
@@ -66,7 +71,7 @@ public class Lockout {
     public final Map<UUID, Integer> playerMobsKilled = new HashMap<>();
     public final Map<UUID, Double> playerDamageTaken = new HashMap<>();
     public final Map<UUID, Double> playerDamageDealt = new HashMap<>();
-    public final Map<UUID, Set<RegistryKey<DamageType>>> playerDamageTypesTaken = new HashMap<>();
+    public final Map<UUID, Set<ResourceKey<DamageType>>> playerDamageTypesTaken = new HashMap<>();
 
     // First contributor tracking (team -> item -> first player UUID who contributed it)
     public final Map<LockoutTeam, Map<Identifier, UUID>> firstBiomeContributor = new HashMap<>();
@@ -75,7 +80,7 @@ public class Lockout {
     public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstLookedAtMobContributor = new HashMap<>();
     public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstHostileKillContributor = new HashMap<>();
     public final Map<LockoutTeam, Map<Item, UUID>> firstFoodContributor = new HashMap<>();
-    public final Map<LockoutTeam, Map<RegistryKey<DamageType>, UUID>> firstDamageTypeContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<ResourceKey<DamageType>, UUID>> firstDamageTypeContributor = new HashMap<>();
 
     public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
     public final Map<UUID, Integer> distanceSwam = new HashMap<>();
@@ -83,7 +88,7 @@ public class Lockout {
     public final Map<LockoutTeam, Set<Identifier>> biomesVisited = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<Identifier>> visitedSpecificBiomes = new HashMap<>();
     public final Map<LockoutTeam, Integer> damageByUniqueSources = new HashMap<>();
-    public final Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> damageTypesTaken = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<ResourceKey<DamageType>>> damageTypesTaken = new HashMap<>();
     public final Map<UUID, Integer> distanceByBoat = new HashMap<>();
     public final Map<UUID, Integer> creeperKills = new LinkedHashMap<>();
 
@@ -148,8 +153,8 @@ public class Lockout {
         ticks++;
     }
 
-    public void completeGoal(Goal goal, PlayerEntity player) {
-        completeGoal(goal, player.getUuid());
+    public void completeGoal(Goal goal, Player player) {
+        completeGoal(goal, player.getUUID());
     }
     public void completeGoal(Goal goal, UUID playerId) {
         if (goal.isCompleted()) return;
@@ -181,21 +186,21 @@ public class Lockout {
         for (LockoutTeam lockoutTeam : teams) {
             if (!(lockoutTeam instanceof LockoutTeamServer lockoutTeamServer)) continue;
             if (Objects.equals(lockoutTeamServer, team)) {
-                lockoutTeamServer.sendMessage(Formatting.GREEN + message);
+                lockoutTeamServer.sendMessage(ChatFormatting.GREEN + message);
             } else {
-                lockoutTeamServer.sendMessage(Formatting.RED + message);
+                lockoutTeamServer.sendMessage(ChatFormatting.RED + message);
             }
         }
-        for (ServerPlayerEntity spectator : Utility.getSpectators(this, LockoutServer.server)) {
-            spectator.sendMessage(Text.literal(message));
+        for (ServerPlayer spectator : Utility.getSpectators(this, LockoutServer.server)) {
+            spectator.sendSystemMessage(Component.literal(message));
         }
 
         sendGoalCompletedPacket(goal, team, goalMessage);
         evaluateWinnerAndEndGame(team);
     }
 
-    public void complete1v1Goal(Goal goal, PlayerEntity player, boolean isWinner, String message) {
-        complete1v1Goal(goal, player.getUuid(), isWinner, message);
+    public void complete1v1Goal(Goal goal, Player player, boolean isWinner, String message) {
+        complete1v1Goal(goal, player.getUUID(), isWinner, message);
     }
     public void complete1v1Goal(Goal goal, UUID playerId, boolean isWinner, String message) {
         if (goal.isCompleted()) return;
@@ -228,10 +233,10 @@ public class Lockout {
             statistics.captureGoalContribution(goal, winnerTeam);
         }
 
-        winnerTeam.sendMessage(Formatting.GREEN + message);
-        loserTeam.sendMessage(Formatting.RED + message);
-        for (ServerPlayerEntity spectator : Utility.getSpectators(this, LockoutServer.server)) {
-            spectator.sendMessage(Text.literal(message));
+        winnerTeam.sendMessage(ChatFormatting.GREEN + message);
+        loserTeam.sendMessage(ChatFormatting.RED + message);
+        for (ServerPlayer spectator : Utility.getSpectators(this, LockoutServer.server)) {
+            spectator.sendSystemMessage(Component.literal(message));
         }
 
         sendGoalCompletedPacket(goal, winnerTeam, "");
@@ -257,7 +262,7 @@ public class Lockout {
 
         if (sendPacket) {
             var payload = new CompleteTaskPayload(goal.getId(), -1, "");
-            for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
+            for (ServerPlayer serverPlayer : LockoutServer.server.getPlayerList().getPlayers()) {
                 ServerPlayNetworking.send(serverPlayer, payload);
             }
         }
@@ -265,17 +270,17 @@ public class Lockout {
 
     private void sendGoalCompletedPacket(Goal goal, LockoutTeam team, String completionMessage) {
         var payload = new CompleteTaskPayload(goal.getId(), teams.indexOf(team), completionMessage);
-        for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer serverPlayer : LockoutServer.server.getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(serverPlayer, payload);
         }
     }
 
     private void evaluateWinnerAndEndGame(LockoutTeam team) {
-        PlayerManager playerManager = LockoutServer.server.getPlayerManager();
+        PlayerList playerManager = LockoutServer.server.getPlayerList();
 
         List<LockoutTeam> winners = new ArrayList<>();
         if (isWinner(team)) {
-            playerManager.broadcast(Text.literal(team.getDisplayName() + " wins."), false);
+            playerManager.broadcastSystemMessage(Component.literal(team.getDisplayName() + " wins."), false);
             winners.add(team);
             setRunning(false);
         } else {
@@ -283,14 +288,14 @@ public class Lockout {
                 int maxCompleted = teams.stream().max(Comparator.comparingInt(LockoutTeam::getPoints)).get().getPoints();
                 List<? extends LockoutTeam> winnerTeams = teams.stream().filter(t -> t.getPoints() == maxCompleted).toList();
                 winners.addAll(winnerTeams);
-                playerManager.broadcast(Text.literal("It's a tie! " + getWinnerTeamsString(winnerTeams) + " win."), false);
+                playerManager.broadcastSystemMessage(Component.literal("It's a tie! " + getWinnerTeamsString(winnerTeams) + " win."), false);
                 setRunning(false);
             }
         }
 
         if (!this.isRunning) {
             var payload = new EndLockoutPayload(winners.stream().mapToInt(winner -> teams.indexOf(winner)).toArray(), System.currentTimeMillis());
-            for (ServerPlayerEntity serverPlayer : LockoutServer.server.getPlayerManager().getPlayerList()) {
+            for (ServerPlayer serverPlayer : LockoutServer.server.getPlayerList().getPlayers()) {
                 ServerPlayNetworking.send(serverPlayer, payload);
             }
             
@@ -314,8 +319,8 @@ public class Lockout {
         this.hasStarted = hasStarted;
     }
 
-    public boolean isLockoutPlayer(PlayerEntity player) {
-        return isLockoutPlayer(player.getUuid());
+    public boolean isLockoutPlayer(Player player) {
+        return isLockoutPlayer(player.getUUID());
     }
     public boolean isLockoutPlayer(UUID playerId) {
         for (LockoutTeam team : teams) {

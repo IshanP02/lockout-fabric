@@ -3,11 +3,11 @@ package me.marin.lockout.lockout.goals.wear_armor;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.DyeColor;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.DyeColor;
 
 public class EquipHorseWithUniqueColoredLeatherArmorGoal extends Goal {
 
@@ -24,8 +24,8 @@ public class EquipHorseWithUniqueColoredLeatherArmorGoal extends Goal {
         DyeColor DYE_COLOR = GoalDataConstants.getDyeColor(parts[1]);
         COLOR = GoalDataConstants.getDyeColorValue(DYE_COLOR);
 
-        DISPLAY_ITEM_STACK = ITEM.getDefaultStack();
-        DISPLAY_ITEM_STACK.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(COLOR));
+        DISPLAY_ITEM_STACK = ITEM.getDefaultInstance();
+        DISPLAY_ITEM_STACK.set(DataComponents.DYED_COLOR, new DyedItemColor(COLOR));
 
         GOAL_NAME = "Equip Horse with " + GoalDataConstants.getDyeColorFormatted(DYE_COLOR) + " " + GoalDataConstants.getHorseArmorPieceFormatted(parts[0]);
     }

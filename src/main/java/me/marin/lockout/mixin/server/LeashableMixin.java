@@ -5,85 +5,62 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.LeashMobGoal;
 import me.marin.lockout.lockout.interfaces.LeashUniqueEntitiesAtOnceGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.Leashable;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Leashable;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Leashable.class)
-public interface LeashableMixin {
+@Mixin(Mob.class)
+public abstract class LeashableMixin {
 
-    @Inject(
-        method = "attachLeash",
-        at = @At("HEAD")
-    )
-    default void lockout$onAttachLeash(
-            Entity leashHolder,
-            boolean sendPacket,
-            CallbackInfo ci
-    ) {
-
+    @Inject(method = "setLeashData", at = @At("HEAD"))
+    public void lockout$onSetLeashData(Leashable.LeashData newData, CallbackInfo ci) {
         Entity entity = (Entity) (Object) this;
+        if (entity.level().isClientSide()) return;
 
-        // Server-only
-        if (entity.getEntityWorld().isClient()) return;
+        Leashable.LeashData oldData = ((Mob) (Object) this).getLeashData();
 
-        Lockout lockout = LockoutServer.lockout;
-        if (!Lockout.isLockoutRunning(lockout)) return;
-
-        // If leashing to a non-player (fence, etc.), remove from all players' tracking
-        if (!(leashHolder instanceof PlayerEntity)) {
-            // Remove this entity type from all players who were tracking it
-            LeashUniqueEntitiesAtOnceGoal.removeEntityTypeFromAllPlayers(entity.getType());
+        // Leash being removed — untrack from whichever player held it
+        if (newData == null && oldData != null && oldData.leashHolder instanceof Player player) {
+            LeashUniqueEntitiesAtOnceGoal.removeLeashedType(player.getUUID(), entity.getType());
             return;
         }
 
-        // Only player-held leashes from here on
-        PlayerEntity player = (PlayerEntity) leashHolder;
+        // Leash being attached
+        if (newData != null && newData.leashHolder != null) {
+            Lockout lockout = LockoutServer.lockout;
+            if (!Lockout.isLockoutRunning(lockout)) return;
 
-        // Track unique mob types for this player
-        LeashUniqueEntitiesAtOnceGoal.addLeashedType(player.getUuid(), entity.getType());
-        int uniqueCount = LeashUniqueEntitiesAtOnceGoal.getUniqueLeashedCount(player.getUuid());
-
-        // Check all goals
-        for (Goal goal : lockout.getBoard().getGoals()) {
-            if (goal == null || goal.isCompleted()) continue;
-
-            // Check specific mob leash goals
-            if (goal instanceof LeashMobGoal leashGoal) {
-                if (leashGoal.matchesMob(entity)) {
-                    lockout.completeGoal(goal, player);
-                    break;
-                }
+            // Leashed to a non-player (fence post, etc.) — remove from all player tracking
+            if (!(newData.leashHolder instanceof Player)) {
+                LeashUniqueEntitiesAtOnceGoal.removeEntityTypeFromAllPlayers(entity.getType());
+                return;
             }
-            
-            // Check unique types goal
-            if (goal instanceof LeashUniqueEntitiesAtOnceGoal uniqueGoal) {
-                if (uniqueCount >= uniqueGoal.getRequiredUniqueTypes()) {
-                    lockout.completeGoal(goal, player);
+
+            Player player = (Player) newData.leashHolder;
+            LeashUniqueEntitiesAtOnceGoal.addLeashedType(player.getUUID(), entity.getType());
+            int uniqueCount = LeashUniqueEntitiesAtOnceGoal.getUniqueLeashedCount(player.getUUID());
+
+            for (Goal goal : lockout.getBoard().getGoals()) {
+                if (goal == null || goal.isCompleted()) continue;
+
+                if (goal instanceof LeashMobGoal leashGoal) {
+                    if (leashGoal.matchesMob(entity)) {
+                        lockout.completeGoal(goal, player);
+                        break;
+                    }
+                }
+
+                if (goal instanceof LeashUniqueEntitiesAtOnceGoal uniqueGoal) {
+                    if (uniqueCount >= uniqueGoal.getRequiredUniqueTypes()) {
+                        lockout.completeGoal(goal, player);
+                    }
                 }
             }
         }
-    }
-
-    @Inject(
-        method = "detachLeash",
-        at = @At("HEAD")
-    )
-    default void lockout$onDetachLeash(CallbackInfo ci) {
-        Entity entity = (Entity) (Object) this;
-
-        // Server-only
-        if (entity.getEntityWorld().isClient()) return;
-
-        if (!(entity instanceof Leashable leashable)) return;
-        Entity leashHolder = leashable.getLeashHolder();
-        if (!(leashHolder instanceof PlayerEntity player)) return;
-
-        // Remove this mob type from player's tracked leashes
-        LeashUniqueEntitiesAtOnceGoal.removeLeashedType(player.getUuid(), entity.getType());
     }
 }

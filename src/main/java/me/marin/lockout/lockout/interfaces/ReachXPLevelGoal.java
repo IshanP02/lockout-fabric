@@ -2,7 +2,7 @@ package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public abstract class ReachXPLevelGoal extends Goal implements TextureProvider, RequiresAmount {
 

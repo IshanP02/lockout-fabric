@@ -1,20 +1,21 @@
 package me.marin.lockout.lockout.goals.ride;
 
 import me.marin.lockout.lockout.interfaces.RideEntityGoal;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class RidePigGoal extends RideEntityGoal {
 
-    private static final ItemStack ITEM_STACK = Items.CARROT_ON_A_STICK.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.CARROT_ON_A_STICK.getDefaultInstance();
     public RidePigGoal(String id, String data) {
         super(id, data);
     }
 
     @Override
     public EntityType<?> getEntityType() {
-        return EntityType.PIG;
+        return EntityTypes.PIG;
     }
 
     @Override

@@ -1,10 +1,10 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public abstract class ObtainAllItemsGoal extends ObtainItemsGoal {
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
         List<Item> items = new ArrayList<>(getItems());
 
         for (var equipmentSlot : EquipmentSlot.values())
@@ -45,11 +45,11 @@ public abstract class ObtainAllItemsGoal extends ObtainItemsGoal {
         return false;
     }
 
-    private boolean CheckRequiredAmount(ItemStack item, PlayerInventory playerInventory, List<Item> items)
+    private boolean CheckRequiredAmount(ItemStack item, Inventory playerInventory, List<Item> items)
     {
         var allow = true;
         if (this instanceof RequiresAmount requiresAmount) {
-            allow = playerInventory.count(item.getItem()) >= requiresAmount.getAmount();
+            allow = playerInventory.countItem(item.getItem()) >= requiresAmount.getAmount();
         }
         if (allow && items.remove(item.getItem())) {
             return items.isEmpty();

@@ -6,13 +6,13 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class Boat2KmGoal extends Goal implements CustomTextureRenderer, HasToolt
     private static final int TWO_KILOMETER = 100 * 2000; // in cm
 
     private static final Item ITEM = Items.OAK_BOAT;
-    private static final ItemStack ITEM_STACK = Items.OAK_BOAT.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.OAK_BOAT.getDefaultInstance();
     public Boat2KmGoal(String id, String data) {
         super(id, data);
     }
@@ -36,20 +36,20 @@ public class Boat2KmGoal extends Goal implements CustomTextureRenderer, HasToolt
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawItem(ITEM_STACK, x, y);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer,  ITEM_STACK, x, y, "2km");
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.item(ITEM_STACK, x, y);
+        context.itemDecorations(Minecraft.getInstance().font,  ITEM_STACK, x, y, "2km");
         return true;
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
-        int distance = Math.min(TWO_KILOMETER, LockoutServer.lockout.distanceByBoat.getOrDefault(player.getUuid(), 0));
+        int distance = Math.min(TWO_KILOMETER, LockoutServer.lockout.distanceByBoat.getOrDefault(player.getUUID(), 0));
         LockoutTeamServer serverTeam = (LockoutTeamServer) team;
 
         tooltip.add(" ");
@@ -57,7 +57,7 @@ public class Boat2KmGoal extends Goal implements CustomTextureRenderer, HasToolt
         if (serverTeam.getPlayers().size() > 1) {
             tooltip.add(" ");
             for (UUID uuid : serverTeam.getPlayers()) {
-                if (!Objects.equals(uuid, player.getUuid())) {
+                if (!Objects.equals(uuid, player.getUUID())) {
                     int pdist = Math.min(TWO_KILOMETER, LockoutServer.lockout.distanceByBoat.getOrDefault(uuid, 0));
                     tooltip.add(serverTeam.getPlayerName(uuid) + ": " + String.format("%.2fm", pdist / 100.0));
                 }
@@ -79,7 +79,7 @@ public class Boat2KmGoal extends Goal implements CustomTextureRenderer, HasToolt
             for (UUID uuid : serverTeam.getPlayers()) {
                 max = Math.max(max, LockoutServer.lockout.distanceByBoat.getOrDefault(uuid, 0));
             }
-            tooltip.add(t.getColor() + t.getDisplayName() + Formatting.RESET + ": " + String.format("%.2fm", Math.min(TWO_KILOMETER, max) / 100.0));
+            tooltip.add(t.getColor() + t.getDisplayName() + ChatFormatting.RESET + ": " + String.format("%.2fm", Math.min(TWO_KILOMETER, max) / 100.0));
         }
         tooltip.add(" ");
 

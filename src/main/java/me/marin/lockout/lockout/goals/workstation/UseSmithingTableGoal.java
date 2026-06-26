@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.workstation;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class UseSmithingTableGoal extends Goal {
 
@@ -15,7 +15,7 @@ public class UseSmithingTableGoal extends Goal {
         return "Use Smithing Table";
     }
 
-    private static final ItemStack ITEM_STACK = Items.SMITHING_TABLE.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.SMITHING_TABLE.getDefaultInstance();
     @Override
     public ItemStack getTextureItemStack() {
         return ITEM_STACK;

@@ -3,7 +3,7 @@ package me.marin.lockout.client.gui;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.marin.lockout.json.JSONBoard;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class BoardBuilderIO {
 
-    public static final Path DIRECTORY = MinecraftClient.getInstance().runDirectory.toPath().resolve("lockout-boards");
+    public static final Path DIRECTORY = Minecraft.getInstance().gameDirectory.toPath().resolve("lockout-boards");
     public static final String FILE_EXTENSION = ".json";
 
     public static final BoardBuilderIO INSTANCE = new BoardBuilderIO();

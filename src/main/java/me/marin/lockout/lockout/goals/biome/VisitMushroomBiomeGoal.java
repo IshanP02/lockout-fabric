@@ -1,15 +1,15 @@
 package me.marin.lockout.lockout.goals.biome;
 
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public class VisitMushroomBiomeGoal extends VisitBiomeGoal {
 
-    private static final ItemStack ITEM_STACK = Items.MYCELIUM.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.MYCELIUM.getDefaultInstance();
 
     public VisitMushroomBiomeGoal(String id, String data) {
         super(id, data);
@@ -25,7 +25,7 @@ public class VisitMushroomBiomeGoal extends VisitBiomeGoal {
         return ITEM_STACK;
     }
 
-    private static final List<Identifier> BIOME_LIST = List.of(Identifier.of("minecraft", "mushroom_fields"));
+    private static final List<Identifier> BIOME_LIST = List.of(Identifier.fromNamespaceAndPath("minecraft", "mushroom_fields"));
     @Override
     public List<Identifier> getBiomes() {
         return BIOME_LIST;

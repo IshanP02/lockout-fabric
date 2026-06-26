@@ -55,7 +55,7 @@ import me.marin.lockout.lockout.goals.tame_animal.TameWolfGoal;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.goals.wear_armor.*;
 import me.marin.lockout.lockout.goals.workstation.*;
-import net.minecraft.util.DyeColor;
+import net.minecraft.world.item.DyeColor;
 
 import me.marin.lockout.lockout.goals.biome.unique.Visit10UniqueBiomesGoal;
 import me.marin.lockout.lockout.goals.biome.unique.Visit15UniqueBiomesGoal;
@@ -64,8 +64,8 @@ import me.marin.lockout.lockout.goals.biome.unique.Visit20UniqueBiomesGoal;
 import java.util.List;
 
 import static me.marin.lockout.lockout.GoalRegistry.INSTANCE;
-import static net.minecraft.world.biome.BiomeKeys.*;
-import static net.minecraft.world.gen.structure.StructureKeys.*;
+import static net.minecraft.world.level.biome.Biomes.*;
+import static net.minecraft.world.level.levelgen.structure.BuiltinStructures.*;
 
 public class DefaultGoalRegister {
 
@@ -210,7 +210,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.LOOK_AT_25_UNIQUE_MOBS, LookAt25UniqueMobsGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_ENDERMAN, LookAtEndermanGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_GUARDIAN, LookAtGuardianGoal.class, new GoalRequirements.Builder()
-                        .structures(List.of(MONUMENT))
+                        .structures(List.of(OCEAN_MONUMENT))
                         .build()
                 );
         INSTANCE.register(GoalType.LOOK_AT_HORSE, LookAtHorseGoal.class);
@@ -291,7 +291,7 @@ public class DefaultGoalRegister {
                 .build()
         );
         INSTANCE.register(GoalType.KILL_ALL_RAID_MOBS, KillAllRaidMobsGoal.class, new GoalRequirements.Builder()
-                        .structures(List.of(PILLAGER_OUTPOST, MANSION))
+                        .structures(List.of(PILLAGER_OUTPOST, WOODLAND_MANSION))
                         .build()
                 );
         INSTANCE.register(GoalType.KILL_7_UNIQUE_HOSTILE_MOBS, Kill7UniqueHostileMobsGoal.class);
@@ -325,12 +325,12 @@ public class DefaultGoalRegister {
                         })
                 );
         INSTANCE.register(GoalType.KILL_ELDER_GUARDIAN, KillElderGuardianGoal.class, new GoalRequirements.Builder()
-                        .structures(List.of(MONUMENT))
+                        .structures(List.of(OCEAN_MONUMENT))
                         .build()
                 );
         INSTANCE.register(GoalType.KILL_GHAST, KillGhastGoal.class);
         INSTANCE.register(GoalType.KILL_GUARDIAN, KillGuardianGoal.class, new GoalRequirements.Builder()
-                        .structures(List.of(MONUMENT))
+                        .structures(List.of(OCEAN_MONUMENT))
                         .build()
                 );
         INSTANCE.register(GoalType.KILL_PARCHED, KillParchedGoal.class, new GoalRequirements.Builder()
@@ -529,12 +529,12 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.OBTAIN_SEA_LANTERN, ObtainSeaLanternGoal.class,
-                        GoalRequirements.MONUMENT);
+                        GoalRequirements.OCEAN_MONUMENT);
         INSTANCE.register(GoalType.OBTAIN_SMOOTH_QUARTZ_STAIRS, ObtainSmoothQuartzStairsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SOUL_CAMPFIRE, ObtainSoulCampfireGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SOUL_LANTERN, ObtainSoulLanternGoal.class);
         INSTANCE.register(GoalType.OBTAIN_SPONGE, ObtainSpongeGoal.class,
-                        GoalRequirements.MONUMENT);
+                        GoalRequirements.OCEAN_MONUMENT);
         INSTANCE.register(GoalType.OBTAIN_TINTED_GLASS, ObtainTintedGlassGoal.class);
         INSTANCE.register(GoalType.OBTAIN_TNT, ObtainTNTGoal.class);
         INSTANCE.register(GoalType.OBTAIN_TROPICAL_FISH_BUCKET, ObtainBucketOfTropicalFishGoal.class, new GoalRequirements.Builder()
@@ -587,7 +587,7 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.GET_MINING_FATIGUE_STATUS_EFFECT, GetMiningFatigueStatusEffectGoal.class,
-                        GoalRequirements.MONUMENT);
+                        GoalRequirements.OCEAN_MONUMENT);
         INSTANCE.register(GoalType.GET_NAUSEA_STATUS_EFFECT, GetNauseaStatusEffectGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(WARM_OCEAN, DEEP_LUKEWARM_OCEAN, LUKEWARM_OCEAN))
                         .build()

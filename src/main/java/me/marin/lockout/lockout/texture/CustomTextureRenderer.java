@@ -1,7 +1,7 @@
 package me.marin.lockout.lockout.texture;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public interface CustomTextureRenderer {
 
@@ -11,6 +11,6 @@ public interface CustomTextureRenderer {
      * @return Whether the texture was rendered successfully. If this method fails to render (and false is returned),
      *         {@link Goal#getTextureItemStack} will be rendered instead.
      */
-    boolean renderTexture(DrawContext context, int x, int y, int tick);
+    boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick);
 
 }

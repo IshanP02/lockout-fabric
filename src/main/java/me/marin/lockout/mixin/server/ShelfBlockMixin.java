@@ -4,18 +4,18 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.misc.FillShelfWithShelvesGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShelfBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.ShelfBlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.ShelfBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,18 +24,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ShelfBlock.class)
 public class ShelfBlockMixin {
 
-    @Inject(method = "onUseWithItem", at = @At("RETURN"))
+    @Inject(method = "useItemOn", at = @At("RETURN"))
     private void onInsertShelf(
         ItemStack stack,
         BlockState state,
-        World world,
+        Level world,
         BlockPos pos,
-        PlayerEntity player,
-        Hand hand,
+        Player player,
+        InteractionHand hand,
         BlockHitResult hit,
-        CallbackInfoReturnable<ActionResult> cir
+        CallbackInfoReturnable<InteractionResult> cir
     ) {
-        if (world.isClient()) return;
+        if (world.isClientSide()) return;
         
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
@@ -43,12 +43,12 @@ public class ShelfBlockMixin {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (!(blockEntity instanceof ShelfBlockEntity shelf)) return;
         
-        if (!cir.getReturnValue().isAccepted()) return;
+        if (!cir.getReturnValue().consumesAction()) return;
 
         // Check if all 3 slots are filled with shelves (any wood variant)
         int shelfCount = 0;
-        for (int i = 0; i < shelf.size(); i++) {
-            ItemStack slotStack = shelf.getStack(i);
+        for (int i = 0; i < shelf.getContainerSize(); i++) {
+            ItemStack slotStack = shelf.getItem(i);
             if (!slotStack.isEmpty() && isShelf(slotStack)) {
                 shelfCount++;
             }
@@ -68,17 +68,17 @@ public class ShelfBlockMixin {
     }
 
     private boolean isShelf(ItemStack stack) {
-        return stack.isOf(Items.OAK_SHELF) ||
-               stack.isOf(Items.SPRUCE_SHELF) ||
-               stack.isOf(Items.BIRCH_SHELF) ||
-               stack.isOf(Items.JUNGLE_SHELF) ||
-               stack.isOf(Items.ACACIA_SHELF) ||
-               stack.isOf(Items.DARK_OAK_SHELF) ||
-               stack.isOf(Items.MANGROVE_SHELF) ||
-               stack.isOf(Items.CHERRY_SHELF) ||
-               stack.isOf(Items.CRIMSON_SHELF) ||
-               stack.isOf(Items.WARPED_SHELF) ||
-               stack.isOf(Items.PALE_OAK_SHELF) ||
-               stack.isOf(Items.BAMBOO_SHELF);
+        return stack.is(Items.OAK_SHELF) ||
+               stack.is(Items.SPRUCE_SHELF) ||
+               stack.is(Items.BIRCH_SHELF) ||
+               stack.is(Items.JUNGLE_SHELF) ||
+               stack.is(Items.ACACIA_SHELF) ||
+               stack.is(Items.DARK_OAK_SHELF) ||
+               stack.is(Items.MANGROVE_SHELF) ||
+               stack.is(Items.CHERRY_SHELF) ||
+               stack.is(Items.CRIMSON_SHELF) ||
+               stack.is(Items.WARPED_SHELF) ||
+               stack.is(Items.PALE_OAK_SHELF) ||
+               stack.is(Items.BAMBOO_SHELF);
     }
 }

@@ -1,16 +1,16 @@
 package me.marin.lockout.lockout.goals.obtain;
 
 import me.marin.lockout.lockout.interfaces.ObtainSomeOfTheItemsGoal;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
 public class ObtainPotterySherdGoal extends ObtainSomeOfTheItemsGoal {
 
-    private static final ItemStack ITEM_STACK = Items.OAK_SAPLING.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.OAK_SAPLING.getDefaultInstance();
     static {
         ITEM_STACK.setCount(1);
     }
@@ -60,7 +60,7 @@ public class ObtainPotterySherdGoal extends ObtainSomeOfTheItemsGoal {
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         super.renderTexture(context, x, y, tick);
         return true;
     }

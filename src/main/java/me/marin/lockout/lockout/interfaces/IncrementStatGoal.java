@@ -1,7 +1,7 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 

@@ -1,15 +1,15 @@
 package me.marin.lockout.lockout.goals.biome;
 
 import me.marin.lockout.lockout.interfaces.VisitBiomeGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public class VisitBadlandsBiomeGoal extends VisitBiomeGoal {
 
-    private static final ItemStack ITEM_STACK = Items.TERRACOTTA.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.TERRACOTTA.getDefaultInstance();
 
     public VisitBadlandsBiomeGoal(String id, String data) {
         super(id, data);
@@ -26,9 +26,9 @@ public class VisitBadlandsBiomeGoal extends VisitBiomeGoal {
     }
 
     private static final List<Identifier> BIOME_LIST = List.of(
-            Identifier.of("minecraft", "badlands"),
-            Identifier.of("minecraft", "eroded_badlands"),
-            Identifier.of("minecraft", "wooded_badlands")
+            Identifier.fromNamespaceAndPath("minecraft", "badlands"),
+            Identifier.fromNamespaceAndPath("minecraft", "eroded_badlands"),
+            Identifier.fromNamespaceAndPath("minecraft", "wooded_badlands")
     );
     @Override
     public List<Identifier> getBiomes() {

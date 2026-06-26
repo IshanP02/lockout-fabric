@@ -3,16 +3,16 @@ package me.marin.lockout.lockout.goals.misc;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 public class ReachBedrockGoal extends Goal implements CustomTextureRenderer {
 
-    private static final ItemStack ITEM_STACK = Items.BEDROCK.getDefaultStack();
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/down_arrow.png");
+    private static final ItemStack ITEM_STACK = Items.BEDROCK.getDefaultInstance();
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/down_arrow.png");
 
     public ReachBedrockGoal(String id, String data) {
         super(id, data);
@@ -29,9 +29,9 @@ public class ReachBedrockGoal extends Goal implements CustomTextureRenderer {
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawItem(ITEM_STACK, x, y);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.item(ITEM_STACK, x, y);
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
         return true;
     }
 

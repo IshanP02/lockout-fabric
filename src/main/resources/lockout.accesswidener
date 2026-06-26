@@ -1,17 +1,13 @@
-accessWidener v2 named
+accessWidener v2 official
 
-accessible class net/minecraft/server/command/AdvancementCommand$Operation
-accessible class net/minecraft/screen/BrewingStandScreenHandler$PotionSlot
+accessible class net/minecraft/server/commands/AdvancementCommands$Action
+accessible method net/minecraft/server/level/ServerPlayerGameMode setGameModeForPlayer (Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V
+accessible field net/minecraft/server/level/ServerPlayer gameMode Lnet/minecraft/server/level/ServerPlayerGameMode;
+accessible class net/minecraft/world/inventory/BrewingStandMenu$PotionSlot
 
-accessible field net/minecraft/client/Keyboard debugCrashStartTime J
-accessible field net/minecraft/client/Keyboard client Lnet/minecraft/client/MinecraftClient;
-accessible field net/minecraft/screen/StonecutterScreenHandler outputSlot Lnet/minecraft/screen/slot/Slot;
-accessible field net/minecraft/entity/damage/DamageTracker recentDamage Ljava/util/List;
-accessible field net/minecraft/entity/player/HungerManager exhaustion F
-accessible method net/minecraft/server/command/LocateCommand executeLocateBiome (Lnet/minecraft/server/command/ServerCommandSource;Lnet/minecraft/command/argument/RegistryEntryPredicateArgumentType$EntryPredicate;)I
-accessible method net/minecraft/server/command/LocateCommand getDistance (IIII)F
-accessible method net/minecraft/server/command/LocateCommand getStructureListForPredicate (Lnet/minecraft/command/argument/RegistryPredicateArgumentType$RegistryPredicate;Lnet/minecraft/registry/Registry;)Ljava/util/Optional;
-accessible field net/minecraft/server/world/ServerWorld worldProperties Lnet/minecraft/world/level/ServerWorldProperties;
-accessible class net/minecraft/village/raid/Raid$Member
-accessible field net/minecraft/client/gui/widget/ScrollableWidget scrollbarDragged Z
-accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbHeight ()I
+accessible field net/minecraft/client/KeyboardHandler debugCrashKeyTime J
+accessible field net/minecraft/client/KeyboardHandler minecraft Lnet/minecraft/client/Minecraft;
+accessible field net/minecraft/world/inventory/StonecutterMenu resultSlot Lnet/minecraft/world/inventory/Slot;
+accessible field net/minecraft/world/food/FoodData exhaustionLevel F
+
+accessible class net/minecraft/world/entity/raid/Raid$RaiderType

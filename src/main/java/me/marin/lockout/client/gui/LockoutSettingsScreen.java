@@ -2,15 +2,15 @@ package me.marin.lockout.client.gui;
 
 import me.marin.lockout.LockoutConfig;
 import me.marin.lockout.client.LockoutClient;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -20,12 +20,12 @@ import java.util.Map;
 public class LockoutSettingsScreen extends Screen {
 
     private final Screen parent;
-    private SliderWidget scaleSlider;
-    private ButtonWidget boardPositionButton;
-    private KeyBinding editingKeyBinding;
-    private final Map<KeyBinding, ButtonWidget> keybindButtons = new HashMap<>();
-    private final Map<KeyBinding, ButtonWidget> resetButtons = new HashMap<>();
-    private final Map<KeyBinding, Integer> keybindRowY = new HashMap<>();
+    private AbstractSliderButton scaleSlider;
+    private Button boardPositionButton;
+    private KeyMapping editingKeyBinding;
+    private final Map<KeyMapping, Button> keybindButtons = new HashMap<>();
+    private final Map<KeyMapping, Button> resetButtons = new HashMap<>();
+    private final Map<KeyMapping, Integer> keybindRowY = new HashMap<>();
     private KeybindOption[] keybindOptions = new KeybindOption[0];
     private int keyLabelX;
 
@@ -35,10 +35,10 @@ public class LockoutSettingsScreen extends Screen {
     private static final int BUTTON_HEIGHT = 20;
     private static final int RESET_BUTTON_WIDTH = 50;
 
-    private record KeybindOption(String label, KeyBinding binding, InputUtil.Key defaultKey) {}
+    private record KeybindOption(String label, KeyMapping binding, InputConstants.Key defaultKey) {}
 
     public LockoutSettingsScreen(Screen parent) {
-        super(Text.literal("Lockout Settings"));
+        super(Component.literal("Lockout Settings"));
         this.parent = parent;
     }
 
@@ -54,13 +54,13 @@ public class LockoutSettingsScreen extends Screen {
         double currentScale = Math.max(0.5, Math.min(2.0, LockoutConfig.getInstance().boardScale));
         double sliderValue = Math.max(0.0, Math.min(1.0, (currentScale - 0.5) / 1.5));
 
-        scaleSlider = new SliderWidget(leftX, y, COLUMN_WIDTH, BUTTON_HEIGHT,
-            Text.literal("Board Scale: " + String.format("%.1fx", currentScale)), sliderValue) {
+        scaleSlider = new AbstractSliderButton(leftX, y, COLUMN_WIDTH, BUTTON_HEIGHT,
+            Component.literal("Board Scale: " + String.format("%.1fx", currentScale)), sliderValue) {
             @Override
             protected void updateMessage() {
                 double scale = 0.5 + (this.value * 1.5);
                 scale = Math.round(scale * 10.0) / 10.0;
-                this.setMessage(Text.literal("Board Scale: " + String.format("%.1fx", scale)));
+                this.setMessage(Component.literal("Board Scale: " + String.format("%.1fx", scale)));
             }
 
             @Override
@@ -72,12 +72,12 @@ public class LockoutSettingsScreen extends Screen {
                 LockoutConfig.save();
             }
         };
-        scaleSlider.setTooltip(Tooltip.of(Text.literal("Adjust board display size (0.5x - 2.0x)")));
-        this.addDrawableChild(scaleSlider);
+        scaleSlider.setTooltip(Tooltip.create(Component.literal("Adjust board display size (0.5x - 2.0x)")));
+        this.addRenderableWidget(scaleSlider);
 
         LockoutConfig.BoardPosition currentPosition = LockoutConfig.getInstance().boardPosition;
         String positionText = currentPosition == LockoutConfig.BoardPosition.LEFT ? "Left" : "Right";
-        boardPositionButton = ButtonWidget.builder(Text.literal(positionText), (button) -> {
+        boardPositionButton = Button.builder(Component.literal(positionText), (button) -> {
             LockoutConfig.BoardPosition oldPosition = LockoutConfig.getInstance().boardPosition;
             LockoutConfig.BoardPosition newPosition = oldPosition == LockoutConfig.BoardPosition.LEFT
                 ? LockoutConfig.BoardPosition.RIGHT 
@@ -85,26 +85,26 @@ public class LockoutSettingsScreen extends Screen {
             LockoutConfig.getInstance().boardPosition = newPosition;
             LockoutConfig.save();
             String newText = newPosition == LockoutConfig.BoardPosition.LEFT ? "Left" : "Right";
-            button.setMessage(Text.literal(newText));
-        }).dimensions(rightX, y, COLUMN_WIDTH, BUTTON_HEIGHT).tooltip(Tooltip.of(Text.literal("Toggle board position between Left and Right"))).build();
-        this.addDrawableChild(boardPositionButton);
+            button.setMessage(Component.literal(newText));
+        }).pos(rightX, y).width( COLUMN_WIDTH).tooltip(Tooltip.create(Component.literal("Toggle board position between Left and Right"))).build();
+        this.addRenderableWidget(boardPositionButton);
 
         y += ROW_HEIGHT + 8;
 
-        List<KeyBinding> bindings = LockoutClient.getLockoutKeyBindings();
+        List<KeyMapping> bindings = LockoutClient.getLockoutKeyBindings();
         keybindOptions = new KeybindOption[] {
-            new KeybindOption("Open Board", getBinding(bindings, 0), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_B)),
-            new KeybindOption("Open Pick/Ban List", getBinding(bindings, 1), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_P)),
-            new KeybindOption("Toggle Board Visibility", getBinding(bindings, 2), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_H)),
-            new KeybindOption("Toggle Section View", getBinding(bindings, 3), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_O)),
-            new KeybindOption("Next Section", getBinding(bindings, 4), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_V)),
-            new KeybindOption("Toggle Auto-Cycle Sections", getBinding(bindings, 5), InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_M))
+            new KeybindOption("Open Board", getBinding(bindings, 0), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_B)),
+            new KeybindOption("Open Pick/Ban List", getBinding(bindings, 1), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_P)),
+            new KeybindOption("Toggle Board Visibility", getBinding(bindings, 2), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_H)),
+            new KeybindOption("Toggle Section View", getBinding(bindings, 3), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_O)),
+            new KeybindOption("Next Section", getBinding(bindings, 4), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_V)),
+            new KeybindOption("Toggle Auto-Cycle Sections", getBinding(bindings, 5), InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_M))
         };
 
         int maxLabelWidth = 0;
         for (KeybindOption option : keybindOptions) {
             if (option.binding() != null) {
-                maxLabelWidth = Math.max(maxLabelWidth, this.textRenderer.getWidth(option.label()));
+                maxLabelWidth = Math.max(maxLabelWidth, this.font.width(option.label()));
             }
         }
 
@@ -123,36 +123,35 @@ public class LockoutSettingsScreen extends Screen {
             int rowY = y + i * ROW_HEIGHT;
             keybindRowY.put(option.binding(), rowY);
 
-            ButtonWidget keybindButton = ButtonWidget.builder(Text.empty(), button -> {
+            Button keybindButton = Button.builder(Component.empty(), button -> {
                 editingKeyBinding = option.binding();
                 updateKeybindButtonMessages();
-            }).dimensions(keyButtonX, rowY, keyButtonWidth, BUTTON_HEIGHT).build();
+            }).pos(keyButtonX, rowY).width( keyButtonWidth).build();
 
-            ButtonWidget resetButton = ButtonWidget.builder(Text.literal("Reset"), button -> {
-                option.binding().setBoundKey(option.defaultKey());
-                KeyBinding.updateKeysByCode();
+            Button resetButton = Button.builder(Component.literal("Reset"), button -> {
+                option.binding().setKey(option.defaultKey());
                 if (editingKeyBinding == option.binding()) {
                     editingKeyBinding = null;
                 }
                 updateKeybindButtonMessages();
-            }).dimensions(resetButtonX, rowY, RESET_BUTTON_WIDTH, BUTTON_HEIGHT).build();
+            }).pos(resetButtonX, rowY).width( RESET_BUTTON_WIDTH).build();
 
             keybindButtons.put(option.binding(), keybindButton);
             resetButtons.put(option.binding(), resetButton);
-            this.addDrawableChild(keybindButton);
-            this.addDrawableChild(resetButton);
+            this.addRenderableWidget(keybindButton);
+            this.addRenderableWidget(resetButton);
         }
 
         updateKeybindButtonMessages();
 
         int doneY = y + keybindOptions.length * ROW_HEIGHT + 12;
-        ButtonWidget doneButton = ButtonWidget.builder(Text.literal("Done"), (button) -> {
-            this.close();
-        }).dimensions(centerX - 100, doneY, 200, BUTTON_HEIGHT).build();
-        this.addDrawableChild(doneButton);
+        Button doneButton = Button.builder(Component.literal("Done"), (button) -> {
+            this.onClose();
+        }).pos(centerX - 100, doneY).width( 200).build();
+        this.addRenderableWidget(doneButton);
     }
 
-    private static KeyBinding getBinding(List<KeyBinding> bindings, int index) {
+    private static KeyMapping getBinding(List<KeyMapping> bindings, int index) {
         if (index < 0 || index >= bindings.size()) {
             return null;
         }
@@ -165,64 +164,63 @@ public class LockoutSettingsScreen extends Screen {
                 continue;
             }
 
-            ButtonWidget widget = keybindButtons.get(option.binding());
+            Button widget = keybindButtons.get(option.binding());
             if (widget == null) {
                 continue;
             }
 
-            String message = option.binding().getBoundKeyLocalizedText().getString();
+            String message = option.binding().getTranslatedKeyMessage().getString();
             if (editingKeyBinding == option.binding()) {
                 message = "> " + message + " <";
             }
-            widget.setMessage(Text.literal(message));
+            widget.setMessage(Component.literal(message));
 
-            ButtonWidget resetButton = resetButtons.get(option.binding());
+            Button resetButton = resetButtons.get(option.binding());
             if (resetButton != null) {
                 resetButton.active = !isBoundTo(option.binding(), option.defaultKey());
             }
         }
     }
 
-    private static boolean isBoundTo(KeyBinding binding, InputUtil.Key key) {
-        return binding.getBoundKeyLocalizedText().getString().equals(key.getLocalizedText().getString());
+    private static boolean isBoundTo(KeyMapping binding, InputConstants.Key key) {
+        return binding.getTranslatedKeyMessage().getString().equals(key.getDisplayName().getString());
     }
 
-    private void setBinding(InputUtil.Key key) {
+    private void setBinding(InputConstants.Key key) {
         if (editingKeyBinding == null) {
             return;
         }
 
-        editingKeyBinding.setBoundKey(key);
-        KeyBinding.updateKeysByCode();
+        editingKeyBinding.setKey(key);
         editingKeyBinding = null;
         updateKeybindButtonMessages();
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (editingKeyBinding != null) {
-            setBinding(InputUtil.fromKeyCode(input));
+            setBinding(InputConstants.getKey(input));
             return true;
         }
         return super.keyPressed(input);
     }
 
     @Override
-    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean consumed) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent click, boolean consumed) {
         if (editingKeyBinding != null) {
-            setBinding(InputUtil.Type.MOUSE.createFromCode(click.button()));
+            setBinding(InputConstants.Type.MOUSE.getOrCreate(click.button()));
             return true;
         }
         return super.mouseClicked(click, consumed);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Avoid calling renderBackground here because this screen can open from another blurred screen.
         context.fill(0, 0, this.width, this.height, 0x60_00_00_00);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFFFF);
+        context.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
         int sharedLabelX = keyLabelX;
@@ -236,22 +234,22 @@ public class LockoutSettingsScreen extends Screen {
                 continue;
             }
 
-            ButtonWidget keyButton = keybindButtons.get(option.binding());
+            Button keyButton = keybindButtons.get(option.binding());
             if (keyButton == null) {
                 continue;
             }
 
-            context.drawText(this.textRenderer, option.label(), sharedLabelX, rowY + 6, 0xFFFFFFFF, true);
+            context.text(this.font, option.label(), sharedLabelX, rowY + 6, 0xFFFFFFFF, true);
         }
 
         if (editingKeyBinding != null) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Press a key or mouse button"), this.width / 2, this.height - 30, 0xFFFFFF55);
+            context.centeredText(this.font, Component.literal("Press a key or mouse button"), this.width / 2, this.height - 30, 0xFFFFFF55);
         }
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(parent);
+    public void onClose() {
+        this.minecraft.gui.setScreen(parent);
     }
 
     @Override

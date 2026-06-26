@@ -15,17 +15,17 @@ import me.marin.lockout.lockout.goals.opponent.*;
 import me.marin.lockout.lockout.goals.wear_armor.WearCarvedPumpkinFor5MinutesGoal;
 import me.marin.lockout.lockout.goals.misc.*;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.EntityType;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.item.Item;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.item.Item;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -332,7 +332,7 @@ public class LockoutStatistics {
         
         // 14. Damage types taken goal
         if (goal instanceof DamagedByUniqueSourcesGoal) {
-            Map<RegistryKey<DamageType>, UUID> firstContributor = lockout.firstDamageTypeContributor.get(team);
+            Map<ResourceKey<DamageType>, UUID> firstContributor = lockout.firstDamageTypeContributor.get(team);
             return calculateProportionalContribution(teamPlayers, lockout.playerDamageTypesTaken, firstContributor);
         }
         
@@ -602,34 +602,34 @@ public class LockoutStatistics {
      * Send clickable buttons for viewing and downloading statistics
      */
     public void displayInChat() {
-        PlayerManager playerManager = LockoutServer.server.getPlayerManager();
+        PlayerList playerManager = LockoutServer.server.getPlayerList();
         
         // Create clickable [View Statistics] button
-        Text viewButton = Text.literal("[View Statistics]")
-            .formatted(Formatting.GREEN, Formatting.BOLD)
-            .styled(style -> style
+        Component viewButton = Component.literal("[View Statistics]")
+            .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+            .withStyle(style -> style
                 .withClickEvent(new ClickEvent.RunCommand("/GameStatistics view"))
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal("Click to view game statistics")))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("MouseButtonEvent to view game statistics")))
             );
         
         // Create clickable [Download Statistics] button
-        Text downloadButton = Text.literal("[Download Statistics]")
-            .formatted(Formatting.AQUA, Formatting.BOLD)
-            .styled(style -> style
+        Component downloadButton = Component.literal("[Download Statistics]")
+            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+            .withStyle(style -> style
                 .withClickEvent(new ClickEvent.RunCommand("/GameStatistics download"))
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal("Click to save statistics file")))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("MouseButtonEvent to save statistics file")))
             );
         
         // Send buttons
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
-        playerManager.broadcast(
-            Text.literal("Game Over! ").formatted(Formatting.YELLOW)
+        playerManager.broadcastSystemMessage(Component.literal("").withStyle(ChatFormatting.GOLD), false);
+        playerManager.broadcastSystemMessage(
+            Component.literal("Game Over! ").withStyle(ChatFormatting.YELLOW)
                 .append(viewButton)
-                .append(Text.literal("  "))
+                .append(Component.literal("  "))
                 .append(downloadButton),
             false
         );
-        playerManager.broadcast(Text.literal("").formatted(Formatting.GOLD), false);
+        playerManager.broadcastSystemMessage(Component.literal("").withStyle(ChatFormatting.GOLD), false);
     }
     
     /**
@@ -639,23 +639,23 @@ public class LockoutStatistics {
         showFullStatistics(null);
     }
     
-    public void showFullStatistics(ServerPlayerEntity targetPlayer) {
+    public void showFullStatistics(ServerPlayer targetPlayer) {
         calculateGoalContributions();
         
-        PlayerManager playerManager = LockoutServer.server.getPlayerManager();
+        PlayerList playerManager = LockoutServer.server.getPlayerList();
         
         // Header
-        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
-        sendMessage(playerManager, targetPlayer, Text.literal("========== Game Statistics ==========").formatted(Formatting.GOLD, Formatting.BOLD));
-        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("========== Game Statistics ==========").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
         
         // Winner(s)
         if (!winners.isEmpty()) {
             if (winners.size() == 1) {
                 LockoutTeam winner = winners.get(0);
                 sendMessage(playerManager, targetPlayer,
-                    Text.literal("Winner: ").formatted(Formatting.YELLOW, Formatting.BOLD)
-                        .append(Text.literal(winner.getDisplayName()).formatted(winner.getColor(), Formatting.BOLD))
+                    Component.literal("Winner: ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+                        .append(Component.literal(winner.getDisplayName()).withStyle(winner.getColor(), ChatFormatting.BOLD))
                 );
             } else {
                 StringBuilder winnerNames = new StringBuilder();
@@ -664,8 +664,8 @@ public class LockoutStatistics {
                     winnerNames.append(winners.get(i).getDisplayName());
                 }
                 sendMessage(playerManager, targetPlayer,
-                    Text.literal("Winners (Tie): ").formatted(Formatting.YELLOW, Formatting.BOLD)
-                        .append(Text.literal(winnerNames.toString()).formatted(Formatting.GOLD, Formatting.BOLD))
+                    Component.literal("Winners (Tie): ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+                        .append(Component.literal(winnerNames.toString()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
                 );
             }
             
@@ -684,42 +684,42 @@ public class LockoutStatistics {
             }
             
             if (winningTeam != null && losingTeam != null) {
-                Text scoreText = Text.literal("Score: ").formatted(Formatting.YELLOW)
-                    .append(Text.literal(winningTeam.getDisplayName() + " ").formatted(winningTeam.getColor()))
-                    .append(Text.literal(String.valueOf(winningTeam.getPoints())).formatted(Formatting.GREEN))
-                    .append(Text.literal(" - ").formatted(Formatting.GRAY))
-                    .append(Text.literal(String.valueOf(losingTeam.getPoints())).formatted(Formatting.RED))
-                    .append(Text.literal(" " + losingTeam.getDisplayName()).formatted(losingTeam.getColor()));
+                Component scoreText = Component.literal("Score: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(winningTeam.getDisplayName() + " ").withStyle(winningTeam.getColor()))
+                    .append(Component.literal(String.valueOf(winningTeam.getPoints())).withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal(" - ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(String.valueOf(losingTeam.getPoints())).withStyle(ChatFormatting.RED))
+                    .append(Component.literal(" " + losingTeam.getDisplayName()).withStyle(losingTeam.getColor()));
                 
                 sendMessage(playerManager, targetPlayer, scoreText);
             }
             
-            sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+            sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
         }
         
         // Game Time
-        sendMessage(playerManager, targetPlayer, Text.literal("Final Game Time: ").formatted(Formatting.YELLOW)
-                .append(Text.literal(getGameTimeFormatted()).formatted(Formatting.WHITE)));
-        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("Final Game Time: ").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(getGameTimeFormatted()).withStyle(ChatFormatting.WHITE)));
+        sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
         
         // Goals Completed by Team
-        sendMessage(playerManager, targetPlayer, Text.literal("Goals Completed:").formatted(Formatting.YELLOW, Formatting.BOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("Goals Completed:").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
         for (Goal goal : lockout.getBoard().getGoals()) {
             if (goal != null && goal.isCompleted()) {
                 LockoutTeam team = goal.getCompletedTeam();
                 String teamDisplay = team != null ? team.getDisplayName() : "Unknown";
-                Formatting teamColor = team != null ? team.getColor() : Formatting.WHITE;
+                ChatFormatting teamColor = team != null ? team.getColor() : ChatFormatting.WHITE;
                 
-                sendMessage(playerManager, targetPlayer, Text.literal("  • ").formatted(Formatting.GRAY)
-                        .append(Text.literal(goal.getGoalName()).formatted(Formatting.WHITE))
-                        .append(Text.literal(" - ").formatted(Formatting.GRAY))
-                        .append(Text.literal(teamDisplay).formatted(teamColor)));
+                sendMessage(playerManager, targetPlayer, Component.literal("  • ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(goal.getGoalName()).withStyle(ChatFormatting.WHITE))
+                        .append(Component.literal(" - ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal(teamDisplay).withStyle(teamColor)));
             }
         }
-        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
         
         // Player Statistics
-        sendMessage(playerManager, targetPlayer, Text.literal("Player Statistics:").formatted(Formatting.YELLOW, Formatting.BOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("Player Statistics:").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
         
         for (LockoutTeam team : lockout.getTeams()) {
             if (!(team instanceof LockoutTeamServer serverTeam)) continue;
@@ -730,28 +730,28 @@ public class LockoutStatistics {
                 int kills = playerKills.getOrDefault(playerId, 0);
                 double contribution = getPlayerTotalContribution(playerId);
                 
-                sendMessage(playerManager, targetPlayer, Text.literal("  " + playerName + ":").formatted(team.getColor(), Formatting.BOLD));
-                sendMessage(playerManager, targetPlayer, Text.literal("    Deaths: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.valueOf(deaths)).formatted(Formatting.WHITE)));
-                sendMessage(playerManager, targetPlayer, Text.literal("    Player Kills: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.valueOf(kills)).formatted(Formatting.WHITE)));
-                sendMessage(playerManager, targetPlayer, Text.literal("    Goal Contribution: ").formatted(Formatting.GRAY)
-                        .append(Text.literal(String.format("%.2f", contribution)).formatted(Formatting.WHITE)));
+                sendMessage(playerManager, targetPlayer, Component.literal("  " + playerName + ":").withStyle(team.getColor(), ChatFormatting.BOLD));
+                sendMessage(playerManager, targetPlayer, Component.literal("    Deaths: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(String.valueOf(deaths)).withStyle(ChatFormatting.WHITE)));
+                sendMessage(playerManager, targetPlayer, Component.literal("    Player Kills: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(String.valueOf(kills)).withStyle(ChatFormatting.WHITE)));
+                sendMessage(playerManager, targetPlayer, Component.literal("    Goal Contribution: ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal(String.format("%.2f", contribution)).withStyle(ChatFormatting.WHITE)));
             }
         }
         
-        sendMessage(playerManager, targetPlayer, Text.literal("").formatted(Formatting.GOLD));
-        sendMessage(playerManager, targetPlayer, Text.literal("====================================").formatted(Formatting.GOLD, Formatting.BOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("").withStyle(ChatFormatting.GOLD));
+        sendMessage(playerManager, targetPlayer, Component.literal("====================================").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
     }
     
     /**
      * Helper method to send message to a specific player or broadcast to all
      */
-    private void sendMessage(PlayerManager playerManager, ServerPlayerEntity targetPlayer, Text message) {
+    private void sendMessage(PlayerList playerManager, ServerPlayer targetPlayer, Component message) {
         if (targetPlayer != null) {
-            targetPlayer.sendMessage(message, false);
+            targetPlayer.sendSystemMessage(message);
         } else {
-            playerManager.broadcast(message, false);
+            playerManager.broadcastSystemMessage(message, false);
         }
     }
     

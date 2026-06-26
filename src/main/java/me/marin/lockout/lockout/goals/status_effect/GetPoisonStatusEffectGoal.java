@@ -3,10 +3,10 @@ package me.marin.lockout.lockout.goals.status_effect;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.StatusEffectGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class GetPoisonStatusEffectGoal extends StatusEffectGoal implements TextureProvider {
 
@@ -25,11 +25,11 @@ public class GetPoisonStatusEffectGoal extends StatusEffectGoal implements Textu
     }
 
     @Override
-    public StatusEffect getStatusEffect() {
-        return StatusEffects.POISON.value();
+    public MobEffect getStatusEffect() {
+        return MobEffects.POISON.value();
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/status_effect/poison.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/status_effect/poison.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

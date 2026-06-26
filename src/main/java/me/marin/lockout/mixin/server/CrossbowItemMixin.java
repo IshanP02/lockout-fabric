@@ -5,13 +5,13 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.misc.ShootFireworkFromCrossbowGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.component.type.ChargedProjectilesComponent;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.item.component.ChargedProjectiles;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,14 +20,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(CrossbowItem.class)
 public class CrossbowItemMixin {
 
-    @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/CrossbowItem;shootAll(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;FFLnet/minecraft/entity/LivingEntity;)V"))
-    public void onShoot(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<ActionResult> cir, @Local ChargedProjectilesComponent chargedProjectilesComponent) {
-        if (world.isClient()) return;
+    @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/CrossbowItem;performShooting(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;FFLnet/minecraft/world/entity/LivingEntity;)V"))
+    public void onShoot(Level world, Player user, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir, @Local ChargedProjectiles ChargedProjectiles) {
+        if (world.isClientSide()) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        boolean hasRocket = chargedProjectilesComponent.contains(Items.FIREWORK_ROCKET);
+        boolean hasRocket = ChargedProjectiles.contains(Items.FIREWORK_ROCKET);
         if (!hasRocket) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {

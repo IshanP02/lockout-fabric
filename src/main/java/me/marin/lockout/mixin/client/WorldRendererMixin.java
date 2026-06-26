@@ -1,8 +1,8 @@
 package me.marin.lockout.mixin.client;
 
 import me.marin.lockout.client.RenderedEntityCounter;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +20,7 @@ public abstract class WorldRendererMixin {
         at = @At("HEAD")
     )
     private void lockout$resetEntityCounter(
-            RenderTickCounter tickCounter,
+            DeltaTracker tickCounter,
             boolean renderLevel,
             CallbackInfo ci
     ) {

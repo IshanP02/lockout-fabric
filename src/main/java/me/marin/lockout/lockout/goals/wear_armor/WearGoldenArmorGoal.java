@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.wear_armor;
 
 import me.marin.lockout.lockout.interfaces.WearArmorGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 

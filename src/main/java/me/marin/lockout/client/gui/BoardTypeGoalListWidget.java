@@ -12,20 +12,21 @@ import me.marin.lockout.lockout.texture.CycleTexturesProvider;
 import me.marin.lockout.lockout.texture.TextureProvider;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ScrollableWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.text.WordUtils;
 
 import java.util.*;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
  * Scrollable widget that displays all goals with icons for selecting exclusions.
  */
 @Environment(EnvType.CLIENT)
-public class BoardTypeGoalListWidget extends ScrollableWidget {
+public class BoardTypeGoalListWidget extends AbstractScrollArea {
 
     private static final int MARGIN_X = 5;
     private static final int ENTRY_HEIGHT = 20;
@@ -53,8 +54,8 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     private int top;
     private int right;
 
-    public BoardTypeGoalListWidget(int x, int y, int width, int height, Text message, BoardTypeCreatorScreen parent) {
-        super(x, y, width, height, message);
+    public BoardTypeGoalListWidget(int x, int y, int width, int height, Component message, BoardTypeCreatorScreen parent) {
+        super(x, y, width, height, message, AbstractScrollArea.defaultSettings(ENTRY_HEIGHT));
         this.parent = parent;
         
         for (String goalId : GoalRegistry.INSTANCE.getRegisteredGoals()) {
@@ -74,9 +75,9 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
             if (goal != null) {
                 icon = goal.getTextureItemStack();
                 if (icon == null && goal instanceof CycleItemTexturesProvider cycleProvider) {
-                    List<net.minecraft.item.Item> items = cycleProvider.getItemsToDisplay();
+                    List<net.minecraft.world.item.Item> items = cycleProvider.getItemsToDisplay();
                     if (items != null && !items.isEmpty()) {
-                        icon = items.get(0).getDefaultStack();
+                        icon = items.get(0).getDefaultInstance();
                     }
                 }
                 if (icon == null) {
@@ -105,12 +106,12 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         }
         
         if (entityType != null) {
-            SpawnEggItem spawnEgg = SpawnEggItem.forEntity(entityType);
-            if (spawnEgg != null) {
-                return spawnEgg.getDefaultStack();
-            }
+            return SpawnEggItem.byId(entityType)
+                .map(Holder::value)
+                .map(item -> item.getDefaultInstance())
+                .orElse(null);
         }
-        
+
         return null;
     }
     
@@ -118,19 +119,19 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         String lowerGoalId = goalId.toLowerCase();
         
         if (lowerGoalId.contains("kill")) {
-            return Items.WOODEN_SWORD.getDefaultStack();
+            return Items.WOODEN_SWORD.getDefaultInstance();
         }
         if (lowerGoalId.contains("die")) {
-            return Items.SKELETON_SKULL.getDefaultStack();
+            return Items.SKELETON_SKULL.getDefaultInstance();
         }
         if (lowerGoalId.contains("breed")) {
-            return Items.WHEAT.getDefaultStack();
+            return Items.WHEAT.getDefaultInstance();
         }
         if (lowerGoalId.contains("tame")) {
-            return Items.BONE.getDefaultStack();
+            return Items.BONE.getDefaultInstance();
         }
         
-        return Items.PAPER.getDefaultStack();
+        return Items.PAPER.getDefaultInstance();
     }
     
     @SuppressWarnings("deprecation")
@@ -140,17 +141,12 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     }
 
     @Override
-    protected int getContentsHeightWithPadding() {
+    protected int contentHeight() {
         return visibleGoals.size() * ENTRY_HEIGHT + 8;
     }
 
     @Override
-    protected double getDeltaYPerScroll() {
-        return ENTRY_HEIGHT;
-    }
-
-    @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         this.rowWidth = getWidth() - MARGIN_X * 2;
         this.left = getX() + MARGIN_X;
         this.top = getY();
@@ -162,7 +158,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
 
         int y = 4;
         for (GoalEntry entry : visibleGoals) {
-            int entryY = getY() + y - (int) getScrollY();
+            int entryY = getY() + y - (int) scrollAmount();
             
             if (entryY + ENTRY_HEIGHT >= this.top && entryY < this.top + getHeight()) {
                 entry.render(context, getX() + MARGIN_X, entryY, rowWidth, ENTRY_HEIGHT, 
@@ -173,11 +169,11 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
         }
 
         context.disableScissor();
-        this.drawScrollbar(context, mouseX, mouseY);
+        this.extractScrollbar(context, mouseX, mouseY);
     }
 
     protected final GoalEntry getEntryAtPosition(double x, double y) {
-        int relativeY = (int) (y - getY() + getScrollY() - 4);
+        int relativeY = (int) (y - getY() + scrollAmount() - 4);
         int index = relativeY / ENTRY_HEIGHT;
         
         if (index >= 0 && index < visibleGoals.size()) {
@@ -187,7 +183,7 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     }
 
     public void updateSearch(String search) {
-        setScrollY(0);
+        setScrollAmount(0);
         if (search.trim().isEmpty()) {
             visibleGoals = new ArrayList<>(allGoals.values());
         } else {
@@ -200,43 +196,20 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubleClick) {
-        if (hoveredEntry != null && click.button() == 0 && !checkScrollbarDragged(click)) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubleClick) {
+        boolean scrollbarClicked = updateScrolling(click);
+        if (hoveredEntry != null && click.button() == 0 && !scrollbarClicked) {
             parent.toggleGoalExclusion(hoveredEntry.goalId);
-            MinecraftClient.getInstance().getSoundManager().play(
-                PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+            Minecraft.getInstance().getSoundManager().play(
+                SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f)
             );
             return true;
         }
-        var bl = checkScrollbarDragged(click);
-        return super.mouseClicked(click, doubleClick) || bl;
+        return super.mouseClicked(click, doubleClick) || scrollbarClicked;
     }
 
     @Override
-    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
-        double mouseY = click.y();
-        if (this.scrollbarDragged) {
-            int top = this.getY();
-            int bottom = top + this.getHeight();
-            int scrollbarHeight = this.getScrollbarThumbHeight();
-            double normalizedPos = (mouseY - top - (double) scrollbarHeight / 2.0) / (double) (bottom - top - scrollbarHeight);
-            normalizedPos = Math.max(0.0, Math.min(1.0, normalizedPos));
-            this.setScrollY(normalizedPos * (double) this.getMaxScrollY());
-            return true;
-        }
-        return super.mouseDragged(click, deltaX, deltaY);
-    }
-
-    @Override
-    public boolean mouseReleased(Click click) {
-        if (click.button() == 0) {
-            this.scrollbarDragged = false;
-        }
-        return super.mouseReleased(click);
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
+    protected void updateWidgetNarration(NarrationElementOutput builder) {}
 
     public class GoalEntry {
         private final String goalId;
@@ -249,9 +222,9 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
             this.icon = icon;
         }
 
-        public void render(DrawContext context, int x, int y, int width, int height, 
+        public void render(GuiGraphicsExtractor context, int x, int y, int width, int height, 
                           int mouseX, int mouseY, boolean hovered, float delta) {
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            Font font = Minecraft.getInstance().font;
             boolean isExcluded = parent.isGoalExcluded(goalId);
 
             if (isExcluded) {
@@ -263,27 +236,27 @@ public class BoardTypeGoalListWidget extends ScrollableWidget {
             int iconX = x + ICON_MARGIN;
             int iconY = y + (height - ICON_SIZE) / 2;
             if (icon != null) {
-                context.drawItem(icon, iconX, iconY);
+                context.item(icon, iconX, iconY);
             }
 
             int textX = iconX + ICON_SIZE + ICON_MARGIN * 2;
-            int textY = y + (height - textRenderer.fontHeight) / 2;
+            int textY = y + (height - font.lineHeight) / 2;
             
             String drawText = displayName;
             int maxTextWidth = width - (ICON_SIZE + ICON_MARGIN * 3 + 5);
-            if (textRenderer.getWidth(drawText) > maxTextWidth) {
-                while (textRenderer.getWidth(drawText + "...") > maxTextWidth && drawText.length() > 0) {
+            if (font.width(drawText) > maxTextWidth) {
+                while (font.width(drawText + "...") > maxTextWidth && drawText.length() > 0) {
                     drawText = drawText.substring(0, drawText.length() - 1);
                 }
                 drawText = drawText + "...";
             }
 
-            context.drawText(textRenderer, drawText, textX, textY, 0xFFFFFFFF, false);
+            context.text(font, drawText, textX, textY, 0xFFFFFFFF, false);
 
             if (hovered) {
                 String idText = "[" + goalId + "]";
-                int idWidth = textRenderer.getWidth(idText);
-                context.drawText(textRenderer, idText, x + width - idWidth - 5, textY, 
+                int idWidth = font.width(idText);
+                context.text(font, idText, x + width - idWidth - 5, textY, 
                     0xFF808080, false);
             }
         }

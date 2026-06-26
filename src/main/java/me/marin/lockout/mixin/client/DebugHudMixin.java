@@ -1,11 +1,9 @@
 package me.marin.lockout.mixin.client;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.DebugHud;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
 import me.marin.lockout.client.RenderedEntityCounter;
-import me.marin.lockout.mixin.client.EntityRendererMixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,18 +18,19 @@ import java.util.List;
  * Merges the debug HUD's right column into the left column to prevent overlap with the lockout board.
  * This approach is robust against user debug settings and future Minecraft updates.
  */
-@Mixin(DebugHud.class)
+@Mixin(DebugScreenOverlay.class)
 public abstract class DebugHudMixin {
 
     /**
-     * Invoker to access the private drawText method.
+     * Invoker to access the private extractLines method.
      */
-    @Invoker("drawText")
+    @Invoker("extractLines")
     protected abstract void lockout$invokeDrawText(
-            DrawContext context,
+            GuiGraphicsExtractor context,
             List<String> text,
             boolean left
     );
+
 
     @Unique
     private List<String> lockout$rightText = new ArrayList<>();
@@ -272,18 +271,18 @@ public abstract class DebugHudMixin {
     }
 
     /**
-     * Intercept all drawText calls from render() to merge right column into left.
+     * Intercept all extractLines calls from extractRenderState() to merge right column into left.
      */
     @Redirect(
-        method = "render",
+        method = "extractRenderState",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/hud/DebugHud;drawText(Lnet/minecraft/client/gui/DrawContext;Ljava/util/List;Z)V"
+            target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V"
         )
     )
     private void lockout$mergeDebugColumns(
-            DebugHud instance,
-            DrawContext context,
+            DebugScreenOverlay instance,
+            GuiGraphicsExtractor context,
             List<String> text,
             boolean left
     ) {
@@ -323,21 +322,18 @@ public abstract class DebugHudMixin {
      */
     @Unique
     private List<String> lockout$fixEntityCounter(List<String> text) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) {
             return text;
         }
         
         for (int i = 0; i < text.size(); i++) {
             String line = text.get(i);
             
-            if (line.startsWith("E:") && client.world != null) {
+            if (line.startsWith("E:") && client.level != null) {
                 int rendered = RenderedEntityCounter.get();
 
-                int total = 0;
-                for (Entity ignored : client.world.getEntities()) {
-                    total++;
-                }
+                int total = client.level.getEntityCount();
 
                 text.set(i, "E: " + rendered + "/" + total);
             }

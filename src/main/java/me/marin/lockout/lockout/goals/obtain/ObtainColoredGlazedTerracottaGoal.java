@@ -2,9 +2,9 @@ package me.marin.lockout.lockout.goals.obtain;
 
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.interfaces.ObtainAllItemsGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 
 import java.util.List;
 
@@ -35,22 +35,22 @@ public class ObtainColoredGlazedTerracottaGoal extends ObtainAllItemsGoal {
     public static Item getGlazedTerracottaColor(String colorString) {
         return switch (colorString) {
             default -> null;
-            case "white" -> Items.WHITE_GLAZED_TERRACOTTA;
-            case "orange" -> Items.ORANGE_GLAZED_TERRACOTTA;
-            case "magenta" -> Items.MAGENTA_GLAZED_TERRACOTTA;
-            case "light_blue" -> Items.LIGHT_BLUE_GLAZED_TERRACOTTA;
-            case "yellow" -> Items.YELLOW_GLAZED_TERRACOTTA;
-            case "lime" -> Items.LIME_GLAZED_TERRACOTTA;
-            case "pink" -> Items.PINK_GLAZED_TERRACOTTA;
-            case "gray" -> Items.GRAY_GLAZED_TERRACOTTA;
-            case "light_gray" -> Items.LIGHT_GRAY_GLAZED_TERRACOTTA;
-            case "cyan" -> Items.CYAN_GLAZED_TERRACOTTA;
-            case "purple" -> Items.PURPLE_GLAZED_TERRACOTTA;
-            case "blue" -> Items.BLUE_GLAZED_TERRACOTTA;
-            case "brown" -> Items.BROWN_GLAZED_TERRACOTTA;
-            case "green" -> Items.GREEN_GLAZED_TERRACOTTA;
-            case "red" -> Items.RED_GLAZED_TERRACOTTA;
-            case "black" -> Items.BLACK_GLAZED_TERRACOTTA;
+            case "white" -> Items.GLAZED_TERRACOTTA.white();
+            case "orange" -> Items.GLAZED_TERRACOTTA.orange();
+            case "magenta" -> Items.GLAZED_TERRACOTTA.magenta();
+            case "light_blue" -> Items.GLAZED_TERRACOTTA.lightBlue();
+            case "yellow" -> Items.GLAZED_TERRACOTTA.yellow();
+            case "lime" -> Items.GLAZED_TERRACOTTA.lime();
+            case "pink" -> Items.GLAZED_TERRACOTTA.pink();
+            case "gray" -> Items.GLAZED_TERRACOTTA.gray();
+            case "light_gray" -> Items.GLAZED_TERRACOTTA.lightGray();
+            case "cyan" -> Items.GLAZED_TERRACOTTA.cyan();
+            case "purple" -> Items.GLAZED_TERRACOTTA.purple();
+            case "blue" -> Items.GLAZED_TERRACOTTA.blue();
+            case "brown" -> Items.GLAZED_TERRACOTTA.brown();
+            case "green" -> Items.GLAZED_TERRACOTTA.green();
+            case "red" -> Items.GLAZED_TERRACOTTA.red();
+            case "black" -> Items.GLAZED_TERRACOTTA.black();
         };
     }
 

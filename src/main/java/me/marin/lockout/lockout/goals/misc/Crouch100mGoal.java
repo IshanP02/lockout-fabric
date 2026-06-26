@@ -12,20 +12,20 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 public class Crouch100mGoal extends Goal implements CustomTextureRenderer, HasTooltipInfo {
 
     private static final int ONE_HUNDRED_METERS = 100 * 100; // in cm
 
-    private static final ItemStack ITEM_STACK = Items.SUGAR.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.SUGAR.getDefaultInstance();
     public Crouch100mGoal(String id, String data) {
         super(id, data);
     }
@@ -40,18 +40,18 @@ public class Crouch100mGoal extends Goal implements CustomTextureRenderer, HasTo
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/sneak_100m.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/sneak_100m.png");
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer,  ITEM_STACK, x, y, "1hm");
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
+        context.itemDecorations(Minecraft.getInstance().font,  ITEM_STACK, x, y, "1hm");
         return true;
     }
     
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
-        int distance = Math.min(ONE_HUNDRED_METERS, LockoutServer.lockout.distanceCrouched.getOrDefault(player.getUuid(), 0));
+        int distance = Math.min(ONE_HUNDRED_METERS, LockoutServer.lockout.distanceCrouched.getOrDefault(player.getUUID(), 0));
         LockoutTeamServer serverTeam = ((LockoutTeamServer) team);
 
         tooltip.add(" ");
@@ -59,7 +59,7 @@ public class Crouch100mGoal extends Goal implements CustomTextureRenderer, HasTo
         if (serverTeam.getPlayers().size() > 1) {
             tooltip.add(" ");
             for (UUID uuid : serverTeam.getPlayers()) {
-                if (!Objects.equals(uuid, player.getUuid())) {
+                if (!Objects.equals(uuid, player.getUUID())) {
                     int dist = Math.min(ONE_HUNDRED_METERS, LockoutServer.lockout.distanceCrouched.getOrDefault(uuid, 0));
                     tooltip.add(serverTeam.getPlayerName(uuid) + ": " + String.format("%.2fm", dist / 100.0));
                 }
@@ -81,7 +81,7 @@ public class Crouch100mGoal extends Goal implements CustomTextureRenderer, HasTo
             for (UUID uuid : serverTeam.getPlayers()) {
                 max = Math.max(max, LockoutServer.lockout.distanceCrouched.getOrDefault(uuid, 0));
             }
-            tooltip.add(t.getColor() + t.getDisplayName() + Formatting.RESET + ": " + String.format("%.2fm", Math.min(ONE_HUNDRED_METERS, max) / 100.0));
+            tooltip.add(t.getColor() + t.getDisplayName() + ChatFormatting.RESET + ": " + String.format("%.2fm", Math.min(ONE_HUNDRED_METERS, max) / 100.0));
         }
         tooltip.add(" ");
 

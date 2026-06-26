@@ -1,9 +1,9 @@
 package me.marin.lockout.network;
 
 import me.marin.lockout.Constants;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,38 +24,38 @@ public record UpdatePickBanSessionPayload(
         int selectionLimit,
         Map<String, String> goalToPlayerMap,
         int maxRounds
-) implements CustomPayload {
-    public static final Id<UpdatePickBanSessionPayload> ID = new Id<>(Constants.UPDATE_PICK_BAN_SESSION_PACKET);
-    public static final PacketCodec<RegistryByteBuf, UpdatePickBanSessionPayload> CODEC = new PacketCodec<>() {
+) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<UpdatePickBanSessionPayload> ID = new CustomPacketPayload.Type<>(Constants.UPDATE_PICK_BAN_SESSION_PACKET);
+    public static final StreamCodec<RegistryFriendlyByteBuf, UpdatePickBanSessionPayload> CODEC = new StreamCodec<>() {
         @Override
-        public UpdatePickBanSessionPayload decode(RegistryByteBuf buf) {
+        public UpdatePickBanSessionPayload decode(RegistryFriendlyByteBuf buf) {
             int currentRound = buf.readInt();
             boolean isTeam1Turn = buf.readBoolean();
-            String team1Name = buf.readString();
-            String team2Name = buf.readString();
+            String team1Name = buf.readUtf();
+            String team2Name = buf.readUtf();
 
             int lockedPicksSize = buf.readInt();
             Set<String> allLockedPicks = new HashSet<>();
             for (int i = 0; i < lockedPicksSize; i++) {
-                allLockedPicks.add(buf.readString());
+                allLockedPicks.add(buf.readUtf());
             }
 
             int lockedBansSize = buf.readInt();
             Set<String> allLockedBans = new HashSet<>();
             for (int i = 0; i < lockedBansSize; i++) {
-                allLockedBans.add(buf.readString());
+                allLockedBans.add(buf.readUtf());
             }
 
             int pendingPicksSize = buf.readInt();
             List<String> pendingPicks = new ArrayList<>();
             for (int i = 0; i < pendingPicksSize; i++) {
-                pendingPicks.add(buf.readString());
+                pendingPicks.add(buf.readUtf());
             }
 
             int pendingBansSize = buf.readInt();
             List<String> pendingBans = new ArrayList<>();
             for (int i = 0; i < pendingBansSize; i++) {
-                pendingBans.add(buf.readString());
+                pendingBans.add(buf.readUtf());
             }
 
             int selectionLimit = buf.readInt();
@@ -63,8 +63,8 @@ public record UpdatePickBanSessionPayload(
             int goalToPlayerMapSize = buf.readInt();
             Map<String, String> goalToPlayerMap = new HashMap<>();
             for (int i = 0; i < goalToPlayerMapSize; i++) {
-                String goalId = buf.readString();
-                String playerName = buf.readString();
+                String goalId = buf.readUtf();
+                String playerName = buf.readUtf();
                 goalToPlayerMap.put(goalId, playerName);
             }
 
@@ -78,38 +78,38 @@ public record UpdatePickBanSessionPayload(
         }
 
         @Override
-        public void encode(RegistryByteBuf buf, UpdatePickBanSessionPayload payload) {
+        public void encode(RegistryFriendlyByteBuf buf, UpdatePickBanSessionPayload payload) {
             buf.writeInt(payload.currentRound());
             buf.writeBoolean(payload.isTeam1Turn());
-            buf.writeString(payload.team1Name());
-            buf.writeString(payload.team2Name());
+            buf.writeUtf(payload.team1Name());
+            buf.writeUtf(payload.team2Name());
 
             buf.writeInt(payload.allLockedPicks().size());
             for (String pick : payload.allLockedPicks()) {
-                buf.writeString(pick);
+                buf.writeUtf(pick);
             }
 
             buf.writeInt(payload.allLockedBans().size());
             for (String ban : payload.allLockedBans()) {
-                buf.writeString(ban);
+                buf.writeUtf(ban);
             }
 
             buf.writeInt(payload.pendingPicks().size());
             for (String pick : payload.pendingPicks()) {
-                buf.writeString(pick);
+                buf.writeUtf(pick);
             }
 
             buf.writeInt(payload.pendingBans().size());
             for (String ban : payload.pendingBans()) {
-                buf.writeString(ban);
+                buf.writeUtf(ban);
             }
 
             buf.writeInt(payload.selectionLimit());
 
             buf.writeInt(payload.goalToPlayerMap().size());
             for (Map.Entry<String, String> entry : payload.goalToPlayerMap().entrySet()) {
-                buf.writeString(entry.getKey());
-                buf.writeString(entry.getValue());
+                buf.writeUtf(entry.getKey());
+                buf.writeUtf(entry.getValue());
             }
 
             buf.writeInt(payload.maxRounds());
@@ -117,7 +117,7 @@ public record UpdatePickBanSessionPayload(
     };
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

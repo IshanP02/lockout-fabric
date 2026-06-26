@@ -11,31 +11,32 @@ import me.marin.lockout.network.*;
 import me.marin.lockout.type.BoardTypeIO;
 import me.marin.lockout.type.BoardTypeManager;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import me.marin.lockout.generator.GoalGroup;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.commands.synchronization.SingletonArgumentInfo;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.lwjgl.glfw.GLFW;
 import oshi.util.tuples.Pair;
-import net.minecraft.command.permission.LeveledPermissionPredicate;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,12 +53,12 @@ public class LockoutClient implements ClientModInitializer {
     public static boolean amIPlayingLockout = false;
     public static String currentBoardType = null; // Current board type for filtering goals
     public static java.util.List<String> currentExcludedGoals = new java.util.ArrayList<>(); // Excluded goals from server
-    private static KeyBinding keyBinding;
-    private static KeyBinding goalListKeyBinding;
-    private static KeyBinding toggleBoardKeyBinding;
-    private static KeyBinding toggleSectionViewKeyBinding;
-    private static KeyBinding nextSectionKeyBinding;
-    private static KeyBinding toggleAutoCycleSectionKeyBinding;
+    private static KeyMapping keyBinding;
+    private static KeyMapping goalListKeyBinding;
+    private static KeyMapping toggleBoardKeyBinding;
+    private static KeyMapping toggleSectionViewKeyBinding;
+    private static KeyMapping nextSectionKeyBinding;
+    private static KeyMapping toggleAutoCycleSectionKeyBinding;
     public static boolean boardVisible = true;
     public static boolean lockoutDebugHudOpen = false;  // mirrors debug HUD open state, updated only on pure F3 (no combo)
     public static boolean sectionViewEnabled = false;
@@ -68,14 +69,14 @@ public class LockoutClient implements ClientModInitializer {
     public static int CURRENT_TICK = 0;
     public static final Map<String, String> goalTooltipMap = new HashMap<>();
 
-    public static final ScreenHandlerType<BoardScreenHandler> BOARD_SCREEN_HANDLER;
-    public static final KeyBinding.Category LOCKOUT_CATEGORY = KeyBinding.Category.create(Identifier.of(Constants.NAMESPACE, "keybinds"));
+    public static final MenuType<BoardScreenHandler> BOARD_SCREEN_HANDLER;
+    public static final KeyMapping.Category LOCKOUT_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "keybinds"));
 
     // Global cache for player skin textures (keyed by player name)
-    public static final java.util.Map<String, net.minecraft.util.Identifier> PLAYER_SKIN_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    public static final java.util.Map<String, net.minecraft.resources.Identifier> PLAYER_SKIN_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
 
     static {
-        BOARD_SCREEN_HANDLER = new ScreenHandlerType<>(BoardScreenHandler::new, FeatureFlags.VANILLA_FEATURES);
+        BOARD_SCREEN_HANDLER = new MenuType<>(BoardScreenHandler::new, FeatureFlags.VANILLA_SET);
     }
 
     private static boolean hasPermission() {
@@ -90,8 +91,8 @@ public class LockoutClient implements ClientModInitializer {
         return true;
     }
 
-    public static List<KeyBinding> getLockoutKeyBindings() {
-        List<KeyBinding> bindings = new ArrayList<>();
+    public static List<KeyMapping> getLockoutKeyBindings() {
+        List<KeyMapping> bindings = new ArrayList<>();
         if (keyBinding != null) bindings.add(keyBinding);
         if (goalListKeyBinding != null) bindings.add(goalListKeyBinding);
         if (toggleBoardKeyBinding != null) bindings.add(toggleBoardKeyBinding);
@@ -107,22 +108,22 @@ public class LockoutClient implements ClientModInitializer {
         autoCycleSectionEnabled = false;
     }
 
-    private static void sendBoardTypeMessage(Text message) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    private static void sendBoardTypeMessage(Component message) {
+        Minecraft client = Minecraft.getInstance();
         if (client.player != null) {
-            client.player.sendMessage(message, false);
+            client.player.sendSystemMessage(message);
         }
     }
 
     @Override
     public void onInitializeClient() {
-        Registry.register(Registries.SCREEN_HANDLER, Constants.BOARD_SCREEN_ID, BOARD_SCREEN_HANDLER);
+        Registry.register(BuiltInRegistries.MENU, Constants.BOARD_SCREEN_ID, BOARD_SCREEN_HANDLER);
 
         ClientPlayNetworking.registerGlobalReceiver(LockoutGoalsTeamsPayload.ID, (payload, context) -> {
             List<LockoutTeam> teams = payload.teams();
 
             LockoutClient.amIPlayingLockout = teams.stream().map(LockoutTeam::getPlayerNames)
-                    .anyMatch(players -> players.stream().anyMatch(player -> player.equals(MinecraftClient.getInstance().getSession().getUsername())));
+                    .anyMatch(players -> players.stream().anyMatch(player -> player.equals(Minecraft.getInstance().getUser().getName())));
 
             int[] completedByTeam = payload.goals().stream().mapToInt(Pair::getB).toArray();
 
@@ -141,10 +142,10 @@ public class LockoutClient implements ClientModInitializer {
                 }
             }
 
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
-                    client.setScreen(new BoardScreen(BOARD_SCREEN_HANDLER.create(0, client.player.getInventory()), client.player.getInventory(), Text.empty()));
+                    client.gui.setScreen(new BoardScreen(BOARD_SCREEN_HANDLER.create(0, client.player.getInventory()), client.player.getInventory(), Component.empty()));
                 }
             });
         });
@@ -153,24 +154,24 @@ public class LockoutClient implements ClientModInitializer {
         });
         
         ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.GoalDetailsPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
                     // Display goal details in chat
                     String[] lines = payload.details().split("\\\\n");
                     for (String line : lines) {
-                        client.player.sendMessage(Text.literal(line), false);
+                        client.player.sendSystemMessage(Component.literal(line));
                     }
                 }
             });
         });
         
         ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.DownloadStatisticsPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 try {
                     // Create lockout-statistics directory in client's instance folder
-                    java.nio.file.Path statisticsDir = client.runDirectory.toPath().resolve("lockout-statistics");
+                    java.nio.file.Path statisticsDir = client.gameDirectory.toPath().resolve("lockout-statistics");
                     if (!java.nio.file.Files.exists(statisticsDir)) {
                         java.nio.file.Files.createDirectories(statisticsDir);
                     }
@@ -181,24 +182,23 @@ public class LockoutClient implements ClientModInitializer {
                     
                     // Send success message with clickable link
                     if (client.player != null) {
-                        net.minecraft.text.Text message = net.minecraft.text.Text.literal("Statistics saved! ")
-                            .formatted(net.minecraft.util.Formatting.GREEN)
+                        net.minecraft.network.chat.Component message = net.minecraft.network.chat.Component.literal("Statistics saved! ")
+                            .withStyle(net.minecraft.ChatFormatting.GREEN)
                             .append(
-                                net.minecraft.text.Text.literal("[Open File]")
-                                    .formatted(net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.BOLD)
-                                    .styled(style -> style
-                                        .withClickEvent(new net.minecraft.text.ClickEvent.OpenFile(statsFile.toFile().getAbsolutePath()))
-                                        .withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(net.minecraft.text.Text.literal("Click to open: " + statsFile.toFile().getAbsolutePath())))
+                                net.minecraft.network.chat.Component.literal("[Open File]")
+                                    .withStyle(net.minecraft.ChatFormatting.AQUA, net.minecraft.ChatFormatting.BOLD)
+                                    .withStyle(style -> style
+                                        .withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenFile(statsFile.toFile().getAbsolutePath()))
+                                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(net.minecraft.network.chat.Component.literal("MouseButtonEvent to open: " + statsFile.toFile().getAbsolutePath())))
                                     )
                             );
-                        client.player.sendMessage(message, false);
+                        client.player.sendSystemMessage(message);
                     }
                 } catch (java.io.IOException e) {
                     if (client.player != null) {
-                        client.player.sendMessage(
-                            net.minecraft.text.Text.literal("Failed to save statistics file: " + e.getMessage())
-                                .formatted(net.minecraft.util.Formatting.RED),
-                            false
+                        client.player.sendSystemMessage(
+                            net.minecraft.network.chat.Component.literal("Failed to save statistics file: " + e.getMessage())
+                                .withStyle(net.minecraft.ChatFormatting.RED)
                         );
                     }
                 }
@@ -206,7 +206,7 @@ public class LockoutClient implements ClientModInitializer {
         });
         
         ClientPlayNetworking.registerGlobalReceiver(UpdatePicksBansPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // During pick/ban session, the payload contains combined PICKS + PENDING_PICKS
                 // We need to separate locked goals from pending goals
@@ -247,13 +247,13 @@ public class LockoutClient implements ClientModInitializer {
                 }
                 
                 // Refresh the GUI if it's open
-                if (client.currentScreen instanceof GoalListScreen goalListScreen) {
+                if (client.gui.screen() instanceof GoalListScreen goalListScreen) {
                     goalListScreen.refreshPanels();
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(BroadcastPickBanPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
                     // Only update the goal player mapping for other players
@@ -279,60 +279,60 @@ public class LockoutClient implements ClientModInitializer {
                     }
                     
                     // Create and display the message
-                    Text message;
+                    Component message;
                     if ("pick".equals(payload.action())) {
-                        message = Text.literal(payload.playerName() + " has picked " + goalName + "!").withColor(0x55FF55);
+                        message = Component.literal(payload.playerName() + " has picked " + goalName + "!").withColor(0x55FF55);
                     } else if ("ban".equals(payload.action())) {
-                        message = Text.literal(payload.playerName() + " has banned " + goalName + "!").withColor(0xFF5555);
+                        message = Component.literal(payload.playerName() + " has banned " + goalName + "!").withColor(0xFF5555);
                     } else if ("unpick".equals(payload.action())) {
-                        message = Text.literal(payload.playerName() + " has unpicked " + goalName + ".").formatted(net.minecraft.util.Formatting.GRAY);
+                        message = Component.literal(payload.playerName() + " has unpicked " + goalName + ".").withStyle(net.minecraft.ChatFormatting.GRAY);
                     } else { // "unban"
-                        message = Text.literal(payload.playerName() + " has unbanned " + goalName + ".").formatted(net.minecraft.util.Formatting.GRAY);
+                        message = Component.literal(payload.playerName() + " has unbanned " + goalName + ".").withStyle(net.minecraft.ChatFormatting.GRAY);
                     }
-                    client.player.sendMessage(message, false);
+                    client.player.sendSystemMessage(message);
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(SyncPickBanLimitPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 GoalGroup.setCustomLimit(payload.limit());
                 if (client.player != null) {
-                    client.player.sendMessage(Text.literal("Pick/Ban limit set to " + payload.limit()), false);
+                    client.player.sendSystemMessage(Component.literal("Pick/Ban limit set to " + payload.limit()));
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(SetBoardTypePayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // Store the board type and excluded goals from the server
                 currentBoardType = payload.boardType();
                 currentExcludedGoals = payload.excludedGoals();
                 
                 // If PickBan GUI is open, refresh it
-                if (client.currentScreen instanceof GoalListScreen screen) {
+                if (client.gui.screen() instanceof GoalListScreen screen) {
                     screen.refreshFromBoardType();
                 }
                 
                 if (client.player != null) {
-                    client.player.sendMessage(Text.literal("Board type updated to: " + payload.boardType() + " (" + currentExcludedGoals.size() + " goals excluded)"), false);
+                    client.player.sendSystemMessage(Component.literal("Board type updated to: " + payload.boardType() + " (" + currentExcludedGoals.size() + " goals excluded)"));
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(me.marin.lockout.network.SyncLocateDataPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // Update ClientLocateUtil with server-provided locate data
                 ClientLocateUtil.setServerLocateData(payload.biomeLocateData(), payload.structureLocateData());
                 
                 // If PickBan GUI is open, refresh it to show newly available goals
-                if (client.currentScreen instanceof GoalListScreen screen) {
-                    screen.init(client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+                if (client.gui.screen() instanceof GoalListScreen screen) {
+                    screen.init(client.getWindow().getGuiScaledWidth(), client.getWindow().getGuiScaledHeight());
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(StartPickBanSessionPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // Clear all goal groups before starting the session
                 GoalGroup.PICKS.getGoals().clear();
@@ -358,18 +358,17 @@ public class LockoutClient implements ClientModInitializer {
                 ClientPickBanSessionHolder.setActiveSession(initialState);
                 
                 // Open the pick/ban GUI for players
-                client.setScreen(new GoalListScreen());
+                client.gui.setScreen(new GoalListScreen());
                 
                 if (client.player != null) {
-                    client.player.sendMessage(
-                        Text.literal("Pick/ban session started: " + payload.team1Name() + " vs " + payload.team2Name()).withColor(0x55FF55),
-                        false
+                    client.player.sendSystemMessage(
+                        Component.literal("Pick/ban session started: " + payload.team1Name() + " vs " + payload.team2Name()).withColor(0x55FF55)
                     );
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(UpdatePickBanSessionPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // Update client-side session state
                 ClientPickBanSessionHolder.setActiveSession(payload);
@@ -391,13 +390,13 @@ public class LockoutClient implements ClientModInitializer {
                 GoalGroup.PENDING_BANS.getGoals().clear();
                 
                 // Update the GUI if it's open (now panels will have updated picks/bans)
-                if (client.currentScreen instanceof GoalListScreen goalListScreen) {
+                if (client.gui.screen() instanceof GoalListScreen goalListScreen) {
                     goalListScreen.refreshForPickBanSession(payload);
                 }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(EndPickBanSessionPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 if (payload.cancelled()) {
                     // Clear all goal groups when cancelled
@@ -428,15 +427,14 @@ public class LockoutClient implements ClientModInitializer {
                 ClientPickBanSessionHolder.clearSession();
                 
                 // Close the GUI if open
-                if (client.currentScreen instanceof GoalListScreen) {
-                    client.setScreen(null);
+                if (client.gui.screen() instanceof GoalListScreen) {
+                    client.gui.setScreen(null);
                 }
                 
                 if (client.player != null) {
                     if (payload.cancelled()) {
-                        client.player.sendMessage(
-                            Text.literal("Pick/ban session has been cancelled by an admin.").withColor(0xFF5555),
-                            false
+                        client.player.sendSystemMessage(
+                            Component.literal("Pick/ban session has been cancelled by an admin.").withColor(0xFF5555)
                         );
                     }
                     // Note: Completion message is sent by server broadcast, not here
@@ -449,8 +447,8 @@ public class LockoutClient implements ClientModInitializer {
                 lockout.setStarted(true);
             }
             context.client().execute(() -> {
-                if (MinecraftClient.getInstance().currentScreen != null) {
-                    MinecraftClient.getInstance().currentScreen.close();
+                if (Minecraft.getInstance().gui.screen() != null) {
+                    Minecraft.getInstance().gui.screen().onClose();
                 }
             });
         });
@@ -461,7 +459,7 @@ public class LockoutClient implements ClientModInitializer {
             }
         });
         ClientPlayNetworking.registerGlobalReceiver(CompleteTaskPayload.ID, (payload, context) -> {
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 // Null check to prevent crash when packet arrives before LockoutGoalsTeamsPayload
                 if (lockout == null) return;
@@ -477,9 +475,9 @@ public class LockoutClient implements ClientModInitializer {
 
                     if (client.player != null && amIPlayingLockout) {
                         if (team.getPlayerNames().contains(client.player.getName().getString())) {
-                            client.player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 2f, 1f);
+                            client.player.playSound(SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("minecraft", "block.note_block.chime")), 2f, 1f);
                         } else {
-                            client.player.playSound(SoundEvents.ENTITY_GUARDIAN_DEATH, 2f, 1f);
+                            client.player.playSound(SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.guardian.death")), 2f, 1f);
                         }
                     }
                 }
@@ -493,7 +491,7 @@ public class LockoutClient implements ClientModInitializer {
             if (lockout == null) return;
             
             lockout.setRunning(false);
-            MinecraftClient client = context.client();
+            Minecraft client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
                     boolean didIWin = false;
@@ -506,21 +504,21 @@ public class LockoutClient implements ClientModInitializer {
                         }
                     }
                     if (didIWin) {
-                        client.player.playSound(SoundEvents.ENTITY_PILLAGER_CELEBRATE, 2f, 1f);
+                        client.player.playSound(SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.pillager.celebrate")), 2f, 1f);
                     } else {
-                        client.player.playSound(SoundEvents.ENTITY_WARDEN_DEATH, 2f, 1f);
+                        client.player.playSound(SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.warden.death")), 2f, 1f);
                     }
                 }
             });
         });
 
-        ArgumentTypeRegistry.registerArgumentType(Constants.BOARD_FILE_ARGUMENT_TYPE, CustomBoardFileArgumentType.class, ConstantArgumentSerializer.of(CustomBoardFileArgumentType::newInstance));
-        ArgumentTypeRegistry.registerArgumentType(Constants.BOARD_POSITION_ARGUMENT_TYPE, BoardPositionArgumentType.class, ConstantArgumentSerializer.of(BoardPositionArgumentType::newInstance));
+        ArgumentTypeRegistry.registerArgumentType(Constants.BOARD_FILE_ARGUMENT_TYPE, CustomBoardFileArgumentType.class, SingletonArgumentInfo.contextFree(CustomBoardFileArgumentType::newInstance));
+        ArgumentTypeRegistry.registerArgumentType(Constants.BOARD_POSITION_ARGUMENT_TYPE, BoardPositionArgumentType.class, SingletonArgumentInfo.contextFree(BoardPositionArgumentType::newInstance));
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             {
-                var commandNode = ClientCommandManager.literal("PickBanLimit").then(
-                    ClientCommandManager.argument("limit", IntegerArgumentType.integer(0)).executes(ctx -> {
+                var commandNode = ClientCommands.literal("PickBanLimit").then(
+                    ClientCommands.argument("limit", IntegerArgumentType.integer(0)).executes(ctx -> {
                         int limit = IntegerArgumentType.getInteger(ctx, "limit");
                         // Send to server so it can broadcast to all players
                         ClientPlayNetworking.send(new SyncPickBanLimitPayload(limit));
@@ -530,19 +528,19 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("BoardPosition").build();
-                var positionNode = ClientCommandManager.argument("board position", BoardPositionArgumentType.newInstance()).executes((context) -> {
+                var commandNode = ClientCommands.literal("BoardPosition").build();
+                var positionNode = ClientCommands.argument("board position", BoardPositionArgumentType.newInstance()).executes((context) -> {
                     String position = context.getArgument("board position", String.class);
 
                     LockoutConfig.BoardPosition boardPosition = LockoutConfig.BoardPosition.match(position);
                     if (boardPosition == null) {
-                        context.getSource().sendError(Text.literal("Invalid board position: " + position + "."));
+                        context.getSource().sendError(Component.literal("Invalid board position: " + position + "."));
                         return 0;
                     }
                     LockoutConfig.getInstance().boardPosition = boardPosition;
                     LockoutConfig.save();
 
-                    context.getSource().sendFeedback(Text.literal("Updated board position." + (boardPosition == LockoutConfig.BoardPosition.LEFT ? " Note: Opening debug hud (F3) will hide the board." : "")));
+                    context.getSource().sendFeedback(Component.literal("Updated board position." + (boardPosition == LockoutConfig.BoardPosition.LEFT ? " Note: Opening debug hud (F3) will hide the board." : "")));
 
                     return 1;
                 }).build();
@@ -551,42 +549,42 @@ public class LockoutClient implements ClientModInitializer {
                 commandNode.addChild(positionNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("BoardBuilder").executes((context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
-                    client.send(() -> {
+                var commandNode = ClientCommands.literal("BoardBuilder").executes((context) -> {
+                    Minecraft client = Minecraft.getInstance();
+                    client.execute(() -> {
                         if (client.player != null) {
-                            client.setScreen(new BoardBuilderScreen());
+                            client.gui.setScreen(new BoardBuilderScreen());
                         }
                     });
 
                     return 1;
                 }).build();
 
-                var boardNameNode = ClientCommandManager.argument("board name", CustomBoardFileArgumentType.newInstance()).executes((context) -> {
+                var boardNameNode = ClientCommands.argument("board name", CustomBoardFileArgumentType.newInstance()).executes((context) -> {
                     String boardName = context.getArgument("board name", String.class);
 
                     JSONBoard jsonBoard;
                     try {
                         jsonBoard = BoardBuilderIO.INSTANCE.readBoard(boardName);
                     } catch (IOException e) {
-                        context.getSource().sendError(Text.literal("Error while trying to read board."));
+                        context.getSource().sendError(Component.literal("Error while trying to read board."));
                         return 0;
                     }
 
                     int size = (int) Math.sqrt(jsonBoard.goals.size());
                     if (size * size != jsonBoard.goals.size() || size < MIN_BOARD_SIZE || size > MAX_BOARD_SIZE) {
-                        context.getSource().sendError(Text.literal("Board doesn't have a valid number of goals!"));
+                        context.getSource().sendError(Component.literal("Board doesn't have a valid number of goals!"));
                         return 0;
                     }
 
                     List<Pair<String, String>> goals = jsonBoard.goals.stream()
                             .map(goal -> new Pair<>(goal.id, goal.data != null ? goal.data : GoalDataConstants.DATA_NONE)).toList();
 
-                    MinecraftClient client = MinecraftClient.getInstance();
-                    client.send(() -> {
+                    Minecraft client = Minecraft.getInstance();
+                    client.execute(() -> {
                         if (client.player != null) {
                             BoardBuilderData.INSTANCE.setBoard(boardName, size, goals);
-                            client.setScreen(new BoardBuilderScreen());
+                            client.gui.setScreen(new BoardBuilderScreen());
                         }
                     });
 
@@ -597,37 +595,37 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("CreateBoardType")
+                var commandNode = ClientCommands.literal("CreateBoardType")
                     .requires(ccs -> hasPermission())
                     .executes((context) -> {
-                        MinecraftClient.getInstance().send(() -> 
-                            MinecraftClient.getInstance().setScreen(new BoardTypeCreatorScreen()));
+                        Minecraft.getInstance().execute(() -> 
+                            Minecraft.getInstance().gui.setScreen(new BoardTypeCreatorScreen()));
                         return 1;
                     }).build();
 
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("EditBoardType")
+                var commandNode = ClientCommands.literal("EditBoardType")
                     .requires(ccs -> hasPermission())
                     .build();
 
-                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                var boardTypeNameNode = ClientCommands.argument("board type name", CustomBoardTypeArgumentType.newInstance())
                     .executes((context) -> {
                         String boardTypeName = context.getArgument("board type name", String.class);
 
-                        MinecraftClient.getInstance().send(() -> {
+                        Minecraft.getInstance().execute(() -> {
                             try {
                                 JSONBoardType existingBoardType = BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
                                 if (existingBoardType == null) {
-                                    sendBoardTypeMessage(Text.literal("BoardType not found: ").formatted(Formatting.RED)
-                                        .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    sendBoardTypeMessage(Component.literal("BoardType not found: ").withStyle(ChatFormatting.RED)
+                                        .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW)));
                                     return;
                                 }
-                                MinecraftClient.getInstance().setScreen(new BoardTypeCreatorScreen(existingBoardType));
+                                Minecraft.getInstance().gui.setScreen(new BoardTypeCreatorScreen(existingBoardType));
                             } catch (IOException e) {
                                 Lockout.error(e);
-                                sendBoardTypeMessage(Text.literal("Failed to load BoardType: " + e.getMessage()).formatted(Formatting.RED));
+                                sendBoardTypeMessage(Component.literal("Failed to load BoardType: " + e.getMessage()).withStyle(ChatFormatting.RED));
                             }
                         });
                         return 1;
@@ -637,38 +635,38 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("ListBoardTypes")
+                var commandNode = ClientCommands.literal("ListBoardTypes")
                     .requires(ccs -> hasPermission())
                     .executes((context) -> {
-                        MinecraftClient.getInstance().send(() -> {
+                        Minecraft.getInstance().execute(() -> {
                             try {
                                 List<String> customBoardTypes = BoardTypeIO.INSTANCE.getSavedBoardTypes();
                                 
                                 if (customBoardTypes.isEmpty()) {
-                                    sendBoardTypeMessage(Text.literal("No custom BoardTypes found.").formatted(Formatting.YELLOW));
+                                    sendBoardTypeMessage(Component.literal("No custom BoardTypes found.").withStyle(ChatFormatting.YELLOW));
                                     return;
                                 }
 
-                                String storagePath = MinecraftClient.getInstance().runDirectory.toPath().resolve("lockout-boardtypes").toString();
-                                sendBoardTypeMessage(Text.literal("Storage location: ").formatted(Formatting.GRAY)
-                                    .append(Text.literal(storagePath).formatted(Formatting.AQUA)));
-                                sendBoardTypeMessage(Text.literal("Custom BoardTypes (" + customBoardTypes.size() + "):").formatted(Formatting.GREEN));
+                                String storagePath = Minecraft.getInstance().gameDirectory.toPath().resolve("lockout-boardtypes").toString();
+                                sendBoardTypeMessage(Component.literal("Storage location: ").withStyle(ChatFormatting.GRAY)
+                                    .append(Component.literal(storagePath).withStyle(ChatFormatting.AQUA)));
+                                sendBoardTypeMessage(Component.literal("Custom BoardTypes (" + customBoardTypes.size() + "):").withStyle(ChatFormatting.GREEN));
                                 
                                 for (String boardTypeName : customBoardTypes) {
                                     try {
                                         JSONBoardType boardType = BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
                                         int excludedCount = boardType.excludedGoals != null ? boardType.excludedGoals.size() : 0;
-                                        sendBoardTypeMessage(Text.literal("  - ").formatted(Formatting.GRAY)
-                                            .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW))
-                                            .append(Text.literal(" (" + excludedCount + " goals excluded)").formatted(Formatting.GRAY)));
+                                        sendBoardTypeMessage(Component.literal("  - ").withStyle(ChatFormatting.GRAY)
+                                            .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW))
+                                            .append(Component.literal(" (" + excludedCount + " goals excluded)").withStyle(ChatFormatting.GRAY)));
                                     } catch (IOException e) {
-                                        sendBoardTypeMessage(Text.literal("  - ").formatted(Formatting.GRAY)
-                                            .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                        sendBoardTypeMessage(Component.literal("  - ").withStyle(ChatFormatting.GRAY)
+                                            .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW)));
                                     }
                                 }
                             } catch (IOException e) {
                                 Lockout.error(e);
-                                sendBoardTypeMessage(Text.literal("Failed to list BoardTypes: " + e.getMessage()).formatted(Formatting.RED));
+                                sendBoardTypeMessage(Component.literal("Failed to list BoardTypes: " + e.getMessage()).withStyle(ChatFormatting.RED));
                             }
                         });
                         return 1;
@@ -677,20 +675,20 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("BoardType")
+                var commandNode = ClientCommands.literal("BoardType")
                     .requires(ccs -> hasPermission())
                     .build();
 
-                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                var boardTypeNameNode = ClientCommands.argument("board type name", CustomBoardTypeArgumentType.newInstance())
                     .executes((context) -> {
                         String boardTypeName = context.getArgument("board type name", String.class);
 
-                        MinecraftClient.getInstance().send(() -> {
+                        Minecraft.getInstance().execute(() -> {
                             try {
                                 me.marin.lockout.json.JSONBoardType boardType = me.marin.lockout.type.BoardTypeIO.INSTANCE.readBoardType(boardTypeName);
                                 if (boardType == null) {
-                                    sendBoardTypeMessage(Text.literal("BoardType not found: ").formatted(Formatting.RED)
-                                        .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                    sendBoardTypeMessage(Component.literal("BoardType not found: ").withStyle(ChatFormatting.RED)
+                                        .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW)));
                                     return;
                                 }
                                 
@@ -699,12 +697,12 @@ public class LockoutClient implements ClientModInitializer {
                                 // Send to server
                                 ClientPlayNetworking.send(new me.marin.lockout.network.UploadBoardTypePayload(boardTypeName, excludedGoals));
                                 
-                                sendBoardTypeMessage(Text.literal("Board type set to '").formatted(Formatting.GREEN)
-                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW))
-                                    .append(Text.literal("' (" + excludedGoals.size() + " goals excluded).").formatted(Formatting.GREEN)));
+                                sendBoardTypeMessage(Component.literal("Board type set to '").withStyle(ChatFormatting.GREEN)
+                                    .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW))
+                                    .append(Component.literal("' (" + excludedGoals.size() + " goals excluded).").withStyle(ChatFormatting.GREEN)));
                             } catch (IOException e) {
                                 Lockout.error(e);
-                                sendBoardTypeMessage(Text.literal("Failed to load BoardType: " + e.getMessage()).formatted(Formatting.RED));
+                                sendBoardTypeMessage(Component.literal("Failed to load BoardType: " + e.getMessage()).withStyle(ChatFormatting.RED));
                             }
                         });
                         return 1;
@@ -714,24 +712,24 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("DeleteBoardType")
+                var commandNode = ClientCommands.literal("DeleteBoardType")
                     .requires(ccs -> hasPermission())
                     .build();
 
-                var boardTypeNameNode = ClientCommandManager.argument("board type name", CustomBoardTypeArgumentType.newInstance())
+                var boardTypeNameNode = ClientCommands.argument("board type name", CustomBoardTypeArgumentType.newInstance())
                     .executes((context) -> {
                         String boardTypeName = context.getArgument("board type name", String.class);
 
-                        MinecraftClient.getInstance().send(() -> {
+                        Minecraft.getInstance().execute(() -> {
                             boolean success = BoardTypeIO.INSTANCE.deleteBoardType(boardTypeName);
                             
                             if (success) {
                                 BoardTypeManager.INSTANCE.clearCache();
-                                sendBoardTypeMessage(Text.literal("Deleted custom BoardType: ").formatted(Formatting.GREEN)
-                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                sendBoardTypeMessage(Component.literal("Deleted custom BoardType: ").withStyle(ChatFormatting.GREEN)
+                                    .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW)));
                             } else {
-                                sendBoardTypeMessage(Text.literal("Failed to delete BoardType: ").formatted(Formatting.RED)
-                                    .append(Text.literal(boardTypeName).formatted(Formatting.YELLOW)));
+                                sendBoardTypeMessage(Component.literal("Failed to delete BoardType: ").withStyle(ChatFormatting.RED)
+                                    .append(Component.literal(boardTypeName).withStyle(ChatFormatting.YELLOW)));
                             }
                         });
                         return 1;
@@ -741,22 +739,22 @@ public class LockoutClient implements ClientModInitializer {
                 dispatcher.getRoot().addChild(commandNode);
             }
             {
-                var commandNode = ClientCommandManager.literal("SetCustomBoard").requires(ccs -> hasPermission()).build();
+                var commandNode = ClientCommands.literal("SetCustomBoard").requires(ccs -> hasPermission()).build();
 
-                var boardNameNode = ClientCommandManager.argument("board name", CustomBoardFileArgumentType.newInstance()).executes((context) -> {
+                var boardNameNode = ClientCommands.argument("board name", CustomBoardFileArgumentType.newInstance()).executes((context) -> {
                     String boardName = context.getArgument("board name", String.class);
 
                     JSONBoard jsonBoard;
                     try {
                         jsonBoard = BoardBuilderIO.INSTANCE.readBoard(boardName);
                     } catch (IOException e) {
-                        context.getSource().sendError(Text.literal("Error while trying to read board."));
+                        context.getSource().sendError(Component.literal("Error while trying to read board."));
                         return 0;
                     }
 
                     int size = (int) Math.sqrt(jsonBoard.goals.size());
                     if (size * size != jsonBoard.goals.size() || size < MIN_BOARD_SIZE || size > MAX_BOARD_SIZE) {
-                        context.getSource().sendError(Text.literal("Board doesn't have a valid number of goals!"));
+                        context.getSource().sendError(Component.literal("Board doesn't have a valid number of goals!"));
                         return 0;
                     }
 
@@ -774,7 +772,7 @@ public class LockoutClient implements ClientModInitializer {
             // Compare Lockout versions, disconnect if invalid.
             String version = payload.version();
             if (!version.equals(LockoutInitializer.MOD_VERSION.getFriendlyString())) {
-                MinecraftClient.getInstance().player.networkHandler.getConnection().disconnect(Text.of("Wrong Lockout version: v" + LockoutInitializer.MOD_VERSION.getFriendlyString() + ".\nServer is using Lockout v" + version + "."));
+                Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal("Wrong Lockout version: v" + LockoutInitializer.MOD_VERSION.getFriendlyString() + ".\nServer is using Lockout v" + version + "."));
                 return;
             }
 
@@ -782,44 +780,44 @@ public class LockoutClient implements ClientModInitializer {
             ClientPlayNetworking.send(new LockoutVersionPayload(LockoutInitializer.MOD_VERSION.getFriendlyString()));
         });
 
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        keyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.open_board", // The translation key of the keybinding's name
-            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
+            InputConstants.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
             GLFW.GLFW_KEY_B, // The keycode of the key
             LOCKOUT_CATEGORY // The translation key of the keybinding's category.
         ));
 
-        goalListKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        goalListKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.open_goal_list",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_P,
             LOCKOUT_CATEGORY // The translation key of the keybinding's category.
         ));
 
-        toggleBoardKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        toggleBoardKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.toggle_board",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_H,
             LOCKOUT_CATEGORY
         ));
 
-        toggleSectionViewKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        toggleSectionViewKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.toggle_section_view",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_O,
             LOCKOUT_CATEGORY
         ));
 
-        nextSectionKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        nextSectionKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.next_section",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_V,
             LOCKOUT_CATEGORY
         ));
 
-        toggleAutoCycleSectionKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        toggleAutoCycleSectionKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.lockout.toggle_auto_cycle_section",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_M,
             LOCKOUT_CATEGORY
         ));
@@ -828,43 +826,43 @@ public class LockoutClient implements ClientModInitializer {
             CURRENT_TICK++;
 
             boolean wasPressed = false;
-            while (keyBinding.wasPressed()) {
+            while (keyBinding.consumeClick()) {
                 wasPressed = true;
             }
             if (wasPressed) {
-                if (client.currentScreen != null || client.player == null) {
+                if (client.gui.screen() != null || client.player == null) {
                     return;
                 }
 
                 // If the game hasn't started, open board builder instead
                 if (!Lockout.exists(lockout)) {
-                    client.setScreen(new BoardBuilderScreen());
+                    client.gui.setScreen(new BoardBuilderScreen());
                     return;
                 }
 
                 // Open GUI
-                client.setScreen(new BoardScreen(BOARD_SCREEN_HANDLER.create(0, client.player.getInventory()), client.player.getInventory(), Text.empty()));
+                client.gui.setScreen(new BoardScreen(BOARD_SCREEN_HANDLER.create(0, client.player.getInventory()), client.player.getInventory(), Component.empty()));
             }
 
             boolean goalListPressed = false;
-            while (goalListKeyBinding.wasPressed()) {
+            while (goalListKeyBinding.consumeClick()) {
                 goalListPressed = true;
             }
             if (goalListPressed) {
-                if (client.currentScreen != null || client.player == null) {
+                if (client.gui.screen() != null || client.player == null) {
                     return;
                 }
                 // Allow anyone to open during active pick/ban session, otherwise only operators
                 boolean hasActiveSession = ClientPickBanSessionHolder.getActiveSession() != null;
                 if (!hasActiveSession && !hasPermissionLevel()) {
-                    client.player.sendMessage(Text.literal("You must be an operator to access the Goal List!").formatted(net.minecraft.util.Formatting.RED), false);
+                    client.player.sendSystemMessage(Component.literal("You must be an operator to access the Goal List!").withStyle(net.minecraft.ChatFormatting.RED));
                     return;
                 }
-                client.setScreen(new GoalListScreen());
+                client.gui.setScreen(new GoalListScreen());
             }
 
             boolean toggleBoardPressed = false;
-            while (toggleBoardKeyBinding.wasPressed()) {
+            while (toggleBoardKeyBinding.consumeClick()) {
                 toggleBoardPressed = true;
             }
             if (toggleBoardPressed) {
@@ -873,11 +871,11 @@ public class LockoutClient implements ClientModInitializer {
             }
 
             boolean toggleSectionViewPressed = false;
-            while (toggleSectionViewKeyBinding.wasPressed()) {
+            while (toggleSectionViewKeyBinding.consumeClick()) {
                 toggleSectionViewPressed = true;
             }
             if (toggleSectionViewPressed) {
-                if (client.currentScreen != null || client.player == null) {
+                if (client.gui.screen() != null || client.player == null) {
                     return;
                 }
                 if (!Lockout.exists(LockoutClient.lockout)) {
@@ -888,7 +886,7 @@ public class LockoutClient implements ClientModInitializer {
                 if (sectionViewEnabled) {
                     resetSectionViewState();
                     if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Section view disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
+                        client.player.sendSystemMessage(Component.literal("Section view disabled").withStyle(net.minecraft.ChatFormatting.YELLOW));
                     }
                     return;
                 }
@@ -896,7 +894,7 @@ public class LockoutClient implements ClientModInitializer {
                 // Only allow enabling if board is at least 4x4.
                 if (LockoutClient.lockout.getBoard().size() < 4) {
                     if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Board is too small to use section view").formatted(net.minecraft.util.Formatting.RED), false);
+                        client.player.sendSystemMessage(Component.literal("Board is too small to use section view").withStyle(net.minecraft.ChatFormatting.RED));
                     }
                     return;
                 }
@@ -906,16 +904,16 @@ public class LockoutClient implements ClientModInitializer {
                 currentSection = 1;
 
                 if (client.player != null) {
-                    client.player.sendMessage(Text.literal("Section view enabled: Section 1").formatted(net.minecraft.util.Formatting.GREEN), false);
+                    client.player.sendSystemMessage(Component.literal("Section view enabled: Section 1").withStyle(net.minecraft.ChatFormatting.GREEN));
                 }
             }
 
             boolean nextSectionPressed = false;
-            while (nextSectionKeyBinding.wasPressed()) {
+            while (nextSectionKeyBinding.consumeClick()) {
                 nextSectionPressed = true;
             }
             if (nextSectionPressed) {
-                if (client.currentScreen != null || client.player == null) {
+                if (client.gui.screen() != null || client.player == null) {
                     return;
                 }
                 
@@ -923,17 +921,17 @@ public class LockoutClient implements ClientModInitializer {
                 if (sectionViewEnabled) {
                     currentSection = currentSection % 4 + 1;  // Cycle 1→2→3→4→1
                     if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Section " + currentSection).formatted(net.minecraft.util.Formatting.GREEN), false);
+                        client.player.sendSystemMessage(Component.literal("Section " + currentSection).withStyle(net.minecraft.ChatFormatting.GREEN));
                     }
                 }
             }
 
             boolean toggleAutoCyclePressed = false;
-            while (toggleAutoCycleSectionKeyBinding.wasPressed()) {
+            while (toggleAutoCycleSectionKeyBinding.consumeClick()) {
                 toggleAutoCyclePressed = true;
             }
             if (toggleAutoCyclePressed) {
-                if (client.currentScreen != null || client.player == null) {
+                if (client.gui.screen() != null || client.player == null) {
                     return;
                 }
                 if (!Lockout.exists(LockoutClient.lockout)) {
@@ -943,7 +941,7 @@ public class LockoutClient implements ClientModInitializer {
                 // Only allow if section view is enabled
                 if (!sectionViewEnabled) {
                     if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Enable section view first").formatted(net.minecraft.util.Formatting.RED), false);
+                        client.player.sendSystemMessage(Component.literal("Enable section view first").withStyle(net.minecraft.ChatFormatting.RED));
                     }
                     return;
                 }
@@ -954,16 +952,15 @@ public class LockoutClient implements ClientModInitializer {
                 
                 if (autoCycleSectionEnabled) {
                     if (client.player != null) {
-                        client.player.sendMessage(
-                            Text.literal("Auto-cycling enabled (").formatted(net.minecraft.util.Formatting.GREEN)
-                                .append(Text.literal(String.valueOf(autoCycleSectionInterval / 20.0)).formatted(net.minecraft.util.Formatting.YELLOW))
-                                .append(Text.literal("s interval)").formatted(net.minecraft.util.Formatting.GREEN)),
-                            false
+                        client.player.sendSystemMessage(
+                            Component.literal("Auto-cycling enabled (").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                .append(Component.literal(String.valueOf(autoCycleSectionInterval / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW))
+                                .append(Component.literal("s interval)").withStyle(net.minecraft.ChatFormatting.GREEN))
                         );
                     }
                 } else {
                     if (client.player != null) {
-                        client.player.sendMessage(Text.literal("Auto-cycling disabled").formatted(net.minecraft.util.Formatting.YELLOW), false);
+                        client.player.sendSystemMessage(Component.literal("Auto-cycling disabled").withStyle(net.minecraft.ChatFormatting.YELLOW));
                     }
                 }
             }
@@ -993,7 +990,7 @@ public class LockoutClient implements ClientModInitializer {
             ClientLocateUtil.clearCache();
         }));
 
-        HandledScreens.register(BOARD_SCREEN_HANDLER, BoardScreen::new);
+        MenuScreens.register(BOARD_SCREEN_HANDLER, BoardScreen::new);
     }
 
 }

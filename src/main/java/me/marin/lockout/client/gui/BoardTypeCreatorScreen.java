@@ -5,15 +5,15 @@ import me.marin.lockout.json.JSONBoardType;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.type.BoardTypeIO;
 import me.marin.lockout.type.BoardTypeManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.awt.*;
 import java.io.IOException;
@@ -26,12 +26,12 @@ import java.util.*;
  */
 public class BoardTypeCreatorScreen extends Screen {
 
-    private TextFieldWidget nameTextField;
-    private TextFieldWidget searchTextField;
-    private ButtonWidget saveButton;
-    private ButtonWidget cancelButton;
-    private TextWidget errorTextWidget;
-    private TextWidget statusTextWidget;
+    private EditBox nameTextField;
+    private EditBox searchTextField;
+    private Button saveButton;
+    private Button cancelButton;
+    private StringWidget errorTextWidget;
+    private StringWidget statusTextWidget;
     private BoardTypeGoalListWidget goalListWidget;
 
     private final Set<String> excludedGoals = new HashSet<>();
@@ -39,13 +39,13 @@ public class BoardTypeCreatorScreen extends Screen {
     private final boolean isEditMode;
 
     public BoardTypeCreatorScreen() {
-        super(Text.literal("Create Custom BoardType"));
+        super(Component.literal("Create Custom BoardType"));
         this.editingBoardTypeName = null;
         this.isEditMode = false;
     }
     
     public BoardTypeCreatorScreen(JSONBoardType existingBoardType) {
-        super(Text.literal("Edit BoardType: " + existingBoardType.name));
+        super(Component.literal("Edit BoardType: " + existingBoardType.name));
         this.editingBoardTypeName = existingBoardType.name;
         this.isEditMode = true;
         if (existingBoardType.excludedGoals != null) {
@@ -56,41 +56,41 @@ public class BoardTypeCreatorScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font textRenderer = Minecraft.getInstance().font;
 
         int centerX = width / 2;
 
-        TextWidget titleWidget = new TextWidget(this.title.copy().formatted(Formatting.BOLD), textRenderer);
+        StringWidget titleWidget = new StringWidget(this.title.copy().withStyle(ChatFormatting.BOLD), font);
         titleWidget.setPosition(centerX - titleWidget.getWidth() / 2, 10);
-        this.addDrawableChild(titleWidget);
+        this.addRenderableWidget(titleWidget);
 
         // Name input field
         int nameFieldWidth = 200;
-        nameTextField = new TextFieldWidget(textRenderer, centerX - nameFieldWidth / 2, 30, nameFieldWidth, 20, Text.empty());
+        nameTextField = new EditBox(font, centerX - nameFieldWidth / 2, 30, nameFieldWidth, 20, Component.empty());
         nameTextField.setMaxLength(50);
         nameTextField.setSuggestion("BoardType Name");
         if (isEditMode) {
-            nameTextField.setText(editingBoardTypeName);
+            nameTextField.setValue(editingBoardTypeName);
         }
-        nameTextField.setChangedListener(text -> nameTextField.setSuggestion(text.isEmpty() ? "BoardType Name" : null));
-        this.addDrawableChild(nameTextField);
+        nameTextField.setResponder(text -> nameTextField.setSuggestion(text.isEmpty() ? "BoardType Name" : null));
+        this.addRenderableWidget(nameTextField);
 
         // Search field
         int searchFieldWidth = 300;
-        searchTextField = new TextFieldWidget(textRenderer, centerX - searchFieldWidth / 2, 60, searchFieldWidth, 20, Text.empty());
+        searchTextField = new EditBox(font, centerX - searchFieldWidth / 2, 60, searchFieldWidth, 20, Component.empty());
         searchTextField.setMaxLength(100);
         searchTextField.setSuggestion("Search goals...");
-        searchTextField.setChangedListener(text -> {
+        searchTextField.setResponder(text -> {
             searchTextField.setSuggestion(text.isEmpty() ? "Search goals..." : null);
             if (goalListWidget != null) {
                 goalListWidget.updateSearch(text);
             }
         });
-        this.addDrawableChild(searchTextField);
+        this.addRenderableWidget(searchTextField);
 
-        statusTextWidget = new TextWidget(getStatusText(), textRenderer);
+        statusTextWidget = new StringWidget(getStatusText(), font);
         statusTextWidget.setPosition(centerX - statusTextWidget.getWidth() / 2, 85);
-        this.addDrawableChild(statusTextWidget);
+        this.addRenderableWidget(statusTextWidget);
 
         int listWidth = 400;
         int listHeight = height - 180;
@@ -99,23 +99,23 @@ public class BoardTypeCreatorScreen extends Screen {
             105,
             listWidth,
             listHeight,
-            Text.empty(),
+            Component.empty(),
             this
         );
-        this.addDrawableChild(goalListWidget);
+        this.addRenderableWidget(goalListWidget);
 
         final int BOTTOM_Y = height - 30;
 
         String saveButtonText = isEditMode ? "Save Changes" : "Save BoardType";
-        saveButton = ButtonWidget.builder(Text.of(saveButtonText), (b) -> {
+        saveButton = Button.builder(Component.literal(saveButtonText), (b) -> {
             saveBoardType();
-        }).width(120).position(centerX - 125, BOTTOM_Y).build();
-        this.addDrawableChild(saveButton);
+        }).width(120).pos(centerX - 125, BOTTOM_Y).build();
+        this.addRenderableWidget(saveButton);
 
-        cancelButton = ButtonWidget.builder(Text.of("Cancel"), (b) -> {
-            close();
-        }).width(80).position(centerX + 10, BOTTOM_Y).build();
-        this.addDrawableChild(cancelButton);
+        cancelButton = Button.builder(Component.literal("Cancel"), (b) -> {
+            onClose();
+        }).width(80).pos(centerX + 10, BOTTOM_Y).build();
+        this.addRenderableWidget(cancelButton);
     }
 
     public void toggleGoalExclusion(String goalId) {
@@ -131,32 +131,32 @@ public class BoardTypeCreatorScreen extends Screen {
 
     private void updateStatusText() {
         if (statusTextWidget != null) {
-            this.remove(statusTextWidget);
+            this.removeWidget(statusTextWidget);
         }
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        statusTextWidget = new TextWidget(getStatusText(), textRenderer);
+        Font textRenderer = Minecraft.getInstance().font;
+        statusTextWidget = new StringWidget(getStatusText(), font);
         statusTextWidget.setPosition(width / 2 - statusTextWidget.getWidth() / 2, 85);
-        this.addDrawableChild(statusTextWidget);
+        this.addRenderableWidget(statusTextWidget);
     }
 
-    private Text getStatusText() {
+    private Component getStatusText() {
         int totalGoals = GoalRegistry.INSTANCE.getRegisteredGoals().size();
         int excludedCount = excludedGoals.size();
         int includedCount = totalGoals - excludedCount;
         
-        return Text.literal(String.format("Goals: %d included, %d excluded (of %d total)", 
+        return Component.literal(String.format("Goals: %d included, %d excluded (of %d total)", 
             includedCount, excludedCount, totalGoals))
-            .formatted(Formatting.GRAY);
+            .withStyle(ChatFormatting.GRAY);
     }
 
     private void saveBoardType() {
         if (errorTextWidget != null) {
-            this.remove(errorTextWidget);
+            this.removeWidget(errorTextWidget);
             errorTextWidget = null;
         }
 
-        String name = nameTextField.getText().trim();
+        String name = nameTextField.getValue().trim();
 
         if (name.isEmpty()) {
             showError("Please enter a name for the BoardType");
@@ -189,14 +189,13 @@ public class BoardTypeCreatorScreen extends Screen {
             BoardTypeManager.INSTANCE.clearCache();
 
             String action = isEditMode ? "Updated" : "Created";
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal(action + " custom BoardType: ").formatted(Formatting.GREEN)
-                    .append(Text.literal(name).formatted(Formatting.YELLOW))
-                    .append(Text.literal(" (" + excludedGoals.size() + " goals excluded)")),
-                false
+            Minecraft.getInstance().player.sendSystemMessage(
+                Component.literal(action + " custom BoardType: ").withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal(name).withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" (" + excludedGoals.size() + " goals excluded)"))
             );
 
-            close();
+            onClose();
         } catch (IOException e) {
             Lockout.error(e);
             showError("Failed to save BoardType: " + e.getMessage());
@@ -205,19 +204,19 @@ public class BoardTypeCreatorScreen extends Screen {
 
     private void showError(String message) {
         if (errorTextWidget != null) {
-            this.remove(errorTextWidget);
+            this.removeWidget(errorTextWidget);
         }
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        errorTextWidget = new TextWidget(Text.literal(message).formatted(Formatting.RED), textRenderer);
+        Font textRenderer = Minecraft.getInstance().font;
+        errorTextWidget = new StringWidget(Component.literal(message).withStyle(ChatFormatting.RED), font);
         int centerX = width / 2;
         errorTextWidget.setPosition(centerX - errorTextWidget.getWidth() / 2, height - 55);
-        this.addDrawableChild(errorTextWidget);
+        this.addRenderableWidget(errorTextWidget);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
     }
 
     @Override

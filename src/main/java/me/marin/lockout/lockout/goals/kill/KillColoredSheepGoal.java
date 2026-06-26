@@ -4,12 +4,13 @@ import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.interfaces.KillMobGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.resources.Identifier;
 
 public class KillColoredSheepGoal extends KillMobGoal implements TextureProvider {
 
@@ -21,14 +22,14 @@ public class KillColoredSheepGoal extends KillMobGoal implements TextureProvider
 
     public KillColoredSheepGoal(String id, String data) {
         super(id, data);
-        texture = Identifier.of(Constants.NAMESPACE, "textures/custom/sheep/kill_" + data + "_sheep.png");
+        texture = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/sheep/kill_" + data + "_sheep.png");
         DYE_COLOR = GoalDataConstants.getDyeColor(data);
         GOAL_NAME = "Kill " + GoalDataConstants.getDyeColorFormatted(DYE_COLOR) + " Sheep";
     }
 
     @Override
     public EntityType<?> getEntity() {
-        return EntityType.SHEEP;
+        return EntityTypes.SHEEP;
     }
 
     public DyeColor getDyeColor() {
@@ -42,7 +43,7 @@ public class KillColoredSheepGoal extends KillMobGoal implements TextureProvider
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
     @Override

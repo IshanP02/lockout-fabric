@@ -4,20 +4,20 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.workstation.UseAnvilGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.AnvilScreenHandler;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AnvilMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(AnvilScreenHandler.class)
+@Mixin(AnvilMenu.class)
 public class AnvilScreenHandlerMixin {
 
-    @Inject(method = "onTakeOutput", at = @At("TAIL"))
-    public void onTakeOutputMixin(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
-        if (player.getEntityWorld().isClient()) return;
+    @Inject(method = "onTake", at = @At("TAIL"))
+    public void onTakeOutputMixin(Player player, ItemStack stack, CallbackInfo ci) {
+        if (player.level().isClientSide()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 

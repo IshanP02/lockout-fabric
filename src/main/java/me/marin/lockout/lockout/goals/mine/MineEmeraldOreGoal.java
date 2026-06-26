@@ -1,9 +1,9 @@
 package me.marin.lockout.lockout.goals.mine;
 
 import me.marin.lockout.lockout.interfaces.MineBlockGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class MineEmeraldOreGoal extends MineBlockGoal {
 
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
     @Override

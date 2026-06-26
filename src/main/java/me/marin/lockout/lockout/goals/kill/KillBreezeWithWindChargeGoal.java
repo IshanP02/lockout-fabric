@@ -3,9 +3,10 @@ package me.marin.lockout.lockout.goals.kill;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.KillMobGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class KillBreezeWithWindChargeGoal extends KillMobGoal implements TextureProvider {
 
@@ -15,7 +16,7 @@ public class KillBreezeWithWindChargeGoal extends KillMobGoal implements Texture
 
     @Override
     public EntityType<?> getEntity() {
-        return EntityType.BREEZE;
+        return EntityTypes.BREEZE;
     }
 
     @Override
@@ -28,7 +29,7 @@ public class KillBreezeWithWindChargeGoal extends KillMobGoal implements Texture
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/kill/breeze_wind_charge.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/kill/breeze_wind_charge.png");
 
     @Override
     public Identifier getTextureIdentifier() {

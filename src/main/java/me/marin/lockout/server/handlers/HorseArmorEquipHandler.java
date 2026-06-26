@@ -5,48 +5,48 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.wear_armor.EquipHorseWithUniqueColoredLeatherArmorGoal;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.world.World;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.entity.animal.equine.Horse;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.level.Level;
 import me.marin.lockout.mixin.server.AbstractHorseEntityAccessor;
 
 public class HorseArmorEquipHandler implements UseEntityCallback {
 
     @Override 
-    public ActionResult interact(PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) {
-        if (world.isClient()) {
-            return ActionResult.PASS;
+    public InteractionResult interact(Player player, Level world, InteractionHand hand, Entity entity, EntityHitResult hitResult) {
+        if (world.isClientSide()) {
+            return InteractionResult.PASS;
         }
 
-        if (entity instanceof HorseEntity) {
-            HorseEntity horse = (HorseEntity) entity;
-            ItemStack heldStack = player.getStackInHand(hand);
+        if (entity instanceof Horse) {
+            Horse horse = (Horse) entity;
+            ItemStack heldStack = player.getItemInHand(hand);
 
-            if(horse.isTame()) {
+            if(horse.isTamed()) {
                 if (isSpecificHorseArmor(heldStack)) {
-                    // Use getBodyArmor() to check if horse already has armor
-                    ItemStack currentArmor = horse.getBodyArmor();
+                    // Use getItemBySlot(BODY) to check if horse already has armor
+                    ItemStack currentArmor = horse.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.BODY);
                     if (currentArmor.isEmpty()) { 
                         // Call the logic method within this same class
-                        if (player instanceof ServerPlayerEntity) {
-                            checkAndCompleteHorseArmorGoal((ServerPlayerEntity) player, heldStack);
+                        if (player instanceof ServerPlayer) {
+                            checkAndCompleteHorseArmorGoal((ServerPlayer) player, heldStack);
                         }
                     }
                 }
             }
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
     
     private boolean isSpecificHorseArmor(ItemStack stack) {
@@ -56,11 +56,11 @@ public class HorseArmorEquipHandler implements UseEntityCallback {
                stack.getItem() == Items.DIAMOND_HORSE_ARMOR;
     }
 
-    public static void checkAndCompleteHorseArmorGoal(ServerPlayerEntity player, ItemStack stack) {
+    public static void checkAndCompleteHorseArmorGoal(ServerPlayer player, ItemStack stack) {
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        DyedColorComponent dyedColor = stack.get(DataComponentTypes.DYED_COLOR);
+        DyedItemColor dyedColor = stack.get(DataComponents.DYED_COLOR);
         if (dyedColor == null) return;
 
         int color = dyedColor.rgb();

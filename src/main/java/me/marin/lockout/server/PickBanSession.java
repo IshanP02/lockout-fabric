@@ -1,7 +1,7 @@
 package me.marin.lockout.server;
 
 import lombok.Getter;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.world.scores.Team;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.*;
@@ -71,7 +71,7 @@ public class PickBanSession {
      */
     public boolean isPlayerOnActiveTeam(String playerName) {
         Team activeTeam = getCurrentActiveTeam();
-        return activeTeam.getPlayerList().contains(playerName);
+        return activeTeam.getPlayers().contains(playerName);
     }
     
     /**

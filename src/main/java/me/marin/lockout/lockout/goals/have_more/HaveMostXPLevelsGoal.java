@@ -6,12 +6,12 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.TextureProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,14 +34,14 @@ public class HaveMostXPLevelsGoal extends Goal implements TextureProvider, HasTo
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/more_level.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/more_level.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         Map<UUID, Integer> levels = LockoutServer.lockout.levels;
         MinecraftServer server = LockoutServer.server;
@@ -51,22 +51,22 @@ public class HaveMostXPLevelsGoal extends Goal implements TextureProvider, HasTo
         // Show leader across all teams
         UUID leaderUuid = LockoutServer.lockout.mostLevelsPlayer;
         if (leaderUuid != null && server != null) {
-            ServerPlayerEntity leader = server.getPlayerManager().getPlayer(leaderUuid);
+            ServerPlayer leader = server.getPlayerList().getPlayer(leaderUuid);
             if (leader != null) {
                 int leaderLevels = levels.getOrDefault(leaderUuid, 0);
-                tooltip.add(Formatting.GOLD + "Leader: " + Formatting.RESET + leader.getName().getString() + " - " + leaderLevels);
+                tooltip.add(ChatFormatting.GOLD + "Leader: " + ChatFormatting.RESET + leader.getName().getString() + " - " + leaderLevels);
             }
         }
         
         // Show team members' progress
         for (String playerName : team.getPlayerNames()) {
-            ServerPlayerEntity teamPlayer = server.getPlayerManager().getPlayer(playerName);
+            ServerPlayer teamPlayer = server.getPlayerList().getPlayer(playerName);
             if (teamPlayer != null) {
-                UUID uuid = teamPlayer.getUuid();
+                UUID uuid = teamPlayer.getUUID();
                 // Skip if this player is already shown as leader
                 if (!uuid.equals(leaderUuid)) {
                     int playerLevels = levels.getOrDefault(uuid, 0);
-                    tooltip.add(Formatting.GRAY + playerName + " - " + playerLevels);
+                    tooltip.add(ChatFormatting.GRAY + playerName + " - " + playerLevels);
                 }
             }
         }
@@ -86,23 +86,23 @@ public class HaveMostXPLevelsGoal extends Goal implements TextureProvider, HasTo
         // Show leader
         UUID leaderUuid = LockoutServer.lockout.mostLevelsPlayer;
         if (leaderUuid != null && server != null) {
-            ServerPlayerEntity leader = server.getPlayerManager().getPlayer(leaderUuid);
+            ServerPlayer leader = server.getPlayerList().getPlayer(leaderUuid);
             if (leader != null) {
                 int leaderLevels = levels.getOrDefault(leaderUuid, 0);
-                tooltip.add(Formatting.GOLD + "Leader: " + Formatting.RESET + leader.getName().getString() + " - " + leaderLevels);
+                tooltip.add(ChatFormatting.GOLD + "Leader: " + ChatFormatting.RESET + leader.getName().getString() + " - " + leaderLevels);
             }
         }
         
         // Show all teams
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             for (String playerName : team.getPlayerNames()) {
-                ServerPlayerEntity teamPlayer = server.getPlayerManager().getPlayer(playerName);
+                ServerPlayer teamPlayer = server.getPlayerList().getPlayer(playerName);
                 if (teamPlayer != null) {
-                    UUID uuid = teamPlayer.getUuid();
+                    UUID uuid = teamPlayer.getUUID();
                     // Skip if already shown as leader
                     if (!uuid.equals(leaderUuid)) {
                         int playerLevels = levels.getOrDefault(uuid, 0);
-                        tooltip.add(team.getColor() + playerName + Formatting.RESET + " - " + playerLevels);
+                        tooltip.add(team.getColor() + playerName + ChatFormatting.RESET + " - " + playerLevels);
                     }
                 }
             }
