@@ -2,27 +2,27 @@ package me.marin.lockout.lockout.goals.misc;
 
 import java.util.List;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.stat.Stat;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.stats.Stat;
+import net.minecraft.stats.Stats;
+import net.minecraft.resources.Identifier;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.IncrementItemStatGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
 
 public class RightClickBannerWithMapGoal extends IncrementItemStatGoal implements TextureProvider{
 
-    private static final ItemStack ITEM_STACK = Items.MAP.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.MAP.getDefaultInstance();
 
     public RightClickBannerWithMapGoal(String id, String data) {
         super(id, data);
     }
 
-    private static final List<Stat<Item>> STATS = List.of(Stats.USED.getOrCreateStat(Items.FILLED_MAP));
+    private static final List<Stat<Item>> STATS = List.of(Stats.ITEM_USED.get(Items.FILLED_MAP));
     @Override
     public List<Stat<Item>> getStats() {
         return STATS;
@@ -39,12 +39,12 @@ public class RightClickBannerWithMapGoal extends IncrementItemStatGoal implement
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
         return true;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/banner_map.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/banner_map.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

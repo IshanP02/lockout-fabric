@@ -6,29 +6,29 @@ import me.marin.lockout.network.LockPickBanSelectionsPayload;
 import me.marin.lockout.network.UpdatePickBanSessionPayload;
 import me.marin.lockout.network.UpdatePicksBansPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.util.Identifier;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.PlayerSkin;
+import net.minecraft.resources.Identifier;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
 import me.marin.lockout.client.ClientLocateUtil;
 import me.marin.lockout.client.ClientPickBanSessionHolder;
 import me.marin.lockout.client.LockoutClient;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.sound.SoundCategory;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import me.marin.lockout.LocateData;
 import me.marin.lockout.generator.GoalGroup;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.structure.Structure;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import me.marin.lockout.generator.GoalRequirements;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -39,10 +39,10 @@ import java.util.Map;
 
 public class GoalListScreen extends Screen {
 
-    private ButtonWidget closeButton;
-    private ButtonWidget lockSelectionsButton;
+    private Button closeButton;
+    private Button lockSelectionsButton;
     private BoardBuilderSearchWidget searchWidget;
-    private TextFieldWidget searchTextField;
+    private EditBox searchTextField;
     private List<String> displayedGoals;
     private double scrollY = 0;
     private static final int ITEM_HEIGHT = 18;
@@ -58,7 +58,7 @@ public class GoalListScreen extends Screen {
     private UpdatePickBanSessionPayload activeSessionState = null;
 
     public GoalListScreen() {
-        super(Text.literal("Goal List"));
+        super(Component.literal("Goal List"));
         this.displayedGoals = new ArrayList<>();
     }
     
@@ -104,16 +104,16 @@ public class GoalListScreen extends Screen {
             // Total width: 60 + 20 + 120 = 200
             // Each button should be 100 pixels from center
             int closeButtonX = centerX - 100;
-            closeButton = ButtonWidget.builder(Text.literal("Close"), (b) -> {
-                this.close();
-            }).width(60).position(closeButtonX, height - 30).build();
+            closeButton = Button.builder(Component.literal("Close"), (b) -> {
+                this.onClose();
+            }).width(60).pos(closeButtonX, height - 30).build();
         } else {
             // When no session, center the close button
-            closeButton = ButtonWidget.builder(Text.literal("Close"), (b) -> {
-                this.close();
-            }).width(60).position(centerX - 30, height - 30).build();
+            closeButton = Button.builder(Component.literal("Close"), (b) -> {
+                this.onClose();
+            }).width(60).pos(centerX - 30, height - 30).build();
         }
-        this.addDrawableChild(closeButton);
+        this.addRenderableWidget(closeButton);
 
         // Create search/list widget similar to BoardBuilder
         int widgetX = centerX - (ITEM_WIDTH / 2);
@@ -121,12 +121,12 @@ public class GoalListScreen extends Screen {
         int widgetWidth = ITEM_WIDTH;
         int widgetHeight = height - 80 - SEARCH_HEIGHT - 5;
 
-        searchWidget = new BoardBuilderSearchWidget(widgetX, widgetY, widgetWidth, widgetHeight, Text.empty(), true, true, persistedSearchText);
-        this.addDrawableChild(searchWidget);
+        searchWidget = new BoardBuilderSearchWidget(widgetX, widgetY, widgetWidth, widgetHeight, Component.empty(), true, true, persistedSearchText);
+        this.addRenderableWidget(searchWidget);
 
         // Create search bar text field
-        searchTextField = new TextFieldWidget(textRenderer, widgetX, 40, widgetWidth, 18, Text.empty());
-        searchTextField.setChangedListener(s -> {
+        searchTextField = new EditBox(font, widgetX, 40, widgetWidth, 18, Component.empty());
+        searchTextField.setResponder(s -> {
             persistedSearchText = s;
             searchWidget.searchUpdated(s);
             if (s == null || s.isEmpty()) {
@@ -135,11 +135,11 @@ public class GoalListScreen extends Screen {
                 searchTextField.setSuggestion("");
             }
         });
-        searchTextField.setText(persistedSearchText);
+        searchTextField.setValue(persistedSearchText);
         if (persistedSearchText.isEmpty()) {
             searchTextField.setSuggestion("Search goals...");
         }
-        this.addDrawableChild(searchTextField);
+        this.addRenderableWidget(searchTextField);
 
         // Calculate available space for side panels
         int leftSpace = widgetX - 10; // space on left side with padding
@@ -161,7 +161,7 @@ public class GoalListScreen extends Screen {
                 allBans,
                 "Banned Goals"
             );
-            this.addDrawableChild(bansPanel);
+            this.addRenderableWidget(bansPanel);
         }
         
         if (rightSpace >= 150) {
@@ -178,15 +178,15 @@ public class GoalListScreen extends Screen {
                 allPicks,
                 "Picked Goals"
             );
-            this.addDrawableChild(picksPanel);
+            this.addRenderableWidget(picksPanel);
         }
 
         // Once the world is available, filter out goals that fail biome/structure requirements
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world != null) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level != null) {
             // Collect all required biomes/structures from registered goals
-            java.util.Set<RegistryKey<Biome>> biomeKeys = new java.util.HashSet<>();
-            java.util.Set<RegistryKey<Structure>> structureKeys = new java.util.HashSet<>();
+            java.util.Set<ResourceKey<Biome>> biomeKeys = new java.util.HashSet<>();
+            java.util.Set<ResourceKey<Structure>> structureKeys = new java.util.HashSet<>();
             for (String id : GoalRegistry.INSTANCE.getRegisteredGoals()) {
                 GoalRequirements req = GoalRegistry.INSTANCE.getGoalGenerator(id);
                 if (req == null) continue;
@@ -194,8 +194,8 @@ public class GoalListScreen extends Screen {
                 if (req.getRequiredStructures() != null) structureKeys.addAll(req.getRequiredStructures());
             }
 
-            java.util.Map<RegistryKey<Biome>, LocateData> biomes = ClientLocateUtil.locateBiomes(client, biomeKeys);
-            java.util.Map<RegistryKey<Structure>, LocateData> structures = ClientLocateUtil.locateStructures(client, structureKeys);
+            java.util.Map<ResourceKey<Biome>, LocateData> biomes = ClientLocateUtil.locateBiomes(client, biomeKeys);
+            java.util.Map<ResourceKey<Structure>, LocateData> structures = ClientLocateUtil.locateStructures(client, structureKeys);
 
             searchWidget.filterByRequirements(biomes, structures);
         }
@@ -208,8 +208,8 @@ public class GoalListScreen extends Screen {
             int buttonX = centerX + 100 - buttonWidth;
             int buttonY = height - 30; // Same height as Close button
             
-            lockSelectionsButton = ButtonWidget.builder(
-                Text.literal("Lock Selections"),
+            lockSelectionsButton = Button.builder(
+                Component.literal("Lock Selections"),
                 button -> {
                     // Validate picks and bans before sending
                     if (client.player == null) return;
@@ -227,7 +227,7 @@ public class GoalListScreen extends Screen {
                         if (pendingBanCount != limit) {
                             String errorMsg = "You must select exactly " + limit + " ban(s). ";
                             errorMsg += "Current: " + pendingBanCount + "/" + limit + " bans.";
-                            client.player.sendMessage(Text.literal(errorMsg).withColor(0xFF5555), false);
+                            client.player.sendSystemMessage(Component.literal(errorMsg).withColor(0xFF5555));
                             return;
                         }
                     } else {
@@ -235,7 +235,7 @@ public class GoalListScreen extends Screen {
                         if (pendingPickCount != limit) {
                             String errorMsg = "You must select exactly " + limit + " pick(s). ";
                             errorMsg += "Current: " + pendingPickCount + "/" + limit + " picks.";
-                            client.player.sendMessage(Text.literal(errorMsg).withColor(0xFF5555), false);
+                            client.player.sendSystemMessage(Component.literal(errorMsg).withColor(0xFF5555));
                             return;
                         }
                     }
@@ -262,14 +262,14 @@ public class GoalListScreen extends Screen {
                         goalToPlayerMap
                     ));
                 }
-            ).dimensions(buttonX, buttonY, buttonWidth, buttonHeight).build();
+            ).pos(buttonX, buttonY).width( buttonWidth).build();
             
-            this.addDrawableChild(lockSelectionsButton);
+            this.addRenderableWidget(lockSelectionsButton);
         }
     }
 
     private void clearSearch() {
-        searchTextField.setText("");
+        searchTextField.setValue("");
         searchWidget.searchUpdated("");
     }
 
@@ -278,20 +278,14 @@ public class GoalListScreen extends Screen {
         if (activeSessionState != null) {
             int currentRound = activeSessionState.currentRound();
             if (currentRound % 2 == 1) { // Ban round
-                MinecraftClient.getInstance().player.sendMessage(
-                    Text.literal("You can only BAN goals during this round! Right-click to ban.").withColor(0xFF5555),
-                    false
-                );
+                Minecraft.getInstance().player.sendSystemMessage(Component.literal("You can only BAN goals during this round! Right-click to ban.").withColor(0xFF5555));
                 return;
             }
         }
         
         // Block interaction if goal is excluded by board type
         if (LockoutClient.currentExcludedGoals.contains(goalId)) {
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("This goal is excluded by the current board type!").withColor(0xFF5555),
-                false
-            );
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("This goal is excluded by the current board type!").withColor(0xFF5555));
             return;
         }
         
@@ -303,10 +297,7 @@ public class GoalListScreen extends Screen {
             String message = activeSessionState != null 
                 ? "This goal has already been locked by a team!"
                 : "This goal is locked. Use /RemovePicks or /RemoveBans to unlock it.";
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal(message).withColor(0xFF5555),
-                false
-            );
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal(message).withColor(0xFF5555));
             return;
         }
         
@@ -317,10 +308,10 @@ public class GoalListScreen extends Screen {
         if (picks.contains(goalId)) {
             picks.remove(goalId);
             // Broadcast unpick action to all players
-            if (MinecraftClient.getInstance().player != null) {
-                String playerName = MinecraftClient.getInstance().player.getName().getString();
+            if (Minecraft.getInstance().player != null) {
+                String playerName = Minecraft.getInstance().player.getName().getString();
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "unpick"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
                 // Clear local mapping and notify panel
                 GoalGroup.setGoalPlayer(goalId, null);
                 if (picksPanel != null) picksPanel.onGoalAssigned(goalId, null);
@@ -331,8 +322,8 @@ public class GoalListScreen extends Screen {
                 int limit = activeSessionState.selectionLimit();
                 if (picks.size() >= limit) {
                     String goalName = formatGoalName(goalId);
-                    Text message = Text.literal("You've reached the maximum number of picks (" + limit + ")");
-                    MinecraftClient.getInstance().player.sendMessage(message, false);
+                    Component message = Component.literal("You've reached the maximum number of picks (" + limit + ")");
+                    Minecraft.getInstance().player.sendSystemMessage(message);
                     return;
                 }
             } else {
@@ -340,14 +331,14 @@ public class GoalListScreen extends Screen {
                 try {
                     if (picks.size() >= GoalGroup.getCustomLimit()) {
                         String goalName = formatGoalName(goalId);
-                        Text message = Text.literal("Unable to add " + goalName + " to Picks as the limit has been reached.");
-                        MinecraftClient.getInstance().player.sendMessage(message, false);
+                        Component message = Component.literal("Unable to add " + goalName + " to Picks as the limit has been reached.");
+                        Minecraft.getInstance().player.sendSystemMessage(message);
                         return;
                     }
                 } catch (Exception e) {
                     String goalName = formatGoalName(goalId);
-                    Text message = Text.literal("Unable to add " + goalName + " to Picks as the limit has been reached.");
-                    if (MinecraftClient.getInstance().player != null) MinecraftClient.getInstance().player.sendMessage(message, false);
+                    Component message = Component.literal("Unable to add " + goalName + " to Picks as the limit has been reached.");
+                    if (Minecraft.getInstance().player != null) Minecraft.getInstance().player.sendSystemMessage(message);
                     return;
                 }
             }
@@ -355,12 +346,12 @@ public class GoalListScreen extends Screen {
             picks.add(goalId);
             bans.remove(goalId);
             // Store who picked this goal
-            if (MinecraftClient.getInstance().player != null) {
-                String playerName = MinecraftClient.getInstance().player.getName().getString();
+            if (Minecraft.getInstance().player != null) {
+                String playerName = Minecraft.getInstance().player.getName().getString();
                 GoalGroup.setGoalPlayer(goalId, playerName);
                 if (picksPanel != null) picksPanel.onGoalAssigned(goalId, playerName);
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "pick"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "entity.experience_orb.pickup")), 1.0f));
             }
         }
         sendPicksBansUpdate();
@@ -372,20 +363,14 @@ public class GoalListScreen extends Screen {
         if (activeSessionState != null) {
             int currentRound = activeSessionState.currentRound();
             if (currentRound % 2 == 0) { // Pick round
-                MinecraftClient.getInstance().player.sendMessage(
-                    Text.literal("You can only PICK goals during this round! Left-click to pick.").withColor(0xFF5555),
-                    false
-                );
+                Minecraft.getInstance().player.sendSystemMessage(Component.literal("You can only PICK goals during this round! Left-click to pick.").withColor(0xFF5555));
                 return;
             }
         }
         
         // Block interaction if goal is excluded by board type
         if (LockoutClient.currentExcludedGoals.contains(goalId)) {
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("This goal is excluded by the current board type!").withColor(0xFF5555),
-                false
-            );
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("This goal is excluded by the current board type!").withColor(0xFF5555));
             return;
         }
         
@@ -397,10 +382,7 @@ public class GoalListScreen extends Screen {
             String message = activeSessionState != null 
                 ? "This goal has already been locked by a team!"
                 : "This goal is locked. Use /RemovePicks or /RemoveBans to unlock it.";
-            MinecraftClient.getInstance().player.sendMessage(
-                Text.literal(message).withColor(0xFF5555),
-                false
-            );
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal(message).withColor(0xFF5555));
             return;
         }
         
@@ -411,10 +393,10 @@ public class GoalListScreen extends Screen {
         if (bans.contains(goalId)) {
             bans.remove(goalId);
             // Broadcast unban action to all players
-            if (MinecraftClient.getInstance().player != null) {
-                String playerName = MinecraftClient.getInstance().player.getName().getString();
+            if (Minecraft.getInstance().player != null) {
+                String playerName = Minecraft.getInstance().player.getName().getString();
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "unban"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
                 // Clear local mapping and notify panel
                 GoalGroup.setGoalPlayer(goalId, null);
                 if (bansPanel != null) bansPanel.onGoalAssigned(goalId, null);
@@ -425,8 +407,8 @@ public class GoalListScreen extends Screen {
                 int limit = activeSessionState.selectionLimit();
                 if (bans.size() >= limit) {
                     String goalName = formatGoalName(goalId);
-                    Text message = Text.literal("You've reached the maximum number of bans (" + limit + ")");
-                    MinecraftClient.getInstance().player.sendMessage(message, false);
+                    Component message = Component.literal("You've reached the maximum number of bans (" + limit + ")");
+                    Minecraft.getInstance().player.sendSystemMessage(message);
                     return;
                 }
             } else {
@@ -434,14 +416,14 @@ public class GoalListScreen extends Screen {
                 try {
                     if (bans.size() >= GoalGroup.getCustomLimit()) {
                         String goalName = formatGoalName(goalId);
-                        Text message = Text.literal("Unable to add " + goalName + " to Bans as the limit has been reached.");
-                        MinecraftClient.getInstance().player.sendMessage(message, false);
+                        Component message = Component.literal("Unable to add " + goalName + " to Bans as the limit has been reached.");
+                        Minecraft.getInstance().player.sendSystemMessage(message);
                         return;
                     }
                 } catch (Exception e) {
                     String goalName = formatGoalName(goalId);
-                    Text message = Text.literal("Unable to add " + goalName + " to Bans as the limit has been reached.");
-                    if (MinecraftClient.getInstance().player != null) MinecraftClient.getInstance().player.sendMessage(message, false);
+                    Component message = Component.literal("Unable to add " + goalName + " to Bans as the limit has been reached.");
+                    if (Minecraft.getInstance().player != null) Minecraft.getInstance().player.sendSystemMessage(message);
                     return;
                 }
             }
@@ -449,12 +431,12 @@ public class GoalListScreen extends Screen {
             bans.add(goalId);
             picks.remove(goalId);
             // Store who banned this goal
-            if (MinecraftClient.getInstance().player != null) {
-                String playerName = MinecraftClient.getInstance().player.getName().getString();
+            if (Minecraft.getInstance().player != null) {
+                String playerName = Minecraft.getInstance().player.getName().getString();
                 GoalGroup.setGoalPlayer(goalId, playerName);
                 if (bansPanel != null) bansPanel.onGoalAssigned(goalId, playerName);
                 ClientPlayNetworking.send(new BroadcastPickBanPayload(playerName, goalId, "ban"));
-                MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.BLOCK_NOTE_BLOCK_BASS, 1.0f));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "block.note_block.bass")), 1.0f));
             }
         }
         sendPicksBansUpdate();
@@ -497,10 +479,10 @@ public class GoalListScreen extends Screen {
     public void refreshPanels() {
         // Remove old panels
         if (bansPanel != null) {
-            this.remove(bansPanel);
+            this.removeWidget(bansPanel);
         }
         if (picksPanel != null) {
-            this.remove(picksPanel);
+            this.removeWidget(picksPanel);
         }
 
         // Re-create panels with updated lists
@@ -527,7 +509,7 @@ public class GoalListScreen extends Screen {
                 allBans,
                 "Banned Goals"
             );
-            this.addDrawableChild(bansPanel);
+            this.addRenderableWidget(bansPanel);
         }
 
         if (rightSpace >= 150) {
@@ -543,7 +525,7 @@ public class GoalListScreen extends Screen {
                 allPicks,
                 "Picked Goals"
             );
-            this.addDrawableChild(picksPanel);
+            this.addRenderableWidget(picksPanel);
         }
     }
 
@@ -574,23 +556,23 @@ public class GoalListScreen extends Screen {
     }
     
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         // Let the searchWidget render entries (it handles scissoring and icons)
         if (searchWidget != null) {
-            searchWidget.render(context, mouseX, mouseY, delta);
+            searchWidget.extractRenderState(context, mouseX, mouseY, delta);
         }
 
         // Render search text field
         if (searchTextField != null) {
-            searchTextField.render(context, mouseX, mouseY, delta);
+            searchTextField.extractRenderState(context, mouseX, mouseY, delta);
         }
         
         // Draw ALL overlays and text AFTER widgets to ensure they're on top
         
         // Draw title
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFFF);
+        context.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
         
         // Draw team selection banner if session is active
         if (activeSessionState != null) {
@@ -599,13 +581,13 @@ public class GoalListScreen extends Screen {
             String bannerText = activeTeamName + " is Now Selecting";
             
             // Get team color from scoreboard
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
             int teamColor = 0xFFFFFFFF; // default white with full alpha
-            if (client.world != null && client.world.getScoreboard() != null) {
-                net.minecraft.scoreboard.Team team = client.world.getScoreboard().getTeam(activeTeamName);
-                if (team != null && team.getColor() != null && team.getColor().getColorValue() != null) {
-                    int colorValue = team.getColor().getColorValue();
-                    // Force ARGB - getColorValue() returns RGB only
+            if (client.level != null && client.level.getScoreboard() != null) {
+                net.minecraft.world.scores.Team team = client.level.getScoreboard().getPlayerTeam(activeTeamName);
+                if (team != null && team.getColor().isPresent()) {
+                    int colorValue = team.getColor().get().rgb();
+                    // Force ARGB - rgb() returns RGB only
                     teamColor = 0xFF000000 | colorValue;
                     // Ensure color is not black (0x000000)
                     if ((teamColor & 0x00FFFFFF) == 0) {
@@ -615,8 +597,8 @@ public class GoalListScreen extends Screen {
             }
             
             // Draw background box for the banner
-            int textWidth = this.textRenderer.getWidth(bannerText);
-            int textHeight = this.textRenderer.fontHeight;
+            int textWidth = this.font.width(bannerText);
+            int textHeight = this.font.lineHeight;
             int bannerX = (width - textWidth) / 2;
             int bannerY = 20;
             int padding = 4;
@@ -633,12 +615,12 @@ public class GoalListScreen extends Screen {
             
             // Center text vertically within the adjusted background, 1px lower
             int textY = backgroundY + (backgroundHeight - textHeight) / 2 + 1;
-            context.drawText(this.textRenderer, bannerText, bannerX, textY, teamColor, true);
+            context.text(this.font, bannerText, bannerX, textY, teamColor, true);
             
             // Render team player faces on either side of the banner
-            if (client.world != null && client.world.getScoreboard() != null) {
-                net.minecraft.scoreboard.Team team1 = client.world.getScoreboard().getTeam(activeSessionState.team1Name());
-                net.minecraft.scoreboard.Team team2 = client.world.getScoreboard().getTeam(activeSessionState.team2Name());
+            if (client.level != null && client.level.getScoreboard() != null) {
+                net.minecraft.world.scores.Team team1 = client.level.getScoreboard().getPlayerTeam(activeSessionState.team1Name());
+                net.minecraft.world.scores.Team team2 = client.level.getScoreboard().getPlayerTeam(activeSessionState.team2Name());
                 
                 int faceSpacing = 2;
                 int leftEndpoint = bannerX - padding;
@@ -647,17 +629,17 @@ public class GoalListScreen extends Screen {
                 
                 // Get team colors
                 int team1Color = 0xFFFFFFFF;
-                if (team1 != null && team1.getColor() != null && team1.getColor().getColorValue() != null) {
-                    int colorValue = team1.getColor().getColorValue();
+                if (team1 != null && team1.getColor().isPresent()) {
+                    int colorValue = team1.getColor().get().rgb();
                     team1Color = 0xFF000000 | colorValue;
                     if ((team1Color & 0x00FFFFFF) == 0) {
                         team1Color = 0xFFFFFFFF;
                     }
                 }
-                
+
                 int team2Color = 0xFFFFFFFF;
-                if (team2 != null && team2.getColor() != null && team2.getColor().getColorValue() != null) {
-                    int colorValue = team2.getColor().getColorValue();
+                if (team2 != null && team2.getColor().isPresent()) {
+                    int colorValue = team2.getColor().get().rgb();
                     team2Color = 0xFF000000 | colorValue;
                     if ((team2Color & 0x00FFFFFF) == 0) {
                         team2Color = 0xFFFFFFFF;
@@ -665,9 +647,9 @@ public class GoalListScreen extends Screen {
                 }
                 
                 // Render Team 1 faces on the left side (right-to-left)
-                if (team1 != null && !team1.getPlayerList().isEmpty()) {
+                if (team1 != null && !team1.getPlayers().isEmpty()) {
                     int xPos = leftEndpoint - faceSpacing;
-                    for (String playerName : team1.getPlayerList()) {
+                    for (String playerName : team1.getPlayers()) {
                         xPos -= faceSize;
                         renderPlayerFace(context, playerName, xPos, yOffset, team1Color);
                         xPos -= faceSpacing;
@@ -675,9 +657,9 @@ public class GoalListScreen extends Screen {
                 }
                 
                 // Render Team 2 faces on the right side (left-to-right)
-                if (team2 != null && !team2.getPlayerList().isEmpty()) {
+                if (team2 != null && !team2.getPlayers().isEmpty()) {
                     int xPos = rightEndpoint + faceSpacing;
-                    for (String playerName : team2.getPlayerList()) {
+                    for (String playerName : team2.getPlayers()) {
                         renderPlayerFace(context, playerName, xPos, yOffset, team2Color);
                         xPos += faceSize + faceSpacing;
                     }
@@ -687,19 +669,19 @@ public class GoalListScreen extends Screen {
         
         // Render pick/ban session info if active
         if (activeSessionState != null) {
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            Font textRenderer = Minecraft.getInstance().font;
             
             // Display round info at the top
             String roundText = "Round " + activeSessionState.currentRound() + "/" + activeSessionState.maxRounds();
-            int roundX = (width - textRenderer.getWidth(roundText)) / 2;
-            context.drawText(textRenderer, roundText, roundX, 10, 0xFFFFFF, true);
+            int roundX = (width - font.width(roundText)) / 2;
+            context.text(font, roundText, roundX, 10, 0xFFFFFF, true);
             
             // Display active team
             String activeTeamName = activeSessionState.isTeam1Turn() ? 
                 activeSessionState.team1Name() : activeSessionState.team2Name();
             String turnText = activeTeamName + "'s Turn";
-            int turnX = (width - textRenderer.getWidth(turnText)) / 2;
-            context.drawText(textRenderer, turnText, turnX, 22, 0xFFAA00, true);
+            int turnX = (width - font.width(turnText)) / 2;
+            context.text(font, turnText, turnX, 22, 0xFFAA00, true);
             
             // Get pending counts from PENDING_PICKS and PENDING_BANS
             int pendingPicks = GoalGroup.PENDING_PICKS.getGoals().size();
@@ -711,29 +693,29 @@ public class GoalListScreen extends Screen {
             
             // Draw picks part
             String picksText = "Picks: " + pendingPicks + "/" + limit;
-            int progressX = (width - textRenderer.getWidth(picksText + " | Bans: " + pendingBans + "/" + limit)) / 2;
-            context.drawText(textRenderer, picksText, progressX, height - 75, pickColor, true);
+            int progressX = (width - font.width(picksText + " | Bans: " + pendingBans + "/" + limit)) / 2;
+            context.text(font, picksText, progressX, height - 75, pickColor, true);
             
             // Draw bans part
             String bansText = " | Bans: " + pendingBans + "/" + limit;
-            int bansX = progressX + textRenderer.getWidth(picksText);
-            context.drawText(textRenderer, bansText, bansX, height - 75, banColor, true);
+            int bansX = progressX + font.width(picksText);
+            context.text(font, bansText, bansX, height - 75, banColor, true);
         }
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubleClick) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubleClick) {
         int button = click.button();
         double mouseX = click.x();
         double mouseY = click.y();
         // Check team validation if there's an active session
         if (activeSessionState != null) {
-            MinecraftClient mc = MinecraftClient.getInstance();
+            Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
                 String activeTeamName = activeSessionState.isTeam1Turn() ? 
                     activeSessionState.team1Name() : activeSessionState.team2Name();
                 
-                net.minecraft.scoreboard.Team playerTeam = mc.player.getScoreboardTeam();
+                net.minecraft.world.scores.Team playerTeam = mc.player.getTeam();
                 if (playerTeam == null) {
                     return super.mouseClicked(click, doubleClick); // Only allow button clicks
                 }
@@ -784,7 +766,7 @@ public class GoalListScreen extends Screen {
     private java.util.List<String> getVisibleGoals() {
         // Return filtered goals from the search widget
         java.util.List<String> visible = new java.util.ArrayList<>();
-        String searchText = searchTextField != null ? searchTextField.getText() : "";
+        String searchText = searchTextField != null ? searchTextField.getValue() : "";
         for (String goalId : GoalRegistry.INSTANCE.getRegisteredGoals()) {
             if (goalId.toLowerCase().contains(searchText.toLowerCase())) {
                 visible.add(goalId);
@@ -812,7 +794,7 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent click, double deltaX, double deltaY) {
         if (searchWidget != null) {
             if (searchWidget.mouseDragged(click, deltaX, deltaY)) return true;
         }
@@ -820,7 +802,7 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(MouseButtonEvent click) {
         if (searchWidget != null) {
             if (searchWidget.mouseReleased(click)) return true;
         }
@@ -828,7 +810,7 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         if (searchTextField != null && searchTextField.keyPressed(input)) {
             return true;
         }
@@ -836,7 +818,7 @@ public class GoalListScreen extends Screen {
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
+    public boolean charTyped(CharacterEvent input) {
         if (searchTextField != null && searchTextField.charTyped(input)) {
             return true;
         }
@@ -852,46 +834,36 @@ public class GoalListScreen extends Screen {
         this.activeSessionState = sessionState;
         
         // Refresh the GUI
-        this.clearAndInit();
+        this.rebuildWidgets();
     }
     
     /**
      * Render a player's face texture with a colored border
      */
-    private void renderPlayerFace(DrawContext context, String playerName, int x, int y, int borderColor) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null) return;
+    private void renderPlayerFace(GuiGraphicsExtractor context, String playerName, int x, int y, int borderColor) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return;
         
         // First try to find the player in the world (for players nearby)
-        var player = client.world.getPlayers().stream()
+        var player = client.level.players().stream()
             .filter(p -> p.getName().getString().equals(playerName))
             .findFirst()
             .orElse(null);
         
-        SkinTextures skinTextures = null;
+        PlayerSkin PlayerSkin = null;
         
-        if (player != null && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity clientPlayer) {
+        if (player != null && player instanceof net.minecraft.client.player.AbstractClientPlayer clientPlayer) {
             // Player is in world, use their skin directly
-            skinTextures = clientPlayer.getSkin();
-        } else if (client.getNetworkHandler() != null) {
-            // Player not in world, try to get from player list (Tab list)
-            var playerListEntry = client.getNetworkHandler().getPlayerList().stream()
-                    .filter(entry -> entry.getProfile().name().equals(playerName))
-                    .findFirst()
-                    .orElse(null);
-            
-            if (playerListEntry != null) {
-                skinTextures = playerListEntry.getSkinTextures();
-            }
+            PlayerSkin = clientPlayer.getSkin();
         }
         
-        if (skinTextures != null) {
+        if (PlayerSkin != null) {
             // Draw 2px border around the face
             int borderWidth = 2;
             context.fill(x - borderWidth, y - borderWidth, x + 16 + borderWidth, y + 16 + borderWidth, borderColor);
             
             // Use PlayerSkinDrawer for accurate 2D player face rendering
-            net.minecraft.client.gui.PlayerSkinDrawer.draw(context, skinTextures, x, y, 16);
+            net.minecraft.client.gui.components.PlayerFaceExtractor.extractRenderState(context, PlayerSkin, x, y, 16);
         }
     }
 

@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.consume;
 
 import me.marin.lockout.lockout.interfaces.ConsumeItemGoal;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 public class EatGlowBerryGoal extends ConsumeItemGoal {
 

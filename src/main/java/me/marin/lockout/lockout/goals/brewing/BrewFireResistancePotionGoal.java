@@ -1,9 +1,9 @@
 package me.marin.lockout.lockout.goals.brewing;
 
 import me.marin.lockout.lockout.interfaces.ObtainPotionItemGoal;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.core.Holder;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ public class BrewFireResistancePotionGoal extends ObtainPotionItemGoal {
         super(id, data);
     }
 
-    private static final List<RegistryEntry<Potion>> POTION_LIST = List.of(Potions.FIRE_RESISTANCE, Potions.LONG_FIRE_RESISTANCE);
+    private static final List<Holder<Potion>> POTION_LIST = List.of(Potions.FIRE_RESISTANCE, Potions.LONG_FIRE_RESISTANCE);
     @Override
-    public List<RegistryEntry<Potion>> getPotions() {
+    public List<Holder<Potion>> getPotions() {
         return POTION_LIST;
     }
 

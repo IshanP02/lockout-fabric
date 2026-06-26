@@ -2,8 +2,8 @@ package me.marin.lockout.lockout.goals.status_effect.unique;
 
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.goals.status_effect.GetXStatusEffectsGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class Get6StatusEffectsGoal extends GetXStatusEffectsGoal {
 
@@ -26,7 +26,7 @@ public class Get6StatusEffectsGoal extends GetXStatusEffectsGoal {
         return 6;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/status_effect/6_status_effects.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/status_effect/6_status_effects.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

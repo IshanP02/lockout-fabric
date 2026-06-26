@@ -1,9 +1,9 @@
 package me.marin.lockout.mixin.server;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -11,20 +11,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ZombieEntity.class)
+@Mixin(Zombie.class)
 public class ZombieEntityMixin {
 
     @Unique
     private Difficulty before;
 
-    @Inject(method = "onKilledOther", at = @At("HEAD"))
-    public void setDifficulty(ServerWorld world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "killedEntity", at = @At("HEAD"))
+    public void setDifficulty(ServerLevel world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         before = world.getDifficulty();
         world.getServer().setDifficulty(Difficulty.HARD, true);
     }
 
-    @Inject(method = "onKilledOther", at = @At("RETURN"))
-    public void restoreDifficulty(ServerWorld world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "killedEntity", at = @At("RETURN"))
+    public void restoreDifficulty(ServerLevel world, LivingEntity other, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         world.getServer().setDifficulty(before, true);
     }
 

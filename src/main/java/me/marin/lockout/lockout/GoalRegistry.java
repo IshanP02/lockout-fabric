@@ -9,7 +9,7 @@ import org.apache.commons.lang3.reflect.ConstructorUtils;
 import java.util.*;
 
 /**
- * TODO: make this an actual {@link net.minecraft.registry.Registry}
+ * TODO: make this an actual {@link net.minecraft.core.Registry}
  */
 public class GoalRegistry {
 

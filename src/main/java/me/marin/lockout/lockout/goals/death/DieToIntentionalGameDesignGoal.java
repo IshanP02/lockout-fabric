@@ -3,11 +3,11 @@ package me.marin.lockout.lockout.goals.death;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.DieToDamageTypeGoal;
 import me.marin.lockout.lockout.texture.CycleTexturesProvider;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class DieToIntentionalGameDesignGoal extends DieToDamageTypeGoal implemen
     }
 
     @Override
-    public List<RegistryKey<DamageType>> getDamageRegistryKeys() {
+    public List<ResourceKey<DamageType>> getDamageRegistryKeys() {
         return List.of(DamageTypes.BAD_RESPAWN_POINT);
     }
 
@@ -33,12 +33,12 @@ public class DieToIntentionalGameDesignGoal extends DieToDamageTypeGoal implemen
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         return CycleTexturesProvider.super.renderTexture(context, x, y, tick);
     }
     private static final List<Identifier> TEXTURES = List.of(
-            Identifier.of(Constants.NAMESPACE, "textures/custom/death/die_to_anchor.png"),
-            Identifier.of(Constants.NAMESPACE, "textures/custom/death/die_to_bed.png")
+            Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/death/die_to_anchor.png"),
+            Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/death/die_to_bed.png")
     );
 
     @Override

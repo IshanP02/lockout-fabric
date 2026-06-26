@@ -1,17 +1,17 @@
 package me.marin.lockout.network;
 
 import me.marin.lockout.Constants;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record UpdateTimerPayload(long ticks) implements CustomPayload {
-    public static final Id<UpdateTimerPayload> ID = new Id<>(Constants.UPDATE_TIMER_PACKET);
-    public static final PacketCodec<RegistryByteBuf, UpdateTimerPayload> CODEC = PacketCodec.tuple(PacketCodecs.LONG, UpdateTimerPayload::ticks, UpdateTimerPayload::new);
+public record UpdateTimerPayload(long ticks) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<UpdateTimerPayload> ID = new CustomPacketPayload.Type<>(Constants.UPDATE_TIMER_PACKET);
+    public static final StreamCodec<RegistryFriendlyByteBuf, UpdateTimerPayload> CODEC = StreamCodec.composite(ByteBufCodecs.LONG, UpdateTimerPayload::ticks, UpdateTimerPayload::new);
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

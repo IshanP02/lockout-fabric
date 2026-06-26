@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.util;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 import org.apache.commons.lang3.text.WordUtils;
 
 import java.util.List;

@@ -8,14 +8,14 @@ import me.marin.lockout.lockout.interfaces.ConsumeItemGoal;
 import me.marin.lockout.lockout.interfaces.ConsumeSomeOfTheFoodsGoal;
 import me.marin.lockout.lockout.interfaces.EatUniqueFoodsGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ConsumableComponent;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Item;
-import net.minecraft.world.World;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,21 +24,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
-@Mixin(FoodComponent.class)
+@Mixin(FoodProperties.class)
 public class FoodComponentMixin {
 
     @Inject(method = "onConsume", at = @At("HEAD"))
-    public void onConsume(World world, LivingEntity user, ItemStack itemStack, ConsumableComponent consumable, CallbackInfo ci) {
+    public void onConsume(Level world, LivingEntity user, ItemStack itemStack, Consumable consumable, CallbackInfo ci) {
 
-        if (world.isClient()) return;
+        if (world.isClientSide()) return;
 
-        if (!(user instanceof PlayerEntity player)) return;
+        if (!(user instanceof Player player)) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
-        if (!lockout.isLockoutPlayer(player.getUuid())) return;
-        LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUuid());
+        if (!lockout.isLockoutPlayer(player.getUUID())) return;
+        LockoutTeamServer team = (LockoutTeamServer) lockout.getPlayerTeam(player.getUUID());
 
 
         for (Goal goal : lockout.getBoard().getGoals()) {
@@ -51,7 +51,7 @@ public class FoodComponentMixin {
                 }
             }
             if (goal instanceof ConsumeSomeOfTheFoodsGoal consumeSomeOfTheFoodsGoal) {
-                FoodComponent foodComponent = itemStack.get(DataComponentTypes.FOOD);
+                FoodProperties foodComponent = itemStack.get(DataComponents.FOOD);
                 if (foodComponent != null) {
                     lockout.foodTypesEaten.putIfAbsent(team, new LinkedHashSet<>());
                     lockout.foodTypesEaten.get(team).add(itemStack.getItem());
@@ -66,19 +66,19 @@ public class FoodComponentMixin {
                 }
             }
             if (goal instanceof EatUniqueFoodsGoal eatUniqueFoodsGoal) {
-                FoodComponent foodComponent = itemStack.get(DataComponentTypes.FOOD);
+                FoodProperties foodComponent = itemStack.get(DataComponents.FOOD);
                 if (foodComponent != null) {
                     eatUniqueFoodsGoal.getTrackerMap().putIfAbsent(team, new LinkedHashSet<>());
                     boolean newFood = eatUniqueFoodsGoal.getTrackerMap().get(team).add(itemStack.getItem());
 
                     // Track per-player food consumption for statistics
-                    lockout.playerFoodsEaten.putIfAbsent(player.getUuid(), new LinkedHashSet<>());
-                    lockout.playerFoodsEaten.get(player.getUuid()).add(itemStack.getItem());
+                    lockout.playerFoodsEaten.putIfAbsent(player.getUUID(), new LinkedHashSet<>());
+                    lockout.playerFoodsEaten.get(player.getUUID()).add(itemStack.getItem());
                     
                     // Track first contributor
                     if (newFood) {
                         lockout.firstFoodContributor.putIfAbsent(team, new HashMap<>());
-                        lockout.firstFoodContributor.get(team).put(itemStack.getItem(), player.getUuid());
+                        lockout.firstFoodContributor.get(team).put(itemStack.getItem(), player.getUUID());
                     }
 
                     int size = eatUniqueFoodsGoal.getTrackerMap().get(team).size();

@@ -15,33 +15,31 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.functions.EnchantRandomlyFunction;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.functions.SetPotionFunction;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
-import net.minecraft.command.argument.GameProfileArgumentType;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.Items;
-import net.minecraft.loot.LootPool;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.LootTables;
-import net.minecraft.loot.entry.ItemEntry;
-import net.minecraft.loot.function.EnchantRandomlyLootFunction;
-import net.minecraft.loot.function.SetCountLootFunction;
-import net.minecraft.loot.function.SetPotionLootFunction;
-import net.minecraft.loot.provider.number.UniformLootNumberProvider;
-import net.minecraft.potion.Potions;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.arguments.GameProfileArgument;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.world.scores.Team;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
 import me.marin.lockout.generator.GoalGroup;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.command.permission.LeveledPermissionPredicate;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -49,9 +47,7 @@ import static me.marin.lockout.Constants.*;
 
 public class LockoutInitializer implements ModInitializer {
 
-    // Permission checks: mappings changed; allow temporarily and restrict in-game if needed.
-    private static final Predicate<ServerCommandSource> PERMISSIONS = (ssc) ->
-    ssc.getServer() != null && (Permissions.check(ssc, PLACEHOLDER_PERM_STRING, LeveledPermissionPredicate.GAMEMASTERS.getLevel()) || ssc.getServer().isSingleplayer());
+    private static final Predicate<CommandSourceStack> PERMISSIONS = ssc -> Commands.LEVEL_GAMEMASTERS.check(ssc.permissions());
 
     public static Version MOD_VERSION;
 
@@ -70,14 +66,14 @@ public class LockoutInitializer implements ModInitializer {
             {
                 {
                     // Lockout command
-                    var commandNode = CommandManager.literal("lockout").requires(PERMISSIONS).build();
-                    var teamsNode = CommandManager.literal("teams").build();
-                    var playersNode = CommandManager.literal("players").build();
-                    var randomNode = CommandManager.literal("random").executes(LockoutServer::lockoutRandomCommandLogic).build();
-                    var teamCountNode = CommandManager.argument("team count", IntegerArgumentType.integer(2, 16)).executes(LockoutServer::lockoutRandomCommandLogic).build();
+                    var commandNode = Commands.literal("lockout").requires(PERMISSIONS).build();
+                    var teamsNode = Commands.literal("teams").build();
+                    var playersNode = Commands.literal("players").build();
+                    var randomNode = Commands.literal("random").executes(LockoutServer::lockoutRandomCommandLogic).build();
+                    var teamCountNode = Commands.argument("team count", IntegerArgumentType.integer(2, 16)).executes(LockoutServer::lockoutRandomCommandLogic).build();
                     //TODO make custom argument types
-                    var teamListNode = CommandManager.argument("team names", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
-                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
+                    var teamListNode = Commands.argument("team names", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
+                    var playerListNode = Commands.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::lockoutCommandLogic).build();
 
                     dispatcher.getRoot().addChild(commandNode);
                     commandNode.addChild(teamsNode);
@@ -91,12 +87,12 @@ public class LockoutInitializer implements ModInitializer {
 
                 {
                     // Blackout command
-                    var commandNode = CommandManager.literal("blackout").requires(PERMISSIONS).build();
-                    var teamNode = CommandManager.literal("team").build();
-                    var playersNode = CommandManager.literal("players").build();
+                    var commandNode = Commands.literal("blackout").requires(PERMISSIONS).build();
+                    var teamNode = Commands.literal("team").build();
+                    var playersNode = Commands.literal("players").build();
                     //TODO make custom argument types
-                    var teamNameNode = CommandManager.argument("team name", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
-                    var playerListNode = CommandManager.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
+                    var teamNameNode = Commands.argument("team name", StringArgumentType.greedyString()).suggests(new TeamSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
+                    var playerListNode = Commands.argument("player names", StringArgumentType.greedyString()).suggests(new PlayerSuggestionProvider()).executes(LockoutServer::blackoutCommandLogic).build();
                     dispatcher.getRoot().addChild(commandNode);
                     commandNode.addChild(teamNode);
                     commandNode.addChild(playersNode);
@@ -108,9 +104,9 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // Chat command
-                var chatCommandNode = CommandManager.literal("chat").build();
-                var chatTeamNode = CommandManager.literal("team").executes(context -> LockoutServer.setChat(context, ChatManager.Type.TEAM)).build();
-                var chatLocalNode = CommandManager.literal("local").executes(context -> LockoutServer.setChat(context, ChatManager.Type.LOCAL)).build();
+                var chatCommandNode = Commands.literal("chat").build();
+                var chatTeamNode = Commands.literal("team").executes(context -> LockoutServer.setChat(context, ChatManager.Type.TEAM)).build();
+                var chatLocalNode = Commands.literal("local").executes(context -> LockoutServer.setChat(context, ChatManager.Type.LOCAL)).build();
 
                 dispatcher.getRoot().addChild(chatCommandNode);
                 chatCommandNode.addChild(chatTeamNode);
@@ -119,9 +115,9 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // Game statistics command
-                var lockoutStatsRoot = CommandManager.literal("GameStatistics").build();
-                var viewNode = CommandManager.literal("view").executes((context) -> LockoutServer.viewStatistics(context)).build();
-                var downloadNode = CommandManager.literal("download").executes((context) -> LockoutServer.downloadStatistics(context)).build();
+                var lockoutStatsRoot = Commands.literal("GameStatistics").build();
+                var viewNode = Commands.literal("view").executes((context) -> LockoutServer.viewStatistics(context)).build();
+                var downloadNode = Commands.literal("download").executes((context) -> LockoutServer.downloadStatistics(context)).build();
 
                 dispatcher.getRoot().addChild(lockoutStatsRoot);
                 lockoutStatsRoot.addChild(viewNode);
@@ -131,9 +127,9 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // GiveGoal command
-                var giveGoalRoot = CommandManager.literal("GiveGoal").requires(PERMISSIONS).build();
-                var playerName = CommandManager.argument("player name", GameProfileArgumentType.gameProfile()).build();
-                var goalIndex = CommandManager.argument("goal number", IntegerArgumentType.integer(1, MAX_BOARD_SIZE * MAX_BOARD_SIZE)).executes(LockoutServer::giveGoal).build();
+                var giveGoalRoot = Commands.literal("GiveGoal").requires(PERMISSIONS).build();
+                var playerName = Commands.argument("player name", GameProfileArgument.gameProfile()).build();
+                var goalIndex = Commands.argument("goal number", IntegerArgumentType.integer(1, MAX_BOARD_SIZE * MAX_BOARD_SIZE)).executes(LockoutServer::giveGoal).build();
 
                 dispatcher.getRoot().addChild(giveGoalRoot);
                 giveGoalRoot.addChild(playerName);
@@ -142,8 +138,8 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // SetStartTime command
-                var setStartTimeRoot = CommandManager.literal("SetStartTime").requires(PERMISSIONS).build();
-                var seconds = CommandManager.argument("seconds", IntegerArgumentType.integer(5, 300)).executes(LockoutServer::setStartTime).build();
+                var setStartTimeRoot = Commands.literal("SetStartTime").requires(PERMISSIONS).build();
+                var seconds = Commands.argument("seconds", IntegerArgumentType.integer(5, 300)).executes(LockoutServer::setStartTime).build();
 
                 dispatcher.getRoot().addChild(setStartTimeRoot);
                 setStartTimeRoot.addChild(seconds);
@@ -151,8 +147,8 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // GracePeriod command
-                var gracePeriodRoot = CommandManager.literal("GracePeriod").requires(PERMISSIONS).build();
-                var gracePeriodSeconds = CommandManager.argument("seconds", IntegerArgumentType.integer(0, 600)).executes(LockoutServer::setGracePeriod).build();
+                var gracePeriodRoot = Commands.literal("GracePeriod").requires(PERMISSIONS).build();
+                var gracePeriodSeconds = Commands.argument("seconds", IntegerArgumentType.integer(0, 600)).executes(LockoutServer::setGracePeriod).build();
 
                 dispatcher.getRoot().addChild(gracePeriodRoot);
                 gracePeriodRoot.addChild(gracePeriodSeconds);
@@ -161,7 +157,7 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // RemoveCustomBoard command (SetCustomBoard is registered in LockoutClient, and server listens for a packet)
 
-                dispatcher.getRoot().addChild(CommandManager.literal("RemoveCustomBoard").requires(PERMISSIONS).executes((context) -> {
+                dispatcher.getRoot().addChild(Commands.literal("RemoveCustomBoard").requires(PERMISSIONS).executes((context) -> {
                     ClientPlayNetworking.send(new CustomBoardPayload(Optional.empty()));
                     return 1;
                 }).build());
@@ -170,8 +166,8 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // SetBoardSize command
 
-                var setBoardTimeRoot = CommandManager.literal("SetBoardSize").requires(PERMISSIONS).build();
-                var size = CommandManager.argument("board size", IntegerArgumentType.integer(MIN_BOARD_SIZE, MAX_BOARD_SIZE)).executes(LockoutServer::setBoardSize).build();
+                var setBoardTimeRoot = Commands.literal("SetBoardSize").requires(PERMISSIONS).build();
+                var size = Commands.argument("board size", IntegerArgumentType.integer(MIN_BOARD_SIZE, MAX_BOARD_SIZE)).executes(LockoutServer::setBoardSize).build();
 
                 dispatcher.getRoot().addChild(setBoardTimeRoot);
                 setBoardTimeRoot.addChild(size);
@@ -179,14 +175,14 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // RemovePicks command
-                dispatcher.getRoot().addChild(CommandManager.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
+                dispatcher.getRoot().addChild(Commands.literal("RemovePicks").requires(PERMISSIONS).executes((context) -> {
                     // Remove goal-to-player mappings for picks before clearing
                     for (String goalId : GoalGroup.PICKS.getGoals()) {
                         GoalGroup.setGoalPlayer(goalId, null);
                     }
                     GoalGroup.PICKS.getGoals().clear();
                     LockoutServer.SERVER_PICKS.clear();
-                    context.getSource().sendMessage(Text.literal("Removed picks."));
+                    context.getSource().sendSystemMessage(Component.literal("Removed picks."));
                     
                     // Broadcast update to all players on server
                     if (context.getSource().getServer() != null) {
@@ -204,7 +200,7 @@ public class LockoutInitializer implements ModInitializer {
                             new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
                             goalToPlayerMap
                         );
-                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                        for (var player : context.getSource().getServer().getPlayerList().getPlayers()) {
                             ServerPlayNetworking.send(player, payload);
                         }
                     }
@@ -214,14 +210,14 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // RemoveBans command
-                dispatcher.getRoot().addChild(CommandManager.literal("RemoveBans").requires(PERMISSIONS).executes((context) -> {
+                dispatcher.getRoot().addChild(Commands.literal("RemoveBans").requires(PERMISSIONS).executes((context) -> {
                     // Remove goal-to-player mappings for bans before clearing
                     for (String goalId : GoalGroup.BANS.getGoals()) {
                         GoalGroup.setGoalPlayer(goalId, null);
                     }
                     GoalGroup.BANS.getGoals().clear();
                     LockoutServer.SERVER_BANS.clear();
-                    context.getSource().sendMessage(Text.literal("Removed bans."));
+                    context.getSource().sendSystemMessage(Component.literal("Removed bans."));
                     
                     // Broadcast update to all players on server
                     if (context.getSource().getServer() != null) {
@@ -239,7 +235,7 @@ public class LockoutInitializer implements ModInitializer {
                             new java.util.ArrayList<>(LockoutServer.SERVER_BANS),
                             goalToPlayerMap
                         );
-                        for (var player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                        for (var player : context.getSource().getServer().getPlayerList().getPlayers()) {
                             ServerPlayNetworking.send(player, payload);
                         }
                     }
@@ -249,26 +245,26 @@ public class LockoutInitializer implements ModInitializer {
 
             {
                 // SimulatePickBans command
-                var simulatePickBansRoot = CommandManager.literal("SimulatePickBans").requires(PERMISSIONS).build();
-                var team1Arg = CommandManager.argument("team1", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).build();
-                var team2Arg = CommandManager.argument("team2", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).executes(context -> {
+                var simulatePickBansRoot = Commands.literal("SimulatePickBans").requires(PERMISSIONS).build();
+                var team1Arg = Commands.argument("team1", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).build();
+                var team2Arg = Commands.argument("team2", StringArgumentType.word()).suggests(new TeamSuggestionProvider()).executes(context -> {
                     String team1Name = StringArgumentType.getString(context, "team1");
                     String team2Name = StringArgumentType.getString(context, "team2");
                     
                     ServerScoreboard scoreboard = context.getSource().getServer().getScoreboard();
-                    Team team1 = scoreboard.getTeam(team1Name);
-                    Team team2 = scoreboard.getTeam(team2Name);
+                    Team team1 = scoreboard.getPlayerTeam(team1Name);
+                    Team team2 = scoreboard.getPlayerTeam(team2Name);
                     
                     if (team1 == null) {
-                        context.getSource().sendError(Text.literal("Team " + team1Name + " does not exist."));
+                        context.getSource().sendFailure(Component.literal("Team " + team1Name + " does not exist."));
                         return 0;
                     }
                     if (team2 == null) {
-                        context.getSource().sendError(Text.literal("Team " + team2Name + " does not exist."));
+                        context.getSource().sendFailure(Component.literal("Team " + team2Name + " does not exist."));
                         return 0;
                     }
                     if (team1.equals(team2)) {
-                        context.getSource().sendError(Text.literal("Cannot start pick/ban with the same team twice."));
+                        context.getSource().sendFailure(Component.literal("Cannot start pick/ban with the same team twice."));
                         return 0;
                     }
                     
@@ -283,11 +279,11 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // CancelPickBanSession command
                 dispatcher.getRoot().addChild(
-                    CommandManager.literal("CancelPickBanSession")
+                    Commands.literal("CancelPickBanSession")
                         .requires(PERMISSIONS)
                         .executes(context -> {
                             if (LockoutServer.activePickBanSession == null) {
-                                context.getSource().sendError(Text.literal("No active pick/ban session to cancel."));
+                                context.getSource().sendFailure(Component.literal("No active pick/ban session to cancel."));
                                 return 0;
                             }
                             
@@ -308,11 +304,11 @@ public class LockoutInitializer implements ModInitializer {
                                 new java.util.HashSet<>(),
                                 new java.util.HashMap<>()
                             );
-                            for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                            for (ServerPlayer player : context.getSource().getServer().getPlayerList().getPlayers()) {
                                 ServerPlayNetworking.send(player, payload);
                             }
                             
-                            context.getSource().sendMessage(Text.literal("Pick/ban session cancelled."));
+                            context.getSource().sendSystemMessage(Component.literal("Pick/ban session cancelled."));
                             return 1;
                         })
                         .build()
@@ -322,22 +318,22 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // PickBanSelectionLimit command
                 dispatcher.getRoot().addChild(
-                    CommandManager.literal("PickBanSelectionLimit")
+                    Commands.literal("PickBanSelectionLimit")
                         .requires(PERMISSIONS)
-                        .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 5))
+                        .then(Commands.argument("limit", IntegerArgumentType.integer(1, 5))
                             .executes(context -> {
                                 int limit = IntegerArgumentType.getInteger(context, "limit");
                                 
                                 if (LockoutServer.activePickBanSession == null) {
                                     // If no active session, store the limit for the next session
                                     LockoutServer.defaultPickBanLimit = limit;
-                                    context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit + " for the next session."));
+                                    context.getSource().sendSystemMessage(Component.literal("Pick/ban selection limit set to " + limit + " for the next session."));
                                     return 1;
                                 }
                                 
                                 // Can only change limit before any rounds are locked
                                 if (LockoutServer.activePickBanSession.getCurrentRound() > 1) {
-                                    context.getSource().sendError(Text.literal("Cannot change selection limit after round 1 has started."));
+                                    context.getSource().sendFailure(Component.literal("Cannot change selection limit after round 1 has started."));
                                     return 0;
                                 }
                                 
@@ -361,11 +357,11 @@ public class LockoutInitializer implements ModInitializer {
                                     LockoutServer.activePickBanSession.getMaxRounds()
                                 );
                                 
-                                for (ServerPlayerEntity player : context.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                for (ServerPlayer player : context.getSource().getServer().getPlayerList().getPlayers()) {
                                     ServerPlayNetworking.send(player, payload);
                                 }
                                 
-                                context.getSource().sendMessage(Text.literal("Pick/ban selection limit set to " + limit));
+                                context.getSource().sendSystemMessage(Component.literal("Pick/ban selection limit set to " + limit));
                                 return 1;
                             })
                         )
@@ -376,24 +372,24 @@ public class LockoutInitializer implements ModInitializer {
             {
                 // MaxRounds command
                 dispatcher.getRoot().addChild(
-                    CommandManager.literal("MaxRounds")
+                    Commands.literal("MaxRounds")
                         .requires(PERMISSIONS)
-                        .then(CommandManager.argument("rounds", IntegerArgumentType.integer(2, 10))
+                        .then(Commands.argument("rounds", IntegerArgumentType.integer(2, 10))
                             .executes(context -> {
                                 int rounds = IntegerArgumentType.getInteger(context, "rounds");
                                 
                                 if (rounds % 2 != 0) {
-                                    context.getSource().sendError(Text.literal("Max rounds must be an even number."));
+                                    context.getSource().sendFailure(Component.literal("Max rounds must be an even number."));
                                     return 0;
                                 }
                                 
                                 if (LockoutServer.activePickBanSession != null) {
-                                    context.getSource().sendError(Text.literal("Cannot change max rounds during an active session."));
+                                    context.getSource().sendFailure(Component.literal("Cannot change max rounds during an active session."));
                                     return 0;
                                 }
                                 
                                 LockoutServer.defaultMaxRounds = rounds;
-                                context.getSource().sendMessage(Text.literal("Max rounds set to " + rounds + " for the next session."));
+                                context.getSource().sendSystemMessage(Component.literal("Max rounds set to " + rounds + " for the next session."));
                                 return 1;
                             })
                         )
@@ -403,44 +399,62 @@ public class LockoutInitializer implements ModInitializer {
 
         });
 
-        LootTableEvents.REPLACE.register(((key, original, source, registries) -> {
-            if (Objects.equals(key, LootTables.PIGLIN_BARTERING_GAMEPLAY)) {
-                UniformLootNumberProvider ironNuggetsCount = UniformLootNumberProvider.create(9.0F, 36.0F);
-                UniformLootNumberProvider quartzCount = UniformLootNumberProvider.create(8.0F, 16.0F);
-                UniformLootNumberProvider glowstoneDustCount = UniformLootNumberProvider.create(5.0F, 12.0F);
-                UniformLootNumberProvider magmaCreamCount = UniformLootNumberProvider.create(2.0F, 6.0F);
-                UniformLootNumberProvider enderPearlCount = UniformLootNumberProvider.create(4.0F, 8.0F);
-                UniformLootNumberProvider stringCount = UniformLootNumberProvider.create(8.0F, 24.0F);
-                UniformLootNumberProvider fireChargeCount = UniformLootNumberProvider.create(1.0F, 5.0F);
-                UniformLootNumberProvider gravelCount = UniformLootNumberProvider.create(8.0F, 16.0F);
-                UniformLootNumberProvider leatherCount = UniformLootNumberProvider.create(4.0F, 10.0F);
-                UniformLootNumberProvider netherBrickCount = UniformLootNumberProvider.create(4.0F, 16.0F);
-                UniformLootNumberProvider cryingObsidianCount = UniformLootNumberProvider.create(1.0F, 3.0F);
-                UniformLootNumberProvider soulSandCount = UniformLootNumberProvider.create(4.0F, 16.0F);
+        LootTableEvents.REPLACE.register((key, original, source, registries) -> {
+            if (!key.equals(BuiltInLootTables.PIGLIN_BARTERING)) return null;
 
-                LootPool pool = LootPool.builder()
-                        .with(ItemEntry.builder(Items.BOOK).apply(EnchantRandomlyLootFunction.create().option(registries.getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.SOUL_SPEED))).weight(5))
-                        .with(ItemEntry.builder(Items.IRON_BOOTS).apply(EnchantRandomlyLootFunction.create().option(registries.getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.SOUL_SPEED))).weight(8))
-                        .with(ItemEntry.builder(Items.POTION).apply(SetPotionLootFunction.builder(Potions.FIRE_RESISTANCE)).weight(10))
-                        .with(ItemEntry.builder(Items.SPLASH_POTION).apply(SetPotionLootFunction.builder(Potions.FIRE_RESISTANCE)).weight(10))
-                        .with(ItemEntry.builder(Items.IRON_NUGGET).apply(SetCountLootFunction.builder(ironNuggetsCount)).weight(10))
-                        .with(ItemEntry.builder(Items.QUARTZ).apply(SetCountLootFunction.builder(quartzCount)).weight(20))
-                        .with(ItemEntry.builder(Items.GLOWSTONE_DUST).apply(SetCountLootFunction.builder(glowstoneDustCount)).weight(20))
-                        .with(ItemEntry.builder(Items.MAGMA_CREAM).apply(SetCountLootFunction.builder(magmaCreamCount)).weight(20))
-                        .with(ItemEntry.builder(Items.ENDER_PEARL).apply(SetCountLootFunction.builder(enderPearlCount)).weight(20))
-                        .with(ItemEntry.builder(Items.STRING).apply(SetCountLootFunction.builder(stringCount)).weight(20))
-                        .with(ItemEntry.builder(Items.FIRE_CHARGE).apply(SetCountLootFunction.builder(fireChargeCount)).weight(40))
-                        .with(ItemEntry.builder(Items.GRAVEL).apply(SetCountLootFunction.builder(gravelCount)).weight(40))
-                        .with(ItemEntry.builder(Items.LEATHER).apply(SetCountLootFunction.builder(leatherCount)).weight(40))
-                        .with(ItemEntry.builder(Items.NETHER_BRICK).apply(SetCountLootFunction.builder(netherBrickCount)).weight(40))
-                        .with(ItemEntry.builder(Items.OBSIDIAN).weight(40))
-                        .with(ItemEntry.builder(Items.CRYING_OBSIDIAN).apply(SetCountLootFunction.builder(cryingObsidianCount)).weight(40))
-                        .with(ItemEntry.builder(Items.SOUL_SAND).apply(SetCountLootFunction.builder(soulSandCount)).weight(40))
-                        .build();
-                return LootTable.builder().pool(pool).build();
-            }
-            return null;
-        }));
+            var soulSpeed = registries.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.SOUL_SPEED);
+
+            var pool = LootPool.lootPool()
+                .add(LootItem.lootTableItem(Items.BOOK)
+                    .apply(EnchantRandomlyFunction.randomEnchantment().withEnchantment(soulSpeed))
+                    .setWeight(5))
+                .add(LootItem.lootTableItem(Items.IRON_BOOTS)
+                    .apply(EnchantRandomlyFunction.randomEnchantment().withEnchantment(soulSpeed))
+                    .setWeight(8))
+                .add(LootItem.lootTableItem(Items.POTION)
+                    .apply(SetPotionFunction.setPotion(Potions.FIRE_RESISTANCE))
+                    .setWeight(10))
+                .add(LootItem.lootTableItem(Items.SPLASH_POTION)
+                    .apply(SetPotionFunction.setPotion(Potions.FIRE_RESISTANCE))
+                    .setWeight(10))
+                .add(LootItem.lootTableItem(Items.IRON_NUGGET)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(9), ConstantValue.exactly(36))))
+                    .setWeight(10))
+                .add(LootItem.lootTableItem(Items.QUARTZ)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(8), ConstantValue.exactly(16))))
+                    .setWeight(20))
+                .add(LootItem.lootTableItem(Items.GLOWSTONE_DUST)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(5), ConstantValue.exactly(12))))
+                    .setWeight(20))
+                .add(LootItem.lootTableItem(Items.MAGMA_CREAM)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(2), ConstantValue.exactly(6))))
+                    .setWeight(20))
+                .add(LootItem.lootTableItem(Items.ENDER_PEARL)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(4), ConstantValue.exactly(8))))
+                    .setWeight(20))
+                .add(LootItem.lootTableItem(Items.STRING)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(8), ConstantValue.exactly(24))))
+                    .setWeight(20))
+                .add(LootItem.lootTableItem(Items.FIRE_CHARGE)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(1), ConstantValue.exactly(5))))
+                    .setWeight(40))
+                .add(LootItem.lootTableItem(Items.GRAVEL)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(8), ConstantValue.exactly(16))))
+                    .setWeight(40))
+                .add(LootItem.lootTableItem(Items.LEATHER)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(4), ConstantValue.exactly(10))))
+                    .setWeight(40))
+                .add(LootItem.lootTableItem(Items.NETHER_BRICK)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(4), ConstantValue.exactly(16))))
+                    .setWeight(40))
+                .add(LootItem.lootTableItem(Items.OBSIDIAN)
+                    .setWeight(40))
+                .add(LootItem.lootTableItem(Items.CRYING_OBSIDIAN)
+                    .apply(SetItemCountFunction.setCount(new UniformGenerator(ConstantValue.exactly(1), ConstantValue.exactly(3))))
+                    .setWeight(40));
+
+            return LootTable.lootTable().withPool(pool).build();
+        });
 
     }
 

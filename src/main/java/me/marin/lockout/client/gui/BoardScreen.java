@@ -7,41 +7,41 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.network.AnnounceGoalFocusPayload;
 import me.marin.lockout.network.RequestGoalDetailsPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
 
-public class BoardScreen extends HandledScreen<BoardScreenHandler> {
+public class BoardScreen extends AbstractContainerScreen<BoardScreenHandler> {
 
-    private DrawContext lastDrawContext;
+    private GuiGraphicsExtractor lastDrawContext;
 
-    public BoardScreen(BoardScreenHandler handler, PlayerInventory inventory, Text title) {
+    public BoardScreen(BoardScreenHandler handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (!Lockout.exists(LockoutClient.lockout)) {
-            this.close();
+            this.onClose();
             return;
         }
         this.lastDrawContext = context;
-        this.renderBackground(context, mouseX, mouseY, delta);
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        this.extractBackground(context, mouseX, mouseY, delta);
+        Font textRenderer = Minecraft.getInstance().font;
 
-        Utility.drawCenterBingoBoard(context, textRenderer, mouseX, mouseY, false);
+        Utility.drawCenterBingoBoard(context, font, mouseX, mouseY, false);
         Goal hoveredGoal = Utility.getBoardHoveredGoal(context, mouseX, mouseY, false);
         if (hoveredGoal != null) {
-            Utility.drawGoalInformation(context, textRenderer, hoveredGoal, mouseX, mouseY);
+            Utility.drawGoalInformation(context, font, hoveredGoal, mouseX, mouseY);
         }
     }
 
     @Override
-    public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubleClick) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent click, boolean doubleClick) {
         int button = click.button();
         double mouseX = click.x();
         double mouseY = click.y();
@@ -52,17 +52,17 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
         Goal clickedGoal = Utility.getBoardHoveredGoal(lastDrawContext, (int) mouseX, (int) mouseY, false);
         
         if (clickedGoal != null) {
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
             
             // Check if player is a spectator (not on any team)
-            if (client.player != null && client.player.getScoreboardTeam() == null) {
+            if (client.player != null && client.player.getTeam() == null) {
                 // Spectator: request detailed goal info
                 ClientPlayNetworking.send(new RequestGoalDetailsPayload(clickedGoal.getId()));
                 return true;
             }
             
             // Team player: announce working on goal
-            if (client.player != null && client.player.getScoreboardTeam() != null) {
+            if (client.player != null && client.player.getTeam() != null) {
                 // Left-click (button 0) = working on, Right-click (button 1) = reminder
                 boolean isReminder = (button == 1);
                 
@@ -77,7 +77,7 @@ public class BoardScreen extends HandledScreen<BoardScreenHandler> {
     }
 
     @Override
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+    public void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
 
     }
 

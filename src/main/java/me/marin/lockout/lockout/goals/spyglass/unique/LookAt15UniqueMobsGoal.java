@@ -1,12 +1,12 @@
 package me.marin.lockout.lockout.goals.spyglass.unique;
 
 import me.marin.lockout.lockout.interfaces.LookAtUniqueMobsGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class LookAt15UniqueMobsGoal extends LookAtUniqueMobsGoal {
 
-    private final ItemStack ITEM = Items.SPYGLASS.getDefaultStack();
+    private final ItemStack ITEM = Items.SPYGLASS.getDefaultInstance();
 
     public LookAt15UniqueMobsGoal(String id, String data) {
         super(id, data);

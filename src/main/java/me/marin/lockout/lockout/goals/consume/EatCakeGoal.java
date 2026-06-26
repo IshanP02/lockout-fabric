@@ -3,10 +3,10 @@ package me.marin.lockout.lockout.goals.consume;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.IncrementStatGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.stats.Stats;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -27,13 +27,13 @@ public class EatCakeGoal extends IncrementStatGoal implements TextureProvider {
         return "Eat a slice of Cake";
     }
 
-    private static final ItemStack ITEM_STACK = Items.CAKE.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.CAKE.getDefaultInstance();
     @Override
     public ItemStack getTextureItemStack() {
         return ITEM_STACK;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/eat_cake.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/eat_cake.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

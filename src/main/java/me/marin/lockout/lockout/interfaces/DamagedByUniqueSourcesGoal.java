@@ -7,16 +7,16 @@ import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.Trackable;
 import me.marin.lockout.lockout.texture.TextureProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackable<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>>, TextureProvider, HasTooltipInfo {
+public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackable<LockoutTeam, LinkedHashSet<ResourceKey<DamageType>>>, TextureProvider, HasTooltipInfo {
 
-    private final static ItemStack DISPLAY_ITEM_STACK = Items.RED_DYE.getDefaultStack();
+    private final static ItemStack DISPLAY_ITEM_STACK = Items.DYE.red().getDefaultInstance();
     static {
         DISPLAY_ITEM_STACK.setCount(64);
     }
@@ -41,22 +41,22 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
         return DISPLAY_ITEM_STACK;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/take_unique_damage.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/take_unique_damage.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
-        var set = getTrackerMap().getOrDefault(team, new LinkedHashSet<>());
+        LinkedHashSet<net.minecraft.resources.ResourceKey<net.minecraft.world.damagesource.DamageType>> set = getTrackerMap().getOrDefault(team, new LinkedHashSet<>());
 
         tooltip.add(" ");
         tooltip.add("Unique Sources: " + Math.min(getAmount(), set.size()) + "/" + getAmount());
         // list formatted damage type names
         List<String> names = set.stream()
-            .map(k -> org.apache.commons.lang3.text.WordUtils.capitalize(k.getValue().getPath().replace("_", " "), ' '))
+            .map(k -> org.apache.commons.lang3.text.WordUtils.capitalize(k.identifier().getPath().replace("_", " "), ' '))
             .collect(Collectors.toList());
         if (!names.isEmpty()) {
             tooltip.addAll(HasTooltipInfo.commaSeparatedList(names));
@@ -73,7 +73,7 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
         tooltip.add(" ");
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             int damage = LockoutServer.lockout.damageByUniqueSources.getOrDefault(team, 0);
-            tooltip.add(team.getColor() + team.getDisplayName() + Formatting.RESET + ": " + Math.min(getAmount(), damage) + "/" + getAmount());
+            tooltip.add(team.getColor() + team.getDisplayName() + ChatFormatting.RESET + ": " + Math.min(getAmount(), damage) + "/" + getAmount());
         }
         tooltip.add(" ");
 
@@ -81,7 +81,7 @@ public abstract class DamagedByUniqueSourcesGoal extends Goal implements Trackab
     }
 
     @Override
-    public Map<LockoutTeam, LinkedHashSet<RegistryKey<DamageType>>> getTrackerMap() {
+    public Map<LockoutTeam, LinkedHashSet<ResourceKey<DamageType>>> getTrackerMap() {
         return LockoutServer.lockout.damageTypesTaken;
     }
 

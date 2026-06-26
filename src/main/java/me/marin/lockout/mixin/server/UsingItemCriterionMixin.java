@@ -8,22 +8,22 @@ import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.LookAtMobGoal;
 import me.marin.lockout.lockout.interfaces.LookAtUniqueMobsGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.advancement.criterion.UsingItemCriterion;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.advancements.triggers.UsingItemTrigger;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,65 +34,65 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
-@Mixin(UsingItemCriterion.class)
+@Mixin(UsingItemTrigger.class)
 public class UsingItemCriterionMixin {
 
     @Inject(method = "trigger", at = @At("TAIL"))
-    private void lockout$onUsingItem(ServerPlayerEntity player, ItemStack stack, CallbackInfo ci) {
+    private void lockout$onUsingItem(ServerPlayer player, ItemStack stack, CallbackInfo ci) {
         if (stack.getItem() != Items.SPYGLASS) return;
 
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
 
         // Raycast to find entity being looked at (similar to spyglass advancements)
-        Vec3d start = player.getCameraPosVec(1.0F);
-        Vec3d direction = player.getRotationVec(1.0F);
-        Vec3d end = start.add(direction.multiply(100.0));
+        Vec3 start = player.getEyePosition(1.0F);
+        Vec3 direction = player.getViewVector(1.0F);
+        Vec3 end = start.add(direction.scale(100.0));
 
         // Find entities in the raycast path
-        Box searchBox = new Box(start, end);
-        List<Entity> entities = player.getEntityWorld().getOtherEntities(player, searchBox, 
+        AABB searchBox = new AABB(start, end);
+        List<Entity> entities = player.level().getEntities(player, searchBox,
             e -> e instanceof LivingEntity && !e.isSpectator());
 
         // Find the closest entity in the look direction
         Optional<Entity> closestEntity = entities.stream()
             .filter(e -> {
-                Vec3d toEntity = e.getEntityPos().subtract(start);
-                double dotProduct = toEntity.normalize().dotProduct(direction);
+                Vec3 toEntity = e.position().subtract(start);
+                double dotProduct = toEntity.normalize().dot(direction);
                 return dotProduct > 0.99; // Very narrow cone (spyglass FOV)
             })
             .min((e1, e2) -> {
-                double dist1 = e1.squaredDistanceTo(start);
-                double dist2 = e2.squaredDistanceTo(start);
+                double dist1 = e1.distanceToSqr(start);
+                double dist2 = e2.distanceToSqr(start);
                 return Double.compare(dist1, dist2);
             });
 
         if (closestEntity.isEmpty()) return;
-        
+
         Entity entity = closestEntity.get();
         if (!(entity instanceof LivingEntity)) return;
 
         // Check line of sight - ensure no solid blocks between player and entity
-        Vec3d entityEyePos = entity.getEntityPos().add(0, entity.getEyeHeight(entity.getPose()), 0);
-        RaycastContext raycastContext = new RaycastContext(
-            start, 
+        Vec3 entityEyePos = entity.position().add(0, entity.getEyeHeight(entity.getPose()), 0);
+        ClipContext raycastContext = new ClipContext(
+            start,
             entityEyePos,
-            RaycastContext.ShapeType.COLLIDER,
-            RaycastContext.FluidHandling.NONE,
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
             player
         );
-        BlockHitResult blockHitResult = player.getEntityWorld().raycast(raycastContext);
-        
+        BlockHitResult blockHitResult = player.level().clip(raycastContext);
+
         // If we hit a block before reaching the entity, they're not in line of sight
         if (blockHitResult.getType() == HitResult.Type.BLOCK) {
-            double distanceToBlock = start.squaredDistanceTo(blockHitResult.getPos());
-            double distanceToEntity = start.squaredDistanceTo(entityEyePos);
+            double distanceToBlock = start.distanceToSqr(blockHitResult.getLocation());
+            double distanceToEntity = start.distanceToSqr(entityEyePos);
             if (distanceToBlock < distanceToEntity) {
                 return; // Block is in the way
             }
         }
 
-        LockoutTeam team = lockout.getPlayerTeam(player.getUuid());
+        LockoutTeam team = lockout.getPlayerTeam(player.getUUID());
         if (team == null) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
@@ -104,34 +104,32 @@ public class UsingItemCriterionMixin {
                 boolean newMob = lockout.lookedAtMobTypes.get(team).add(entity.getType());
 
                 // Track per-player for statistics
-                lockout.playerLookedAtMobs.computeIfAbsent(player.getUuid(), p -> new LinkedHashSet<>());
-                lockout.playerLookedAtMobs.get(player.getUuid()).add(entity.getType());
+                lockout.playerLookedAtMobs.computeIfAbsent(player.getUUID(), p -> new LinkedHashSet<>());
+                lockout.playerLookedAtMobs.get(player.getUUID()).add(entity.getType());
                 
                 // Track first contributor
                 if (newMob) {
                     lockout.firstLookedAtMobContributor.putIfAbsent(team, new HashMap<>());
-                    lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUuid());
-                    
-                    if (player instanceof ServerPlayerEntity serverPlayer) {
-                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_CHIME;
-                    serverPlayer.networkHandler.sendPacket(
-                        new PlaySoundS2CPacket(
+                    lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUUID());
+
+                    Holder<net.minecraft.sounds.SoundEvent> soundEntry = SoundEvents.NOTE_BLOCK_CHIME;
+                    player.connection.send(
+                        new ClientboundSoundPacket(
                             soundEntry,
-                            SoundCategory.MASTER,
-                            serverPlayer.getX(),
-                            serverPlayer.getY(),
-                            serverPlayer.getZ(),
+                            SoundSource.MASTER,
+                            player.getX(),
+                            player.getY(),
+                            player.getZ(),
                             2f,
                             2f,
-                            player.getEntityWorld().random.nextLong()
+                            player.level().getRandom().nextLong()
                         )
                     );
-                }
-                
+
                     int size = lockout.lookedAtMobTypes.get(team).size();
-                    
+
                     // Display count above action bar
-                    player.sendMessage(Text.of("Mobs Looked at: " + size), true);
+                    player.sendSystemMessage(Component.literal("Mobs Looked at: " + size));
                 }
 
                 int size = lockout.lookedAtMobTypes.get(team).size();

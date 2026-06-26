@@ -2,8 +2,8 @@ package me.marin.lockout.lockout.goals.misc;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class ShootFireworkFromCrossbowGoal extends Goal implements TextureProvider {
 
@@ -21,7 +21,7 @@ public class ShootFireworkFromCrossbowGoal extends Goal implements TextureProvid
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of("minecraft", "textures/item/crossbow_firework.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/item/crossbow_firework.png");
 
     @Override
     public Identifier getTextureIdentifier() {

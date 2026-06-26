@@ -9,24 +9,24 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.awt.*;
 import java.io.IOException;
@@ -43,72 +43,72 @@ public class BoardBuilderScreen extends Screen {
     public static boolean displaySearch = false;
     public static boolean displayEditData = false;
 
-    private TextFieldWidget titleTextField;
-    private ButtonWidget saveButton;
-    private TextWidget saveErrorTextWidget;
-    private ButtonWidget clearBoardButton;
-    private ButtonWidget closeButton;
-    private ButtonWidget closeSearchButton;
-    private ButtonWidget increaseSizeButton;
-    private ButtonWidget decreaseSizeButton;
-    private TextFieldWidget searchTextField;
+    private EditBox titleTextField;
+    private Button saveButton;
+    private StringWidget saveErrorTextWidget;
+    private Button clearBoardButton;
+    private Button closeButton;
+    private Button closeSearchButton;
+    private Button increaseSizeButton;
+    private Button decreaseSizeButton;
+    private EditBox searchTextField;
     private BoardBuilderSearchWidget boardBuilderSearchWidget;
-    private ButtonWidget saveDataButton;
-    private ButtonWidget closeEditDataButton;
-    private TextWidget editDataErrorTextWidget;
+    private Button saveDataButton;
+    private Button closeEditDataButton;
+    private StringWidget editDataErrorTextWidget;
 
 
     public BoardBuilderScreen() {
-        super(Text.empty());
+        super(Component.empty());
     }
 
     @Override
     protected void init() {
         super.init();
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font textRenderer = Minecraft.getInstance().font;
 
         int centerX = width / 2;
         int centerY = height / 2;
 
         int boardHalfSize = GUI_PADDING + (BoardBuilderData.INSTANCE.size() * GUI_SLOT_SIZE) / 2;
 
-        titleTextField = new TextFieldWidget(textRenderer, centerX - 60 - CENTER_OFFSET, centerY - boardHalfSize - 18 - 8, 120, 18, Text.empty());
-        titleTextField.setChangedListener(BoardBuilderData.INSTANCE::setTitle);
-        titleTextField.setText(BoardBuilderData.INSTANCE.getTitle());
-        this.addDrawableChild(titleTextField);
+        titleTextField = new EditBox(font, centerX - 60 - CENTER_OFFSET, centerY - boardHalfSize - 18 - 8, 120, 18, Component.empty());
+        titleTextField.setResponder(BoardBuilderData.INSTANCE::setTitle);
+        titleTextField.setValue(BoardBuilderData.INSTANCE.getTitle());
+        this.addRenderableWidget(titleTextField);
 
         final int BOTTOM_BUTTONS_Y = height - 30;
 
-        saveButton = ButtonWidget.builder(Text.of("Save Board"), (b) -> {
+        saveButton = Button.builder(Component.literal("Save Board"), (b) -> {
             saveGoals(10, height - 45);
-        }).width(85).position(10, BOTTOM_BUTTONS_Y).build();
-        this.addDrawableChild(saveButton);
+        }).width(85).pos(10, BOTTOM_BUTTONS_Y).build();
+        this.addRenderableWidget(saveButton);
 
-        closeButton = ButtonWidget.builder(Text.of("Close"), (b) -> {
-            close();
-        }).width(50).position(width - 50 - 10, BOTTOM_BUTTONS_Y).build();
-        this.addDrawableChild(closeButton);
+        closeButton = Button.builder(Component.literal("Close"), (b) -> {
+            onClose();
+        }).width(50).pos(width - 50 - 10, BOTTOM_BUTTONS_Y).build();
+        this.addRenderableWidget(closeButton);
 
-        clearBoardButton = ButtonWidget.builder(Text.of("Clear Board"), (b) -> {
+        clearBoardButton = Button.builder(Component.literal("Clear Board"), (b) -> {
             BoardBuilderData.INSTANCE.clear();
             closeEditData();
             closeSearch();
-        }).width(85).position(closeButton.getX() - 85 - 10, BOTTOM_BUTTONS_Y).build();
-        this.addDrawableChild(clearBoardButton);
+        }).width(85).pos(closeButton.getX() - 85 - 10, BOTTOM_BUTTONS_Y).build();
+        this.addRenderableWidget(clearBoardButton);
 
-        increaseSizeButton = ButtonWidget.builder(Text.literal("+"), b -> {
+        increaseSizeButton = Button.builder(Component.literal("+"), b -> {
             BoardBuilderData.INSTANCE.incrementSize();
-            clearAndInit();
-        }).tooltip(Tooltip.of(Text.literal("Increase board size"))).width(20).position(centerX + boardHalfSize - CENTER_OFFSET + 8, centerY - 10).build();
+            rebuildWidgets();
+        }).tooltip(Tooltip.create(Component.literal("Increase board size"))).width(20).pos(centerX + boardHalfSize - CENTER_OFFSET + 8, centerY - 10).build();
         increaseSizeButton.active = BoardBuilderData.INSTANCE.size() != MAX_BOARD_SIZE;
-        this.addDrawableChild(increaseSizeButton);
+        this.addRenderableWidget(increaseSizeButton);
 
-        decreaseSizeButton = ButtonWidget.builder(Text.literal("-"), b -> {
+        decreaseSizeButton = Button.builder(Component.literal("-"), b -> {
             BoardBuilderData.INSTANCE.decrementSize();
-            clearAndInit();
-        }).tooltip(Tooltip.of(Text.literal("Decrease board size"))).width(20).position(centerX - boardHalfSize - CENTER_OFFSET - 20 - 8, centerY - 10).build();
+            rebuildWidgets();
+        }).tooltip(Tooltip.create(Component.literal("Decrease board size"))).width(20).pos(centerX - boardHalfSize - CENTER_OFFSET - 20 - 8, centerY - 10).build();
         decreaseSizeButton.active = BoardBuilderData.INSTANCE.size() != MIN_BOARD_SIZE;
-        this.addDrawableChild(decreaseSizeButton);
+        this.addRenderableWidget(decreaseSizeButton);
 
         if (displaySearch) {
             double scrollY = boardBuilderSearchWidget == null ? 0 : boardBuilderSearchWidget.getScrollY();
@@ -116,24 +116,24 @@ public class BoardBuilderScreen extends Screen {
                     centerX + boardHalfSize + 35 - CENTER_OFFSET,
                     40,
                     width / 2 - 125 + CENTER_OFFSET,
-                    height - 40 * 2, Text.empty(), false, false, BoardBuilderData.INSTANCE.getSearch());
+                    height - 40 * 2, Component.empty(), false, false, BoardBuilderData.INSTANCE.getSearch());
             boardBuilderSearchWidget.setScrollY(scrollY);
-            this.addDrawableChild(boardBuilderSearchWidget);
+            this.addRenderableWidget(boardBuilderSearchWidget);
 
-            closeSearchButton = ButtonWidget.builder(Text.of("<"), (b) -> {
+            closeSearchButton = Button.builder(Component.literal("<"), (b) -> {
                 closeSearch();
-            }).tooltip(Tooltip.of(Text.of("Close search"))).width(20).position(boardBuilderSearchWidget.getX(), boardBuilderSearchWidget.getY() - 21).build();
-            this.addDrawableChild(closeSearchButton);
+            }).tooltip(Tooltip.create(Component.literal("Close search"))).width(20).pos(boardBuilderSearchWidget.getX(), boardBuilderSearchWidget.getY() - 21).build();
+            this.addRenderableWidget(closeSearchButton);
 
-            searchTextField = new TextFieldWidget(textRenderer, closeSearchButton.getX() + closeSearchButton.getWidth() + 1 + 5, closeSearchButton.getY() + 1, boardBuilderSearchWidget.getWidth() - closeSearchButton.getWidth() - 2 - 5, 18, Text.empty());
-            searchTextField.setChangedListener(s -> {
+            searchTextField = new EditBox(font, closeSearchButton.getX() + closeSearchButton.getWidth() + 1 + 5, closeSearchButton.getY() + 1, boardBuilderSearchWidget.getWidth() - closeSearchButton.getWidth() - 2 - 5, 18, Component.empty());
+            searchTextField.setResponder(s -> {
                 BoardBuilderData.INSTANCE.setSearch(s);
                 boardBuilderSearchWidget.searchUpdated(s);
             });
             if (!BoardBuilderData.INSTANCE.getSearch().isEmpty()) {
-                searchTextField.setText(BoardBuilderData.INSTANCE.getSearch());
+                searchTextField.setValue(BoardBuilderData.INSTANCE.getSearch());
             }
-            this.addDrawableChild(searchTextField);
+            this.addRenderableWidget(searchTextField);
         }
         if (displayEditData) {
             Goal goal = BoardBuilderData.INSTANCE.getModifyingGoal();
@@ -145,29 +145,29 @@ public class BoardBuilderScreen extends Screen {
             for (int i = 0; i < generators.size(); i++) {
                 final int idx = i;
                 GoalDataGenerator.Generator<?> generator = generators.get(i);
-                TextWidget textWidget = new TextWidget(Text.of(generator.getGeneratorName()), textRenderer);
-                textWidget.setPosition(x, y);
-                this.addDrawableChild(textWidget);
+                StringWidget StringWidget = new StringWidget(Component.literal(generator.getGeneratorName()), font);
+                StringWidget.setPosition(x, y);
+                this.addRenderableWidget(StringWidget);
 
                 y += 15;
 
-                TextFieldWidget textFieldWidget = new TextFieldWidget(textRenderer, x, y, 150, 18, Text.empty());
-                textFieldWidget.setText(dataList.get(idx));
-                textFieldWidget.setChangedListener(s -> {
+                EditBox textFieldWidget = new EditBox(font, x, y, 150, 18, Component.empty());
+                textFieldWidget.setValue(dataList.get(idx));
+                textFieldWidget.setResponder(s -> {
                     dataList.set(idx, s);
                 });
-                this.addDrawableChild(textFieldWidget);
+                this.addRenderableWidget(textFieldWidget);
 
                 y += 30;
             }
 
-            closeEditDataButton = ButtonWidget.builder(Text.of("<"), (b) -> {
+            closeEditDataButton = Button.builder(Component.literal("<"), (b) -> {
                 closeEditData();
-            }).tooltip(Tooltip.of(Text.of("Close 'Edit Data'"))).width(20).position(x, y).build();
-            this.addDrawableChild(closeEditDataButton);
+            }).tooltip(Tooltip.create(Component.literal("Close 'Edit Data'"))).width(20).pos(x, y).build();
+            this.addRenderableWidget(closeEditDataButton);
 
             int errorY = y + 25;
-            saveDataButton = ButtonWidget.builder(Text.of("Save"), (b) -> {
+            saveDataButton = Button.builder(Component.literal("Save"), (b) -> {
                 StringBuilder sb = new StringBuilder();
                 boolean isOk = true;
                 String wrongDataGenerator = null;
@@ -182,20 +182,20 @@ public class BoardBuilderScreen extends Screen {
                     sb.append(dataList.get(i));
                 }
                 if (editDataErrorTextWidget != null) {
-                    this.remove(editDataErrorTextWidget);
+                    this.removeWidget(editDataErrorTextWidget);
                     this.editDataErrorTextWidget = null;
                 }
                 if (!isOk) {
                     String s = "Invalid '" + wrongDataGenerator + "'.";
-                    editDataErrorTextWidget = new TextWidget(Text.literal(s).formatted(Formatting.RED), textRenderer);
-                    editDataErrorTextWidget.setPosition(x + 75 - textRenderer.getWidth(s) / 2, errorY);
-                    this.addDrawableChild(editDataErrorTextWidget);
+                    editDataErrorTextWidget = new StringWidget(Component.literal(s).withStyle(ChatFormatting.RED), font);
+                    editDataErrorTextWidget.setPosition(x + 75 - font.width(s) / 2, errorY);
+                    this.addRenderableWidget(editDataErrorTextWidget);
                     return;
                 }
                 BoardBuilderData.INSTANCE.setGoal(GoalRegistry.INSTANCE.newGoal(goal.getId(), sb.toString()));
                 closeEditData();
-            }).width(50).position(closeEditDataButton.getX() + closeEditDataButton.getWidth() + 5, closeEditDataButton.getY()).build();
-            this.addDrawableChild(saveDataButton);
+            }).width(50).pos(closeEditDataButton.getX() + closeEditDataButton.getWidth() + 5, closeEditDataButton.getY()).build();
+            this.addRenderableWidget(saveDataButton);
         }
 
     }
@@ -240,47 +240,47 @@ public class BoardBuilderScreen extends Screen {
 
         String finalBoardName = boardName;
         // TODO: Fix board builder
-        Text openBoardFile = Text.literal("[Open file]").styled(style ->
+        Component openBoardFile = Component.literal("[Open file]").withStyle(style ->
                 style.withClickEvent(new ClickEvent.OpenFile(BoardBuilderIO.INSTANCE.getBoardPath(finalBoardName).toFile().getAbsolutePath()))
-                        .withHoverEvent(new HoverEvent.ShowText(Text.of("Click to open board file.")))
-                        .withFormatting(Formatting.WHITE)
+                        .withHoverEvent(new HoverEvent.ShowText(Component.literal("MouseButtonEvent to open board file.")))
+                        .applyFormat(ChatFormatting.WHITE)
         );
-        Text openBoardsDirectory = Text.literal("[View all boards]").styled(style ->
+        Component openBoardsDirectory = Component.literal("[View all boards]").withStyle(style ->
                 style.withClickEvent(new ClickEvent.OpenFile(BoardBuilderIO.DIRECTORY.toFile().getAbsolutePath()))
-                        .withHoverEvent(new HoverEvent.ShowText(Text.of("Click to open boards directory.")))
-                        .withFormatting(Formatting.WHITE)
+                        .withHoverEvent(new HoverEvent.ShowText(Component.literal("MouseButtonEvent to open boards directory.")))
+                        .applyFormat(ChatFormatting.WHITE)
         );
-        MinecraftClient.getInstance().player.sendMessage(Text.literal("Saved custom board as " + boardName + BoardBuilderIO.FILE_EXTENSION + "!\n").formatted(Formatting.GREEN).append(openBoardFile).append(" ").append(openBoardsDirectory), false);
-        close();
+        Minecraft.getInstance().player.sendSystemMessage(Component.literal("Saved custom board as " + boardName + BoardBuilderIO.FILE_EXTENSION + "!\n").withStyle(ChatFormatting.GREEN).append(openBoardFile).append(" ").append(openBoardsDirectory));
+        onClose();
     }
 
     private void showError(String message, int x, int y) {
-        saveErrorTextWidget = new TextWidget(Text.literal(message).formatted(Formatting.RED), textRenderer);
+        saveErrorTextWidget = new StringWidget(Component.literal(message).withStyle(ChatFormatting.RED), this.font);
         saveErrorTextWidget.setPosition(x, y);
-        this.addDrawableChild(saveErrorTextWidget);
+        this.addRenderableWidget(saveErrorTextWidget);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         closeSearch();
-        super.close();
+        super.onClose();
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Draw the board first so child widgets (search, buttons) render on top
         drawCenterBoard(context, mouseX, mouseY);
-        //this.renderBackground(context, mouseX, mouseY, delta);
-        super.render(context, mouseX, mouseY, delta);
+        //this.extractBackground(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
-        titleTextField.setSuggestion(titleTextField.getText().isEmpty() ? "Board Name" : null);
+        titleTextField.setSuggestion(titleTextField.getValue().isEmpty() ? "Board Name" : null);
         if (displaySearch) {
-            searchTextField.setSuggestion(searchTextField.getText().isEmpty() ? "Search goals.." : null);
+            searchTextField.setSuggestion(searchTextField.getValue().isEmpty() ? "Search goals.." : null);
         }
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean consumed) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean consumed) {
         Optional<Integer> hoveredIdx = Utility.getBoardHoveredIndex(BoardBuilderData.INSTANCE.size(), width, height, (int) click.x(), (int) click.y(), false);
         if ((click.button() == 0 || click.button() == 1) && hoveredIdx.isPresent()) {
             Goal goal = BoardBuilderData.INSTANCE.getGoals().get(hoveredIdx.get());
@@ -302,8 +302,8 @@ public class BoardBuilderScreen extends Screen {
         BoardBuilderData.INSTANCE.setModifyingIdx(hoveredIdx);
         CENTER_OFFSET = 100;
 
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
-        clearAndInit();
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        rebuildWidgets();
     }
 
     public void closeSearch() {
@@ -316,7 +316,7 @@ public class BoardBuilderScreen extends Screen {
         this.closeSearchButton = null;
         this.searchTextField = null;
 
-        clearAndInit();
+        rebuildWidgets();
     }
 
     public void openEditData(int hoveredIdx) {
@@ -326,8 +326,8 @@ public class BoardBuilderScreen extends Screen {
         BoardBuilderData.INSTANCE.setModifyingIdx(hoveredIdx);
         CENTER_OFFSET = 50;
 
-        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0f));
-        clearAndInit();
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+        rebuildWidgets();
     }
 
     public void closeEditData() {
@@ -340,7 +340,7 @@ public class BoardBuilderScreen extends Screen {
         this.closeEditDataButton = null;
         this.editDataErrorTextWidget = null;
 
-        clearAndInit();
+        rebuildWidgets();
     }
 
     @Override
@@ -348,8 +348,8 @@ public class BoardBuilderScreen extends Screen {
         return false;
     }
 
-    public void drawCenterBoard(DrawContext context, int mouseX, int mouseY) {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+    public void drawCenterBoard(GuiGraphicsExtractor context, int mouseX, int mouseY) {
+        Font textRenderer = Minecraft.getInstance().font;
 
         int size = BoardBuilderData.INSTANCE.size();
 
@@ -358,7 +358,7 @@ public class BoardBuilderScreen extends Screen {
         int x = width / 2 - boardWidth / 2 - CENTER_OFFSET;
         int y = height / 2 - boardHeight / 2;
 
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, GUI_CENTER_IDENTIFIER, x, y, boardWidth, boardHeight);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, GUI_CENTER_IDENTIFIER, x, y, boardWidth, boardHeight);
 
         x += GUI_CENTER_PADDING + 1;
         y += GUI_CENTER_PADDING + 1;
@@ -372,7 +372,7 @@ public class BoardBuilderScreen extends Screen {
                 int idx = j + size * i;
                 Goal goal = BoardBuilderData.INSTANCE.getGoals().get(idx);
                 if (goal != null) {
-                    goal.render(context, textRenderer, x, y);
+                    goal.render(context, font, x, y);
                 }
 
                 if (hoveredIdx.isPresent() && hoveredIdx.get() == idx) {
@@ -383,12 +383,12 @@ public class BoardBuilderScreen extends Screen {
                 }
                 if (hoveredIdx.isPresent() && hoveredIdx.get() == idx) {
                     if (goal != null) {
-                        List<OrderedText> tooltip = new ArrayList<>();
-                        tooltip.add(Text.of(goal.getGoalName()).asOrderedText());
+                        List<net.minecraft.network.chat.Component> tooltip = new ArrayList<>();
+                        tooltip.add(Component.literal(goal.getGoalName()));
                         if (goal.hasData()) {
-                            tooltip.add(Text.literal("Right-click to edit data.").formatted(Formatting.GRAY, Formatting.ITALIC).asOrderedText());
+                            tooltip.add(Component.literal("Right-click to edit data.").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
                         }
-                        context.drawOrderedTooltip(textRenderer, tooltip, mouseX, mouseY);
+                        context.setComponentTooltipForNextFrame(font, tooltip, mouseX, mouseY);
                     }
                 }
 
@@ -399,7 +399,7 @@ public class BoardBuilderScreen extends Screen {
         }
     }
 
-    private static void drawBorder(DrawContext context, int x, int y, int width, int height, int color) {
+    private static void drawBorder(GuiGraphicsExtractor context, int x, int y, int width, int height, int color) {
         context.fill(x, y, x + width, y + 1, color);
         context.fill(x, y + height - 1, x + width, y + height, color);
         context.fill(x, y + 1, x + 1, y + height - 1, color);

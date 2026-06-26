@@ -3,8 +3,8 @@ package me.marin.lockout.lockout.interfaces;
 import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -17,13 +17,13 @@ public abstract class KillUniqueHostileMobsGoal extends Goal implements Requires
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         var hostiles = LockoutServer.lockout.killedHostileTypes.getOrDefault(team, new LinkedHashSet<>());
 
         tooltip.add(" ");
         tooltip.add("Unique Hostile Mobs Killed: " + LockoutServer.lockout.killedHostileTypes.getOrDefault(team, new LinkedHashSet<>()).size() + "/" + getAmount());
-        tooltip.addAll(HasTooltipInfo.commaSeparatedList(hostiles.stream().map(type -> type.getName().getString()).toList()));
+        tooltip.addAll(HasTooltipInfo.commaSeparatedList(hostiles.stream().map(type -> type.getDescriptionId()).toList()));
         tooltip.add(" ");
 
         return tooltip;
@@ -36,7 +36,7 @@ public abstract class KillUniqueHostileMobsGoal extends Goal implements Requires
         tooltip.add(" ");
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             var hostiles = LockoutServer.lockout.killedHostileTypes.getOrDefault(team, new LinkedHashSet<>());
-            tooltip.add(team.getColor() + team.getDisplayName() + Formatting.RESET + ": " + hostiles.size() + "/" + getAmount());
+            tooltip.add(team.getColor() + team.getDisplayName() + ChatFormatting.RESET + ": " + hostiles.size() + "/" + getAmount());
         }
         tooltip.add(" ");
 

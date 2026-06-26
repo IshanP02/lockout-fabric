@@ -4,14 +4,14 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.misc.ConstructCopperGolemGoal;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,43 +21,43 @@ import static me.marin.lockout.server.LockoutServer.lockout;
 
 public class CopperGolemConstructionHandler implements UseBlockCallback {
 
-    // Tracks recent pumpkin placements: BlockPos -> (PlayerEntity, tickTime)
+    // Tracks recent pumpkin placements: BlockPos -> (Player, tickTime)
     private static final Map<BlockPos, PumpkinPlacement> RECENT_PUMPKIN_PLACEMENTS = new HashMap<>();
     
     // Maximum ticks to keep a placement record (5 ticks = ~0.25 seconds)
     private static final int MAX_PLACEMENT_AGE_TICKS = 5;
     
-    private record PumpkinPlacement(ServerPlayerEntity player, long tickTime) {}
-    public static void recordPumpkinAction(BlockPos pos, ServerPlayerEntity player, World world) {
+    private record PumpkinPlacement(ServerPlayer player, long tickTime) {}
+    public static void recordPumpkinAction(BlockPos pos, ServerPlayer player, Level world) {
         if (!Lockout.isLockoutRunning(lockout)) return;
-        RECENT_PUMPKIN_PLACEMENTS.put(pos, new PumpkinPlacement(player, world.getTime()));
+        RECENT_PUMPKIN_PLACEMENTS.put(pos, new PumpkinPlacement(player, world.getGameTime()));
     }
     
     @Override
-    public ActionResult interact(PlayerEntity player, World world, Hand hand, BlockHitResult blockHitResult) {
-        if (!Lockout.isLockoutRunning(lockout)) return ActionResult.PASS;
-        if (world.isClient()) return ActionResult.PASS;
-        if (!(player instanceof ServerPlayerEntity serverPlayer)) return ActionResult.PASS;
+    public InteractionResult interact(Player player, Level world, InteractionHand hand, BlockHitResult blockHitResult) {
+        if (!Lockout.isLockoutRunning(lockout)) return InteractionResult.PASS;
+        if (world.isClientSide()) return InteractionResult.PASS;
+        if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
         
         BlockPos clickedPos = blockHitResult.getBlockPos();
-        BlockPos placementPos = clickedPos.up();
+        BlockPos placementPos = clickedPos.above();
         
         // Check if player is placing a carved pumpkin or jack o' lantern
-        if (player.getStackInHand(hand).isOf(Blocks.CARVED_PUMPKIN.asItem()) ||
-            player.getStackInHand(hand).isOf(Blocks.JACK_O_LANTERN.asItem())) {
+        if (player.getItemInHand(hand).is(Blocks.CARVED_PUMPKIN.asItem()) ||
+            player.getItemInHand(hand).is(Blocks.JACK_O_LANTERN.asItem())) {
             
             // Record this pumpkin placement with current world time
             recordPumpkinAction(placementPos, serverPlayer, world);
         }
         
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
     
-    public static ServerPlayerEntity findConstructor(BlockPos golemPos, World world) {
+    public static ServerPlayer findConstructor(BlockPos golemPos, Level world) {
         if (!Lockout.isLockoutRunning(lockout)) return null;
         
-        long currentTime = world.getTime();
-        ServerPlayerEntity constructor = null;
+        long currentTime = world.getGameTime();
+        ServerPlayer constructor = null;
         
         // Check for recent pumpkin placements within 2.5 blocks of the golem spawn
         Iterator<Map.Entry<BlockPos, PumpkinPlacement>> iterator = RECENT_PUMPKIN_PLACEMENTS.entrySet().iterator();
@@ -73,7 +73,7 @@ public class CopperGolemConstructionHandler implements UseBlockCallback {
             }
             
             // Check if this pumpkin is close to the golem spawn position
-            if (pumpkinPos.isWithinDistance(golemPos, 2.5)) {
+            if (pumpkinPos.closerThan(golemPos, 2.5)) {
                 constructor = placement.player();
                 iterator.remove(); // Remove used entry
                 break;
@@ -86,7 +86,7 @@ public class CopperGolemConstructionHandler implements UseBlockCallback {
     /**
      * Call this when a copper golem is successfully spawned
      */
-    public static void onCopperGolemSpawn(ServerPlayerEntity player) {
+    public static void onCopperGolemSpawn(ServerPlayer player) {
         if (!Lockout.isLockoutRunning(lockout)) return;
         
         for (Goal goal : lockout.getBoard().getGoals()) {

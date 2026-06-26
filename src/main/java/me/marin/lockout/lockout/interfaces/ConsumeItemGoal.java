@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public abstract class ConsumeItemGoal extends Goal {
 
@@ -12,7 +12,7 @@ public abstract class ConsumeItemGoal extends Goal {
 
     @Override
     public ItemStack getTextureItemStack() {
-        return getItem().getDefaultStack();
+        return getItem().getDefaultInstance();
     }
 
     public abstract Item getItem();

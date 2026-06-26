@@ -4,16 +4,16 @@ import me.marin.lockout.LocateData;
 import me.marin.lockout.server.LockoutServer;
 import me.marin.lockout.lockout.GoalRegistry;
 import me.marin.lockout.generator.GoalRequirements;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.server.command.LocateCommand;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.structure.Structure;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,19 +22,19 @@ import java.util.HashSet;
 
 public class ClientLocateUtil {
 
-    private static final Map<RegistryKey<Biome>, LocateData> CACHED_BIOMES = new HashMap<>();
-    private static final Map<RegistryKey<Structure>, LocateData> CACHED_STRUCTURES = new HashMap<>();
+    private static final Map<ResourceKey<Biome>, LocateData> CACHED_BIOMES = new HashMap<>();
+    private static final Map<ResourceKey<Structure>, LocateData> CACHED_STRUCTURES = new HashMap<>();
     private static boolean CACHE_BUILT = false;
     
     // Server-provided locate data (for multiplayer)
-    private static final Map<RegistryKey<Biome>, LocateData> SERVER_BIOMES = new HashMap<>();
-    private static final Map<RegistryKey<Structure>, LocateData> SERVER_STRUCTURES = new HashMap<>();
+    private static final Map<ResourceKey<Biome>, LocateData> SERVER_BIOMES = new HashMap<>();
+    private static final Map<ResourceKey<Structure>, LocateData> SERVER_STRUCTURES = new HashMap<>();
     private static boolean HAS_SERVER_DATA = false;
 
     /**
      * Update the cached locate data with server-provided data
      */
-    public static void setServerLocateData(Map<RegistryKey<Biome>, LocateData> biomes, Map<RegistryKey<Structure>, LocateData> structures) {
+    public static void setServerLocateData(Map<ResourceKey<Biome>, LocateData> biomes, Map<ResourceKey<Structure>, LocateData> structures) {
         SERVER_BIOMES.clear();
         SERVER_BIOMES.putAll(biomes);
         SERVER_STRUCTURES.clear();
@@ -46,11 +46,11 @@ public class ClientLocateUtil {
      * Build the locate cache once at world load. Call this when the client world finishes loading.
      * It will collect all required biomes/structures from registered goals and run locate once.
      */
-    public static void buildCacheFromRegisteredGoals(MinecraftClient client) {
-        if (client == null || client.world == null) return;
+    public static void buildCacheFromRegisteredGoals(Minecraft client) {
+        if (client == null || client.level == null) return;
         try {
-            Set<RegistryKey<Biome>> biomeKeys = new HashSet<>();
-            Set<RegistryKey<Structure>> structureKeys = new HashSet<>();
+            Set<ResourceKey<Biome>> biomeKeys = new HashSet<>();
+            Set<ResourceKey<Structure>> structureKeys = new HashSet<>();
             for (String id : GoalRegistry.INSTANCE.getRegisteredGoals()) {
                 GoalRequirements req = GoalRegistry.INSTANCE.getGoalGenerator(id);
                 if (req == null) continue;
@@ -70,25 +70,28 @@ public class ClientLocateUtil {
         }
     }
 
-    private static Map<RegistryKey<Biome>, LocateData> locateBiomesImpl(MinecraftClient client, Iterable<RegistryKey<Biome>> biomesToCheck) {
-        Map<RegistryKey<Biome>, LocateData> map = new HashMap<>();
-        if (client == null || client.world == null) return map;
+    private static Map<ResourceKey<Biome>, LocateData> locateBiomesImpl(Minecraft client, Iterable<ResourceKey<Biome>> biomesToCheck) {
+        Map<ResourceKey<Biome>, LocateData> map = new HashMap<>();
+        if (client == null || client.level == null) return map;
 
         try {
-            var server = client.getServer();
+            var server = client.getSingleplayerServer();
             if (server == null) return map;
 
             BlockPos currentPos = new BlockPos(0, 64, 0);
-            for (RegistryKey<Biome> biome : biomesToCheck) {
-                var pair = server.getOverworld().locateBiome(
-                        biomeRegistryEntry -> biomeRegistryEntry.matchesKey(biome),
+            for (ResourceKey<Biome> biome : biomesToCheck) {
+                var chunkSrc = server.overworld().getChunkSource();
+                var pair = chunkSrc.getGenerator().getBiomeSource().findClosestBiome3d(
                         currentPos,
                         LockoutServer.LOCATE_SEARCH,
                         32,
-                        64);
+                        64,
+                        biomeHolder -> biomeHolder.is(biome),
+                        chunkSrc.randomState().sampler(),
+                        server.overworld());
                 LocateData data = new LocateData(false, 0);
                 if (pair != null) {
-                    int distance = MathHelper.floor(LocateCommand.getDistance(currentPos.getX(), currentPos.getZ(), pair.getFirst().getX(), pair.getFirst().getZ()));
+                    int distance = Mth.floor(Math.sqrt(Math.pow(pair.getFirst().getX() - currentPos.getX(), 2) + Math.pow(pair.getFirst().getZ() - currentPos.getZ(), 2)));
                     if (distance < LockoutServer.LOCATE_SEARCH) {
                         data = new LocateData(true, distance);
                     }
@@ -102,20 +105,20 @@ public class ClientLocateUtil {
         return map;
     }
 
-    private static Map<RegistryKey<Structure>, LocateData> locateStructuresImpl(MinecraftClient client, Iterable<RegistryKey<Structure>> structuresToCheck) {
-        Map<RegistryKey<Structure>, LocateData> map = new HashMap<>();
-        if (client == null || client.world == null) return map;
+    private static Map<ResourceKey<Structure>, LocateData> locateStructuresImpl(Minecraft client, Iterable<ResourceKey<Structure>> structuresToCheck) {
+        Map<ResourceKey<Structure>, LocateData> map = new HashMap<>();
+        if (client == null || client.level == null) return map;
 
         try {
-            var server = client.getServer();
+            var server = client.getSingleplayerServer();
             if (server == null) return map;
 
             BlockPos currentPos = new BlockPos(0, 64, 0);
-            Registry<Structure> registry = server.getOverworld().getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
-            for (RegistryKey<Structure> structure : structuresToCheck) {
-                RegistryEntryList<Structure> structureList = RegistryEntryList.of(registry.getOrThrow(structure));
-                var pair = server.getOverworld().getChunkManager().getChunkGenerator().locateStructure(
-                        server.getOverworld(),
+            Registry<Structure> registry = server.overworld().registryAccess().lookupOrThrow(Registries.STRUCTURE);
+            for (ResourceKey<Structure> structure : structuresToCheck) {
+                HolderSet<Structure> structureList = HolderSet.direct(registry.getOrThrow(structure));
+                var pair = server.overworld().getChunkSource().getGenerator().findNearestMapStructure(
+                        server.overworld(),
                         structureList,
                         currentPos,
                         LockoutServer.LOCATE_SEARCH,
@@ -123,7 +126,7 @@ public class ClientLocateUtil {
 
                 LocateData data = new LocateData(false, 0);
                 if (pair != null) {
-                    int distance = MathHelper.floor(LocateCommand.getDistance(currentPos.getX(), currentPos.getZ(), pair.getFirst().getX(), pair.getFirst().getZ()));
+                    int distance = Mth.floor(Math.sqrt(Math.pow(pair.getFirst().getX() - currentPos.getX(), 2) + Math.pow(pair.getFirst().getZ() - currentPos.getZ(), 2)));
                     if (distance < LockoutServer.LOCATE_SEARCH) {
                         data = new LocateData(true, distance);
                     }
@@ -137,11 +140,11 @@ public class ClientLocateUtil {
         return map;
     }
 
-    public static Map<RegistryKey<Biome>, LocateData> locateBiomes(MinecraftClient client, Iterable<RegistryKey<Biome>> biomesToCheck) {
+    public static Map<ResourceKey<Biome>, LocateData> locateBiomes(Minecraft client, Iterable<ResourceKey<Biome>> biomesToCheck) {
         // Prefer server-provided data if available (multiplayer)
         if (HAS_SERVER_DATA) {
-            Map<RegistryKey<Biome>, LocateData> result = new HashMap<>();
-            for (RegistryKey<Biome> k : biomesToCheck) {
+            Map<ResourceKey<Biome>, LocateData> result = new HashMap<>();
+            for (ResourceKey<Biome> k : biomesToCheck) {
                 LocateData d = SERVER_BIOMES.get(k);
                 if (d != null) result.put(k, d);
             }
@@ -150,8 +153,8 @@ public class ClientLocateUtil {
         
         // Fall back to cached or local locate (singleplayer)
         if (CACHE_BUILT) {
-            Map<RegistryKey<Biome>, LocateData> result = new HashMap<>();
-            for (RegistryKey<Biome> k : biomesToCheck) {
+            Map<ResourceKey<Biome>, LocateData> result = new HashMap<>();
+            for (ResourceKey<Biome> k : biomesToCheck) {
                 LocateData d = CACHED_BIOMES.get(k);
                 if (d != null) result.put(k, d);
             }
@@ -160,11 +163,11 @@ public class ClientLocateUtil {
         return locateBiomesImpl(client, biomesToCheck);
     }
 
-    public static Map<RegistryKey<Structure>, LocateData> locateStructures(MinecraftClient client, Iterable<RegistryKey<Structure>> structuresToCheck) {
+    public static Map<ResourceKey<Structure>, LocateData> locateStructures(Minecraft client, Iterable<ResourceKey<Structure>> structuresToCheck) {
         // Prefer server-provided data if available (multiplayer)
         if (HAS_SERVER_DATA) {
-            Map<RegistryKey<Structure>, LocateData> result = new HashMap<>();
-            for (RegistryKey<Structure> k : structuresToCheck) {
+            Map<ResourceKey<Structure>, LocateData> result = new HashMap<>();
+            for (ResourceKey<Structure> k : structuresToCheck) {
                 LocateData d = SERVER_STRUCTURES.get(k);
                 if (d != null) result.put(k, d);
             }
@@ -173,8 +176,8 @@ public class ClientLocateUtil {
         
         // Fall back to cached or local locate (singleplayer)
         if (CACHE_BUILT) {
-            Map<RegistryKey<Structure>, LocateData> result = new HashMap<>();
-            for (RegistryKey<Structure> k : structuresToCheck) {
+            Map<ResourceKey<Structure>, LocateData> result = new HashMap<>();
+            for (ResourceKey<Structure> k : structuresToCheck) {
                 LocateData d = CACHED_STRUCTURES.get(k);
                 if (d != null) result.put(k, d);
             }

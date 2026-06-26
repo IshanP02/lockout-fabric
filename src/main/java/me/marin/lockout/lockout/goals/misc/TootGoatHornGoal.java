@@ -2,14 +2,14 @@ package me.marin.lockout.lockout.goals.misc;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 public class TootGoatHornGoal extends Goal implements TextureProvider {
 
-    private static final ItemStack ITEM_STACK = Items.GOAT_HORN.getDefaultStack();
-    private static final Identifier TEXTURE = Identifier.of("minecraft", "textures/item/goat_horn.png");
+    private static final ItemStack ITEM_STACK = Items.GOAT_HORN.getDefaultInstance();
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/item/goat_horn.png");
 
     public TootGoatHornGoal(String id, String data) {
         super(id, data);

@@ -1,3 +1,5 @@
+## Lockout v0.12
+- Updated Mod to MC 26.2
 ## Lockout v0.11.10
 - Added Post Game Statistics
 	- Can be viewed ingame or downloaded

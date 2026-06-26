@@ -1,6 +1,6 @@
 package me.marin.lockout;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,12 +15,12 @@ public class ChatManager {
 
     private static final Map<UUID, Type> map = new HashMap<>();
 
-    public static void setChat(PlayerEntity player, Type type) {
-        map.put(player.getUuid(), type);
+    public static void setChat(Player player, Type type) {
+        map.put(player.getUUID(), type);
     }
 
-    public static Type getChat(PlayerEntity player) {
-        return map.getOrDefault(player.getUuid(), Type.LOCAL);
+    public static Type getChat(Player player) {
+        return map.getOrDefault(player.getUUID(), Type.LOCAL);
     }
 
 }

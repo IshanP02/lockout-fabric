@@ -1,7 +1,7 @@
 package me.marin.lockout.lockout.goals.kill;
 
 import me.marin.lockout.Constants;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class KillSnowGolemInNetherGoal extends KillSnowGolemGoal {
 
@@ -14,7 +14,7 @@ public class KillSnowGolemInNetherGoal extends KillSnowGolemGoal {
         return "Kill Snow Golem in The Nether";
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/kill/kill_snowman_nether.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/kill/kill_snowman_nether.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

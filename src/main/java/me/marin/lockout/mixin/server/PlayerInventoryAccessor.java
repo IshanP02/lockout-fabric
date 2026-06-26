@@ -1,17 +1,17 @@
 package me.marin.lockout.mixin.server;
 
-import net.minecraft.entity.EntityEquipment;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.entity.EntityEquipment;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(PlayerInventory.class)
+@Mixin(Inventory.class)
 public interface PlayerInventoryAccessor {
 
-    @Accessor("main")
-    DefaultedList<ItemStack> getPlayerInventory();
+    @Accessor("items")
+    NonNullList<ItemStack> getPlayerInventory();
 
     @Accessor
     EntityEquipment getEquipment();

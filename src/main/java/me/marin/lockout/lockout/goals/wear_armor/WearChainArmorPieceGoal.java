@@ -2,11 +2,11 @@ package me.marin.lockout.lockout.goals.wear_armor;
 
 import me.marin.lockout.lockout.interfaces.WearArmorPieceGoal;
 import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class WearChainArmorPieceGoal extends WearArmorPieceGoal {
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
 
         // TODO: Do better
         var armor = new ArrayList<ItemStack>();

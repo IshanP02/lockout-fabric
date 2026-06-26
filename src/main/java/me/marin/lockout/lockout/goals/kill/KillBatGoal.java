@@ -3,9 +3,10 @@ package me.marin.lockout.lockout.goals.kill;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.KillMobGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class KillBatGoal extends KillMobGoal implements TextureProvider {
 
@@ -23,7 +24,7 @@ public class KillBatGoal extends KillMobGoal implements TextureProvider {
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/kill/kill_bat.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/kill/kill_bat.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
@@ -31,6 +32,6 @@ public class KillBatGoal extends KillMobGoal implements TextureProvider {
 
     @Override
     public EntityType<?> getEntity() {
-        return EntityType.BAT;
+        return EntityTypes.BAT;
     }
 }

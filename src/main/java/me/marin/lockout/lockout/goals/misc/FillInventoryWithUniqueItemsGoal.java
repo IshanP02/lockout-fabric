@@ -1,10 +1,10 @@
 package me.marin.lockout.lockout.goals.misc;
 
 import me.marin.lockout.lockout.interfaces.ObtainItemsGoal;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,9 +28,10 @@ public class FillInventoryWithUniqueItemsGoal extends ObtainItemsGoal {
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
         Set<Item> itemTypes = new HashSet<>();
-        for (ItemStack item : playerInventory.getMainStacks()) {
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = playerInventory.getItem(i);
             if (item == null || item.isEmpty()) return false;
 
             if (!itemTypes.add(item.getItem())) return false;

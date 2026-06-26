@@ -3,10 +3,10 @@ package me.marin.lockout.lockout.goals.status_effect;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.StatusEffectGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 public class GetAbsorptionStatusEffectGoal extends StatusEffectGoal implements TextureProvider {
 
@@ -25,11 +25,11 @@ public class GetAbsorptionStatusEffectGoal extends StatusEffectGoal implements T
     }
 
     @Override
-    public StatusEffect getStatusEffect() {
-        return StatusEffects.ABSORPTION.value();
+    public MobEffect getStatusEffect() {
+        return MobEffects.ABSORPTION.value();
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/status_effect/absorption.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/status_effect/absorption.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

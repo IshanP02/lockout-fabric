@@ -3,14 +3,14 @@ package me.marin.lockout.lockout.goals.wear_armor;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.interfaces.WearArmorPieceGoal;
 import me.marin.lockout.mixin.server.PlayerInventoryAccessor;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.DyeColor;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.DyeColor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +31,8 @@ public class WearColoredLeatherPieceGoal extends WearArmorPieceGoal {
         DyeColor DYE_COLOR = GoalDataConstants.getDyeColor(parts[1]);
         COLOR = GoalDataConstants.getDyeColorValue(DYE_COLOR);
 
-        DISPLAY_ITEM_STACK = ITEM.getDefaultStack();
-        DISPLAY_ITEM_STACK.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(COLOR));
+        DISPLAY_ITEM_STACK = ITEM.getDefaultInstance();
+        DISPLAY_ITEM_STACK.set(DataComponents.DYED_COLOR, new DyedItemColor(COLOR));
 
         GOAL_NAME = "Wear " + GoalDataConstants.getDyeColorFormatted(DYE_COLOR) + " " + GoalDataConstants.getArmorPieceFormatted(parts[0]);
     }
@@ -53,12 +53,12 @@ public class WearColoredLeatherPieceGoal extends WearArmorPieceGoal {
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         return false;
     }
 
     @Override
-    public boolean satisfiedBy(PlayerInventory playerInventory) {
+    public boolean satisfiedBy(Inventory playerInventory) {
 
         var armor = new ArrayList<ItemStack>();
         armor.add(((PlayerInventoryAccessor)playerInventory).getEquipment().get(EquipmentSlot.HEAD));
@@ -69,7 +69,7 @@ public class WearColoredLeatherPieceGoal extends WearArmorPieceGoal {
         for (ItemStack item : armor) {
             if (item == null) continue;
             if (item.getItem().equals(ITEM)) {
-                if (Optional.ofNullable(item.get(DataComponentTypes.DYED_COLOR)).map(dyed -> dyed.rgb() == COLOR).orElse(false)) {
+                if (Optional.ofNullable(item.get(DataComponents.DYED_COLOR)).map(dyed -> dyed.rgb() == COLOR).orElse(false)) {
                     return true;
                 }
             }

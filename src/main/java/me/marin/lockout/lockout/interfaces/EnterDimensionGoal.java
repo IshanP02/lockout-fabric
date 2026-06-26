@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 public abstract class EnterDimensionGoal extends Goal {
 
@@ -10,6 +10,6 @@ public abstract class EnterDimensionGoal extends Goal {
         super(id, data);
     }
 
-    public abstract RegistryKey<World> getWorldRegistryKey();
+    public abstract ResourceKey<Level> getWorldRegistryKey();
 
 }

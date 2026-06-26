@@ -3,14 +3,14 @@ package me.marin.lockout.lockout.goals.misc;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.IncrementItemStatGoal;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.stat.Stat;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.stats.Stat;
+import net.minecraft.stats.Stats;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -75,59 +75,59 @@ public class BreakAnyToolGoal extends IncrementItemStatGoal implements CycleItem
     );
 
     private static final List<Stat<Item>> STATS = List.of(
-        Stats.USED.getOrCreateStat(Items.WOODEN_AXE),
-        Stats.USED.getOrCreateStat(Items.WOODEN_HOE),
-        Stats.USED.getOrCreateStat(Items.WOODEN_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.WOODEN_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.WOODEN_SWORD),
-        Stats.USED.getOrCreateStat(Items.WOODEN_SPEAR),
-        Stats.USED.getOrCreateStat(Items.STONE_AXE),
-        Stats.USED.getOrCreateStat(Items.STONE_HOE),
-        Stats.USED.getOrCreateStat(Items.STONE_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.STONE_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.STONE_SWORD),
-        Stats.USED.getOrCreateStat(Items.STONE_SPEAR),
-        Stats.USED.getOrCreateStat(Items.COPPER_AXE),
-        Stats.USED.getOrCreateStat(Items.COPPER_HOE),
-        Stats.USED.getOrCreateStat(Items.COPPER_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.COPPER_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.COPPER_SWORD),
-        Stats.USED.getOrCreateStat(Items.COPPER_SPEAR),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_AXE),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_HOE),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_SWORD),
-        Stats.USED.getOrCreateStat(Items.GOLDEN_SPEAR),
-        Stats.USED.getOrCreateStat(Items.IRON_AXE),
-        Stats.USED.getOrCreateStat(Items.IRON_HOE),
-        Stats.USED.getOrCreateStat(Items.IRON_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.IRON_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.IRON_SWORD),
-        Stats.USED.getOrCreateStat(Items.IRON_SPEAR),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_AXE),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_HOE),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_SWORD),
-        Stats.USED.getOrCreateStat(Items.DIAMOND_SPEAR),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_AXE),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_HOE),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_PICKAXE),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_SHOVEL),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_SWORD),
-        Stats.USED.getOrCreateStat(Items.NETHERITE_SPEAR),
-        Stats.USED.getOrCreateStat(Items.SHEARS),
-        Stats.USED.getOrCreateStat(Items.FISHING_ROD),
-        Stats.USED.getOrCreateStat(Items.CARROT_ON_A_STICK),
-        Stats.USED.getOrCreateStat(Items.WARPED_FUNGUS_ON_A_STICK),
-        Stats.USED.getOrCreateStat(Items.FLINT_AND_STEEL),
-        Stats.USED.getOrCreateStat(Items.BOW),
-        Stats.USED.getOrCreateStat(Items.CROSSBOW),
-        Stats.USED.getOrCreateStat(Items.TRIDENT),
-        Stats.USED.getOrCreateStat(Items.SHIELD),
-        Stats.USED.getOrCreateStat(Items.BRUSH),
-        Stats.USED.getOrCreateStat(Items.MACE)
+        Stats.ITEM_USED.get(Items.WOODEN_AXE),
+        Stats.ITEM_USED.get(Items.WOODEN_HOE),
+        Stats.ITEM_USED.get(Items.WOODEN_PICKAXE),
+        Stats.ITEM_USED.get(Items.WOODEN_SHOVEL),
+        Stats.ITEM_USED.get(Items.WOODEN_SWORD),
+        Stats.ITEM_USED.get(Items.WOODEN_SPEAR),
+        Stats.ITEM_USED.get(Items.STONE_AXE),
+        Stats.ITEM_USED.get(Items.STONE_HOE),
+        Stats.ITEM_USED.get(Items.STONE_PICKAXE),
+        Stats.ITEM_USED.get(Items.STONE_SHOVEL),
+        Stats.ITEM_USED.get(Items.STONE_SWORD),
+        Stats.ITEM_USED.get(Items.STONE_SPEAR),
+        Stats.ITEM_USED.get(Items.COPPER_AXE),
+        Stats.ITEM_USED.get(Items.COPPER_HOE),
+        Stats.ITEM_USED.get(Items.COPPER_PICKAXE),
+        Stats.ITEM_USED.get(Items.COPPER_SHOVEL),
+        Stats.ITEM_USED.get(Items.COPPER_SWORD),
+        Stats.ITEM_USED.get(Items.COPPER_SPEAR),
+        Stats.ITEM_USED.get(Items.GOLDEN_AXE),
+        Stats.ITEM_USED.get(Items.GOLDEN_HOE),
+        Stats.ITEM_USED.get(Items.GOLDEN_PICKAXE),
+        Stats.ITEM_USED.get(Items.GOLDEN_SHOVEL),
+        Stats.ITEM_USED.get(Items.GOLDEN_SWORD),
+        Stats.ITEM_USED.get(Items.GOLDEN_SPEAR),
+        Stats.ITEM_USED.get(Items.IRON_AXE),
+        Stats.ITEM_USED.get(Items.IRON_HOE),
+        Stats.ITEM_USED.get(Items.IRON_PICKAXE),
+        Stats.ITEM_USED.get(Items.IRON_SHOVEL),
+        Stats.ITEM_USED.get(Items.IRON_SWORD),
+        Stats.ITEM_USED.get(Items.IRON_SPEAR),
+        Stats.ITEM_USED.get(Items.DIAMOND_AXE),
+        Stats.ITEM_USED.get(Items.DIAMOND_HOE),
+        Stats.ITEM_USED.get(Items.DIAMOND_PICKAXE),
+        Stats.ITEM_USED.get(Items.DIAMOND_SHOVEL),
+        Stats.ITEM_USED.get(Items.DIAMOND_SWORD),
+        Stats.ITEM_USED.get(Items.DIAMOND_SPEAR),
+        Stats.ITEM_USED.get(Items.NETHERITE_AXE),
+        Stats.ITEM_USED.get(Items.NETHERITE_HOE),
+        Stats.ITEM_USED.get(Items.NETHERITE_PICKAXE),
+        Stats.ITEM_USED.get(Items.NETHERITE_SHOVEL),
+        Stats.ITEM_USED.get(Items.NETHERITE_SWORD),
+        Stats.ITEM_USED.get(Items.NETHERITE_SPEAR),
+        Stats.ITEM_USED.get(Items.SHEARS),
+        Stats.ITEM_USED.get(Items.FISHING_ROD),
+        Stats.ITEM_USED.get(Items.CARROT_ON_A_STICK),
+        Stats.ITEM_USED.get(Items.WARPED_FUNGUS_ON_A_STICK),
+        Stats.ITEM_USED.get(Items.FLINT_AND_STEEL),
+        Stats.ITEM_USED.get(Items.BOW),
+        Stats.ITEM_USED.get(Items.CROSSBOW),
+        Stats.ITEM_USED.get(Items.TRIDENT),
+        Stats.ITEM_USED.get(Items.SHIELD),
+        Stats.ITEM_USED.get(Items.BRUSH),
+        Stats.ITEM_USED.get(Items.MACE)
     );
 
     public BreakAnyToolGoal(String id, String data) {
@@ -135,7 +135,7 @@ public class BreakAnyToolGoal extends IncrementItemStatGoal implements CycleItem
     }
 
     public ItemStack getTextureItemStack() {
-        return ITEM.getDefaultStack();
+        return ITEM.getDefaultInstance();
     }
 
      @Override
@@ -153,12 +153,12 @@ public class BreakAnyToolGoal extends IncrementItemStatGoal implements CycleItem
         return ITEMS;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/durability_bar.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/durability_bar.png");
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         int mod = tick % (60 * getItemsToDisplay().size());
-        context.drawItem(ITEMS.get(mod / 60).getDefaultStack(), x, y);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0,0, 16, 16, 16, 16);
+        context.item(ITEMS.get(mod / 60).getDefaultInstance(), x, y);
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0,0, 16, 16, 16, 16);
         return true;
     }
 

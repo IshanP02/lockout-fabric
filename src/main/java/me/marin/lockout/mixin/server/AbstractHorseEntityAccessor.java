@@ -1,16 +1,13 @@
-package me.marin.lockout.mixin.server; // Adjust to your mixin package path
+package me.marin.lockout.mixin.server;
 
-import net.minecraft.entity.passive.AbstractHorseEntity;
-import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
+import net.minecraft.world.SimpleContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(AbstractHorseEntity.class)
+@Mixin(AbstractHorse.class)
 public interface AbstractHorseEntityAccessor {
 
-    /**
-     * Access the private 'items' inventory field via a generated public method.
-     */
-    @Accessor("items")
-    SimpleInventory getItems();
+    @Accessor("inventory")
+    SimpleContainer getItems();
 }

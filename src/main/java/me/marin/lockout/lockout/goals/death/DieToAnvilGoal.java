@@ -2,10 +2,10 @@ package me.marin.lockout.lockout.goals.death;
 
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.DieToDamageTypeGoal;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -21,11 +21,11 @@ public class DieToAnvilGoal extends DieToDamageTypeGoal {
     }
 
     @Override
-    public List<RegistryKey<DamageType>> getDamageRegistryKeys() {
+    public List<ResourceKey<DamageType>> getDamageRegistryKeys() {
         return List.of(DamageTypes.FALLING_ANVIL);
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/death/die_to_anvil.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/death/die_to_anvil.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

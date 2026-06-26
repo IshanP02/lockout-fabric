@@ -6,15 +6,16 @@ import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.interfaces.KillAllSpecificMobsGoal;
 import me.marin.lockout.lockout.texture.CustomTextureRenderer;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -23,9 +24,9 @@ import java.util.Map;
 
 public class KillAllRaidMobsGoal extends KillAllSpecificMobsGoal implements CustomTextureRenderer {
 
-    private static final ItemStack DISPLAY_ITEM_STACK = Items.VILLAGER_SPAWN_EGG.getDefaultStack();
-    private static final List<EntityType<?>> MOBS = List.of(EntityType.PILLAGER, EntityType.VINDICATOR, EntityType.RAVAGER, EntityType.WITCH, EntityType.VEX, EntityType.EVOKER);
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/status_effect/bad_omen.png");
+    private static final ItemStack DISPLAY_ITEM_STACK = Items.VILLAGER_SPAWN_EGG.getDefaultInstance();
+    private static final List<EntityType<?>> MOBS = List.of(EntityTypes.PILLAGER, EntityTypes.VINDICATOR, EntityTypes.RAVAGER, EntityTypes.WITCH, EntityTypes.VEX, EntityTypes.EVOKER);
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/status_effect/bad_omen.png");
 
     static {
         DISPLAY_ITEM_STACK.setCount(MOBS.size());
@@ -56,13 +57,13 @@ public class KillAllRaidMobsGoal extends KillAllSpecificMobsGoal implements Cust
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         var raidMobs = getTrackerMap().getOrDefault(team, new LinkedHashSet<>());
 
         tooltip.add(" ");
         tooltip.add("Raid mobs killed: " + raidMobs.size() + "/" + MOBS.size());
-        tooltip.addAll(HasTooltipInfo.commaSeparatedList(raidMobs.stream().map(type -> type.getName().getString()).toList()));
+        tooltip.addAll(HasTooltipInfo.commaSeparatedList(raidMobs.stream().map(type -> type.getDescriptionId()).toList()));
         tooltip.add(" ");
 
         return tooltip;
@@ -75,7 +76,7 @@ public class KillAllRaidMobsGoal extends KillAllSpecificMobsGoal implements Cust
         tooltip.add(" ");
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             var raidMobs = getTrackerMap().getOrDefault(team, new LinkedHashSet<>());
-            tooltip.add(team.getColor() + team.getDisplayName() + Formatting.RESET + ": " + raidMobs.size() + "/" + MOBS.size());
+            tooltip.add(team.getColor() + team.getDisplayName() + ChatFormatting.RESET + ": " + raidMobs.size() + "/" + MOBS.size());
         }
         tooltip.add(" ");
 
@@ -83,9 +84,9 @@ public class KillAllRaidMobsGoal extends KillAllSpecificMobsGoal implements Cust
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, DISPLAY_ITEM_STACK, x, y);
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, 16, 16, 16, 16);
+        context.itemDecorations(Minecraft.getInstance().font, DISPLAY_ITEM_STACK, x, y);
         return true;
     }
 

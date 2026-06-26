@@ -4,10 +4,10 @@ import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.lockout.interfaces.VisitAllSpecificBiomesGoal;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,12 +15,12 @@ import java.util.Map;
 
 public class VisitAllCaveBiomesGoal extends VisitAllSpecificBiomesGoal implements CycleItemTexturesProvider {
 
-    private static final ItemStack ITEM_STACK = Items.SCULK.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.SCULK.getDefaultInstance();
     private static final List<Item> ITEMS_TO_DISPLAY = List.of(Items.MOSS_BLOCK, Items.DRIPSTONE_BLOCK, Items.SCULK);
     private static final List<Identifier> BIOMES = List.of(
-            Identifier.of("minecraft", "lush_caves"),
-            Identifier.of("minecraft", "dripstone_caves"),
-            Identifier.of("minecraft", "deep_dark")
+            Identifier.fromNamespaceAndPath("minecraft", "lush_caves"),
+            Identifier.fromNamespaceAndPath("minecraft", "dripstone_caves"),
+            Identifier.fromNamespaceAndPath("minecraft", "deep_dark")
     );
 
     static {

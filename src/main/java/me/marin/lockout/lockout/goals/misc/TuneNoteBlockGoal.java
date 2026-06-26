@@ -1,11 +1,11 @@
 package me.marin.lockout.lockout.goals.misc;
 
 import me.marin.lockout.lockout.interfaces.IncrementStatGoal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.Item;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.stats.Stats;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class TuneNoteBlockGoal extends IncrementStatGoal {
     
     @Override
     public ItemStack getTextureItemStack() {
-        return ITEMS.getDefaultStack();
+        return ITEMS.getDefaultInstance();
     }
 
 }

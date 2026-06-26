@@ -3,14 +3,14 @@ package me.marin.lockout.lockout.goals.advancement;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public class GetStarTraderAdvancementGoal extends AdvancementGoal implements TextureProvider{
 
-    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.of("minecraft", "adventure/trade_at_world_height"));
+    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.fromNamespaceAndPath("minecraft", "adventure/trade_at_world_height"));
 
     public GetStarTraderAdvancementGoal(String id, String data) {
         super(id, data);
@@ -26,7 +26,7 @@ public class GetStarTraderAdvancementGoal extends AdvancementGoal implements Tex
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/star_trader.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/star_trader.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

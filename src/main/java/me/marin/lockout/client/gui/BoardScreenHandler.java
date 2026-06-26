@@ -2,24 +2,24 @@ package me.marin.lockout.client.gui;
 
 
 import me.marin.lockout.client.LockoutClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 
-public class BoardScreenHandler extends ScreenHandler {
+public class BoardScreenHandler extends AbstractContainerMenu {
 
-    public BoardScreenHandler(int syncId, @SuppressWarnings("unused") PlayerInventory playerInventory) {
+    public BoardScreenHandler(int syncId, @SuppressWarnings("unused") Inventory playerInventory) {
         super(LockoutClient.BOARD_SCREEN_HANDLER, syncId);
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
+    public ItemStack quickMoveStack(Player player, int slot) {
         return null;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 

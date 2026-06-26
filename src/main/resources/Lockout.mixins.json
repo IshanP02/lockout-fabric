@@ -48,6 +48,7 @@
     "server.SmithingScreenHandlerMixin",
     "server.StatusEffectMixin",
     "server.TameAnimalCriterionMixin",
+    "server.ThrowableProjectileMixin",
     "server.UsingItemCriterionMixin",
     "server.WolfEntityMixin",
     "server.ZombieEntityMixin",
@@ -66,7 +67,6 @@
     "client.toasts.SystemToastMixin",
     "client.toasts.TutorialToastMixin",
     "client.KeyboardMixin",
-    "client.LocatorBarMixin",
     "client.PauseScreenMixin",
     "client.WorldRendererMixin"
   ],

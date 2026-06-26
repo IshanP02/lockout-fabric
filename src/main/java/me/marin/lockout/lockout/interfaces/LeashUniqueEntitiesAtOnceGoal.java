@@ -2,15 +2,15 @@ package me.marin.lockout.lockout.interfaces;
 
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.*;
 
 public abstract class LeashUniqueEntitiesAtOnceGoal extends Goal implements RequiresAmount {
 
-    private final ItemStack DISPLAY_ITEM_STACK = Items.LEAD.getDefaultStack();
+    private final ItemStack DISPLAY_ITEM_STACK = Items.LEAD.getDefaultInstance();
 
     public LeashUniqueEntitiesAtOnceGoal(String id, String data) {
         super(id, data);

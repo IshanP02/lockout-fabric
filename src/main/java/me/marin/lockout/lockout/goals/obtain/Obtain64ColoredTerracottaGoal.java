@@ -3,12 +3,12 @@ package me.marin.lockout.lockout.goals.obtain;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.interfaces.ObtainAllItemsGoal;
 import me.marin.lockout.lockout.interfaces.RequiresAmount;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DyeColor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class Obtain64ColoredTerracottaGoal extends ObtainAllItemsGoal implements
 
         GOAL_NAME = "Obtain 64 " + GoalDataConstants.getDyeColorFormatted(DYE_COLOR) + " Terracotta";
         ITEMS = List.of(getTerracottaColor(data));
-        ITEM_STACK = getTerracottaColor(data).getDefaultStack();
+        ITEM_STACK = getTerracottaColor(data).getDefaultInstance();
         ITEM_STACK.setCount(64);
     }
 
@@ -47,29 +47,29 @@ public class Obtain64ColoredTerracottaGoal extends ObtainAllItemsGoal implements
     public static Item getTerracottaColor(String colorString) {
         return switch (colorString) {
             default -> null;
-            case "white" -> Items.WHITE_TERRACOTTA;
-            case "orange" -> Items.ORANGE_TERRACOTTA;
-            case "magenta" -> Items.MAGENTA_TERRACOTTA;
-            case "light_blue" -> Items.LIGHT_BLUE_TERRACOTTA;
-            case "yellow" -> Items.YELLOW_TERRACOTTA;
-            case "lime" -> Items.LIME_TERRACOTTA;
-            case "pink" -> Items.PINK_TERRACOTTA;
-            case "gray" -> Items.GRAY_TERRACOTTA;
-            case "light_gray" -> Items.LIGHT_GRAY_TERRACOTTA;
-            case "cyan" -> Items.CYAN_TERRACOTTA;
-            case "purple" -> Items.PURPLE_TERRACOTTA;
-            case "blue" -> Items.BLUE_TERRACOTTA;
-            case "brown" -> Items.BROWN_TERRACOTTA;
-            case "green" -> Items.GREEN_TERRACOTTA;
-            case "red" -> Items.RED_TERRACOTTA;
-            case "black" -> Items.BLACK_TERRACOTTA;
+            case "white" -> Items.DYED_TERRACOTTA.white();
+            case "orange" -> Items.DYED_TERRACOTTA.orange();
+            case "magenta" -> Items.DYED_TERRACOTTA.magenta();
+            case "light_blue" -> Items.DYED_TERRACOTTA.lightBlue();
+            case "yellow" -> Items.DYED_TERRACOTTA.yellow();
+            case "lime" -> Items.DYED_TERRACOTTA.lime();
+            case "pink" -> Items.DYED_TERRACOTTA.pink();
+            case "gray" -> Items.DYED_TERRACOTTA.gray();
+            case "light_gray" -> Items.DYED_TERRACOTTA.lightGray();
+            case "cyan" -> Items.DYED_TERRACOTTA.cyan();
+            case "purple" -> Items.DYED_TERRACOTTA.purple();
+            case "blue" -> Items.DYED_TERRACOTTA.blue();
+            case "brown" -> Items.DYED_TERRACOTTA.brown();
+            case "green" -> Items.DYED_TERRACOTTA.green();
+            case "red" -> Items.DYED_TERRACOTTA.red();
+            case "black" -> Items.DYED_TERRACOTTA.black();
         };
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         super.renderTexture(context, x, y, tick);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, ITEM_STACK, x, y);
+        context.itemDecorations(Minecraft.getInstance().font, ITEM_STACK, x, y);
         return true;
     }
 

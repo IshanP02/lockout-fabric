@@ -1,24 +1,24 @@
 package me.marin.lockout.network;
 
 import me.marin.lockout.Constants;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record StartPickBanSessionPayload(String team1Name, String team2Name, int selectionLimit) implements CustomPayload {
-    public static final Id<StartPickBanSessionPayload> ID = new Id<>(Constants.START_PICK_BAN_SESSION_PACKET);
-    public static final PacketCodec<RegistryByteBuf, StartPickBanSessionPayload> CODEC = PacketCodec.tuple(
-            PacketCodecs.STRING,
+public record StartPickBanSessionPayload(String team1Name, String team2Name, int selectionLimit) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<StartPickBanSessionPayload> ID = new CustomPacketPayload.Type<>(Constants.START_PICK_BAN_SESSION_PACKET);
+    public static final StreamCodec<RegistryFriendlyByteBuf, StartPickBanSessionPayload> CODEC = StreamCodec.composite(
+            ByteBufCodecs.STRING_UTF8,
             StartPickBanSessionPayload::team1Name,
-            PacketCodecs.STRING,
+            ByteBufCodecs.STRING_UTF8,
             StartPickBanSessionPayload::team2Name,
-            PacketCodecs.INTEGER,
+            ByteBufCodecs.INT,
             StartPickBanSessionPayload::selectionLimit,
             StartPickBanSessionPayload::new);
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

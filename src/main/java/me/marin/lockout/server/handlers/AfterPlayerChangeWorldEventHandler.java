@@ -3,16 +3,16 @@ package me.marin.lockout.server.handlers;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.EnterDimensionGoal;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 
 import static me.marin.lockout.server.LockoutServer.lockout;
 
-public class AfterPlayerChangeWorldEventHandler implements ServerEntityWorldChangeEvents.AfterPlayerChange {
+public class AfterPlayerChangeWorldEventHandler implements ServerEntityLevelChangeEvents.AfterPlayerChange {
 
     @Override
-    public void afterChangeWorld(ServerPlayerEntity player, ServerWorld origin, ServerWorld destination) {
+    public void afterChangeLevel(ServerPlayer player, ServerLevel origin, ServerLevel destination) {
         if (!Lockout.isLockoutRunning(lockout)) return;
 
         for (Goal goal : lockout.getBoard().getGoals()) {
@@ -20,7 +20,7 @@ public class AfterPlayerChangeWorldEventHandler implements ServerEntityWorldChan
             if (!(goal instanceof EnterDimensionGoal enterDimensionGoal)) continue;
             if (goal.isCompleted()) continue;
 
-            if (destination.getRegistryKey() == enterDimensionGoal.getWorldRegistryKey()) {
+            if (destination.dimension() == enterDimensionGoal.getWorldRegistryKey()) {
                 lockout.completeGoal(goal, player);
             }
         }

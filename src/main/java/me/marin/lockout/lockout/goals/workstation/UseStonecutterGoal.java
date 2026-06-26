@@ -1,8 +1,8 @@
 package me.marin.lockout.lockout.goals.workstation;
 
 import me.marin.lockout.lockout.Goal;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class UseStonecutterGoal extends Goal {
 
@@ -15,7 +15,7 @@ public class UseStonecutterGoal extends Goal {
         return "Use Stonecutter";
     }
 
-    private static final ItemStack ITEM_STACK = Items.STONECUTTER.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.STONECUTTER.getDefaultInstance();
     @Override
     public ItemStack getTextureItemStack() {
         return ITEM_STACK;

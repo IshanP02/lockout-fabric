@@ -8,8 +8,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.marin.lockout.Constants;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,13 +26,13 @@ public class BoardPositionArgumentType implements ArgumentType<String> {
     public String parse(StringReader reader) throws CommandSyntaxException {
         String s = reader.readString();
         if (!BOARD_POSITIONS.contains(s)) {
-            throw new SimpleCommandExceptionType(Text.of("Invalid board position.")).createWithContext(reader);
+            throw new SimpleCommandExceptionType(Component.literal("Invalid board position.")).createWithContext(reader);
         }
         return s;
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(BOARD_POSITIONS, builder);
+        return SharedSuggestionProvider.suggest(BOARD_POSITIONS, builder);
     }
 }

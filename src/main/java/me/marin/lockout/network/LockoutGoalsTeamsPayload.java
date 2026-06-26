@@ -2,31 +2,31 @@ package me.marin.lockout.network;
 
 import me.marin.lockout.Constants;
 import me.marin.lockout.LockoutTeam;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.ChatFormatting;
 import oshi.util.tuples.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public record LockoutGoalsTeamsPayload(List<LockoutTeam> teams, List<Pair<Pair<String, String>, Integer>> goals,
-                                       boolean isRunning) implements CustomPayload {
-    public static final Id<LockoutGoalsTeamsPayload> ID = new Id<>(Constants.LOCKOUT_GOALS_TEAMS_PACKET);
+                                       boolean isRunning) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<LockoutGoalsTeamsPayload> ID = new CustomPacketPayload.Type<>(Constants.LOCKOUT_GOALS_TEAMS_PACKET);
 
-    public static final PacketCodec<RegistryByteBuf, LockoutGoalsTeamsPayload> CODEC = new PacketCodec<RegistryByteBuf, LockoutGoalsTeamsPayload>() {
+    public static final StreamCodec<RegistryFriendlyByteBuf, LockoutGoalsTeamsPayload> CODEC = new StreamCodec<RegistryFriendlyByteBuf, LockoutGoalsTeamsPayload>() {
         @Override
-        public LockoutGoalsTeamsPayload decode(RegistryByteBuf buf) {
+        public LockoutGoalsTeamsPayload decode(RegistryFriendlyByteBuf buf) {
             // Read teams
             int teamsSize = buf.readInt();
             List<LockoutTeam> teams = new ArrayList<>(teamsSize);
             for (int i = 0; i < teamsSize; i++) {
                 int teamSize = buf.readInt();
-                Formatting color = Formatting.byName(buf.readString());
+                ChatFormatting color = ChatFormatting.valueOf(buf.readUtf().toUpperCase());
                 List<String> playerNames = new ArrayList<>();
                 for (int j = 0; j < teamSize; j++) {
-                    String playerName = buf.readString();
+                    String playerName = buf.readUtf();
                     playerNames.add(playerName);
                 }
                 teams.add(new LockoutTeam(playerNames, color));
@@ -36,7 +36,7 @@ public record LockoutGoalsTeamsPayload(List<LockoutTeam> teams, List<Pair<Pair<S
             int size = buf.readInt();
             List<Pair<Pair<String, String>, Integer>> goals = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                goals.add(new Pair<>(new Pair<>(buf.readString(), buf.readString()), buf.readInt()));
+                goals.add(new Pair<>(new Pair<>(buf.readUtf(), buf.readUtf()), buf.readInt()));
             }
 
             boolean isRunning = buf.readBoolean();
@@ -44,23 +44,23 @@ public record LockoutGoalsTeamsPayload(List<LockoutTeam> teams, List<Pair<Pair<S
         }
 
         @Override
-        public void encode(RegistryByteBuf buf, LockoutGoalsTeamsPayload payload) {
+        public void encode(RegistryFriendlyByteBuf buf, LockoutGoalsTeamsPayload payload) {
             // Write teams
             List<LockoutTeam> teams = payload.teams();
             buf.writeInt(teams.size());
             for (LockoutTeam team : payload.teams()) {
                 buf.writeInt(team.getPlayerNames().size());
-                buf.writeString(team.getColor().asString());
+                buf.writeUtf(team.getColor().name().toLowerCase());
                 for (String playerName : team.getPlayerNames()) {
-                    buf.writeString(playerName);
+                    buf.writeUtf(playerName);
                 }
             }
 
             // Write goals
             buf.writeInt(payload.goals().size());
             for (Pair<Pair<String, String>, Integer> goal : payload.goals()) {
-                buf.writeString(goal.getA().getA());
-                buf.writeString(goal.getA().getB());
+                buf.writeUtf(goal.getA().getA());
+                buf.writeUtf(goal.getA().getB());
                 buf.writeInt(goal.getB());
             }
 
@@ -69,7 +69,7 @@ public record LockoutGoalsTeamsPayload(List<LockoutTeam> teams, List<Pair<Pair<S
     };
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

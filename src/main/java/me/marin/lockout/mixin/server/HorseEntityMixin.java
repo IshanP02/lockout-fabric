@@ -1,11 +1,11 @@
 package me.marin.lockout.mixin.server;
 
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.animal.equine.Horse;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(HorseEntity.class)
+@Mixin(Horse.class)
 public abstract class HorseEntityMixin {
 
     private boolean isHorseArmor(ItemStack stack) {

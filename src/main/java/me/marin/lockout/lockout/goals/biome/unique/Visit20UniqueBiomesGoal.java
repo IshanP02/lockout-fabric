@@ -3,13 +3,13 @@ package me.marin.lockout.lockout.goals.biome.unique;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.VisitUniqueBiomesGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.Identifier;
 
 public class Visit20UniqueBiomesGoal extends VisitUniqueBiomesGoal implements TextureProvider {
 
-    private static final ItemStack ITEM_STACK = Items.TERRACOTTA.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.TERRACOTTA.getDefaultInstance();
 
     public Visit20UniqueBiomesGoal(String id, String data) {
         super(id, data);
@@ -30,7 +30,7 @@ public class Visit20UniqueBiomesGoal extends VisitUniqueBiomesGoal implements Te
         return ITEM_STACK;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/unique_biomes.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/unique_biomes.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

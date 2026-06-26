@@ -3,8 +3,8 @@ package me.marin.lockout.lockout.interfaces;
 import me.marin.lockout.LockoutTeam;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public abstract class KillSpecificMobsGoal extends Goal implements RequiresAmoun
 
         tooltip.add(" ");
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
-            tooltip.add(team.getColor() + team.getDisplayName() + Formatting.RESET + ": " + getTrackerMap().getOrDefault(team, 0) + "/" + getAmount());
+            tooltip.add(team.getColor() + team.getDisplayName() + ChatFormatting.RESET + ": " + getTrackerMap().getOrDefault(team, 0) + "/" + getAmount());
         }
         tooltip.add(" ");
 

@@ -1,17 +1,17 @@
 package me.marin.lockout.lockout.goals.obtain;
 
 import me.marin.lockout.lockout.interfaces.ObtainSomeOfTheItemsGoal;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
 public class Obtain3UniqueBannerPatternsGoal extends ObtainSomeOfTheItemsGoal {
 
-    private static final ItemStack ITEM_STACK = Items.BORDURE_INDENTED_BANNER_PATTERN.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.BORDURE_INDENTED_BANNER_PATTERN.getDefaultInstance();
     static {
         ITEM_STACK.setCount(3);
     }
@@ -48,9 +48,9 @@ public class Obtain3UniqueBannerPatternsGoal extends ObtainSomeOfTheItemsGoal {
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         super.renderTexture(context, x, y, tick);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer,  ITEM_STACK, x, y, "3");
+        context.itemDecorations(Minecraft.getInstance().font,  ITEM_STACK, x, y, "3");
         return true;
     }
 }

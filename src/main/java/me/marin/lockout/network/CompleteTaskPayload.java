@@ -1,24 +1,24 @@
 package me.marin.lockout.network;
 
 import me.marin.lockout.Constants;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record CompleteTaskPayload(String goal, int teamIndex, String completionMessage) implements CustomPayload {
-    public static final Id<CompleteTaskPayload> ID = new Id<>(Constants.COMPLETE_TASK_PACKET);
-    public static final PacketCodec<RegistryByteBuf, CompleteTaskPayload> CODEC = PacketCodec.tuple(
-            PacketCodecs.STRING,
+public record CompleteTaskPayload(String goal, int teamIndex, String completionMessage) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<CompleteTaskPayload> ID = new CustomPacketPayload.Type<>(Constants.COMPLETE_TASK_PACKET);
+    public static final StreamCodec<RegistryFriendlyByteBuf, CompleteTaskPayload> CODEC = StreamCodec.composite(
+            ByteBufCodecs.STRING_UTF8,
             CompleteTaskPayload::goal,
-            PacketCodecs.INTEGER,
+            ByteBufCodecs.INT,
             CompleteTaskPayload::teamIndex,
-            PacketCodecs.STRING,
+            ByteBufCodecs.STRING_UTF8,
             CompleteTaskPayload::completionMessage,
             CompleteTaskPayload::new);
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

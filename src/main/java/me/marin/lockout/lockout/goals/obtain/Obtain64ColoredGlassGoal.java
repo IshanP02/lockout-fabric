@@ -3,12 +3,12 @@ package me.marin.lockout.lockout.goals.obtain;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.interfaces.ObtainAllItemsGoal;
 import me.marin.lockout.lockout.interfaces.RequiresAmount;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DyeColor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.DyeColor;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class Obtain64ColoredGlassGoal extends ObtainAllItemsGoal implements Requ
 
         GOAL_NAME = "Obtain 64 " + GoalDataConstants.getDyeColorFormatted(DYE_COLOR) + " Glass";
         ITEMS = List.of(getGlassColor(data));
-        ITEM_STACK = getGlassColor(data).getDefaultStack();
+        ITEM_STACK = getGlassColor(data).getDefaultInstance();
         ITEM_STACK.setCount(64);
     }
 
@@ -47,29 +47,29 @@ public class Obtain64ColoredGlassGoal extends ObtainAllItemsGoal implements Requ
     public static Item getGlassColor(String colorString) {
         return switch (colorString) {
             default -> null;
-            case "white" -> Items.WHITE_STAINED_GLASS;
-            case "orange" -> Items.ORANGE_STAINED_GLASS;
-            case "magenta" -> Items.MAGENTA_STAINED_GLASS;
-            case "light_blue" -> Items.LIGHT_BLUE_STAINED_GLASS;
-            case "yellow" -> Items.YELLOW_STAINED_GLASS;
-            case "lime" -> Items.LIME_STAINED_GLASS;
-            case "pink" -> Items.PINK_STAINED_GLASS;
-            case "gray" -> Items.GRAY_STAINED_GLASS;
-            case "light_gray" -> Items.LIGHT_GRAY_STAINED_GLASS;
-            case "cyan" -> Items.CYAN_STAINED_GLASS;
-            case "purple" -> Items.PURPLE_STAINED_GLASS;
-            case "blue" -> Items.BLUE_STAINED_GLASS;
-            case "brown" -> Items.BROWN_STAINED_GLASS;
-            case "green" -> Items.GREEN_STAINED_GLASS;
-            case "red" -> Items.RED_STAINED_GLASS;
-            case "black" -> Items.BLACK_STAINED_GLASS;
+            case "white" -> Items.STAINED_GLASS.white();
+            case "orange" -> Items.STAINED_GLASS.orange();
+            case "magenta" -> Items.STAINED_GLASS.magenta();
+            case "light_blue" -> Items.STAINED_GLASS.lightBlue();
+            case "yellow" -> Items.STAINED_GLASS.yellow();
+            case "lime" -> Items.STAINED_GLASS.lime();
+            case "pink" -> Items.STAINED_GLASS.pink();
+            case "gray" -> Items.STAINED_GLASS.gray();
+            case "light_gray" -> Items.STAINED_GLASS.lightGray();
+            case "cyan" -> Items.STAINED_GLASS.cyan();
+            case "purple" -> Items.STAINED_GLASS.purple();
+            case "blue" -> Items.STAINED_GLASS.blue();
+            case "brown" -> Items.STAINED_GLASS.brown();
+            case "green" -> Items.STAINED_GLASS.green();
+            case "red" -> Items.STAINED_GLASS.red();
+            case "black" -> Items.STAINED_GLASS.black();
         };
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         super.renderTexture(context, x, y, tick);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, ITEM_STACK, x, y);
+        context.itemDecorations(Minecraft.getInstance().font, ITEM_STACK, x, y);
         return true;
     }
 

@@ -3,8 +3,9 @@ package me.marin.lockout.lockout.goals.breed_animals;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.BreedAnimalGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.resources.Identifier;
 
 public class BreedCowsGoal extends BreedAnimalGoal implements TextureProvider {
 
@@ -19,10 +20,10 @@ public class BreedCowsGoal extends BreedAnimalGoal implements TextureProvider {
 
     @Override
     public EntityType<?> getAnimal() {
-        return EntityType.COW;
+        return EntityTypes.COW;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/breed/breed_cow.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/breed/breed_cow.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

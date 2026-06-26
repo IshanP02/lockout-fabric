@@ -3,17 +3,17 @@ package me.marin.lockout.lockout.goals.advancement;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public class GetAnySpyglassAdvancementGoal extends AdvancementGoal implements TextureProvider {
 
     private static final List<Identifier> ADVANCEMENTS = List.of(
-            Identifier.of("minecraft", "adventure/spyglass_at_parrot"),
-            Identifier.of("minecraft", "adventure/spyglass_at_ghast"),
-            Identifier.of("minecraft", "adventure/spyglass_at_dragon")
+            Identifier.fromNamespaceAndPath("minecraft", "adventure/spyglass_at_parrot"),
+            Identifier.fromNamespaceAndPath("minecraft", "adventure/spyglass_at_ghast"),
+            Identifier.fromNamespaceAndPath("minecraft", "adventure/spyglass_at_dragon")
             );
 
     public GetAnySpyglassAdvancementGoal(String id, String data) {
@@ -30,7 +30,7 @@ public class GetAnySpyglassAdvancementGoal extends AdvancementGoal implements Te
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/spyglass/spyglass_advancement.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/spyglass/spyglass_advancement.png");
 
     @Override
     public Identifier getTextureIdentifier() {

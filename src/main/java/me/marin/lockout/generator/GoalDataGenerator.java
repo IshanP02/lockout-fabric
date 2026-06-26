@@ -2,7 +2,7 @@ package me.marin.lockout.generator;
 
 import lombok.Getter;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
-import net.minecraft.util.DyeColor;
+import net.minecraft.world.item.DyeColor;
 
 import java.util.ArrayList;
 import java.util.List;

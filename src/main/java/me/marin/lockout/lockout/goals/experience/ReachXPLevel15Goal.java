@@ -2,7 +2,7 @@ package me.marin.lockout.lockout.goals.experience;
 
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.ReachXPLevelGoal;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class ReachXPLevel15Goal extends ReachXPLevelGoal {
 
@@ -20,7 +20,7 @@ public class ReachXPLevel15Goal extends ReachXPLevelGoal {
         return 15;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/experience/level_15.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/experience/level_15.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

@@ -3,8 +3,8 @@ package me.marin.lockout.lockout.goals.advancement;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -24,13 +24,13 @@ public class GetRemoteGatewayAdvancementGoal extends AdvancementGoal implements 
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/end_gateway.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/end_gateway.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
     }
 
-    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.of("minecraft", "end/enter_end_gateway"));
+    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.fromNamespaceAndPath("minecraft", "end/enter_end_gateway"));
     @Override
     public List<Identifier> getAdvancements() {
         return ADVANCEMENTS;

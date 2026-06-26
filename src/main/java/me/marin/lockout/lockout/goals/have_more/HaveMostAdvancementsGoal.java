@@ -6,12 +6,12 @@ import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.TextureProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,14 +34,14 @@ public class HaveMostAdvancementsGoal extends Goal implements TextureProvider, H
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/more_advancements.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/more_advancements.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         Map<UUID, Integer> playerAdvancements = LockoutServer.lockout.playerAdvancements;
         MinecraftServer server = LockoutServer.server;
@@ -51,21 +51,21 @@ public class HaveMostAdvancementsGoal extends Goal implements TextureProvider, H
         // Show leader
         UUID leaderUuid = LockoutServer.lockout.mostAdvancementsPlayer;
         if (leaderUuid != null && server != null) {
-            ServerPlayerEntity leader = server.getPlayerManager().getPlayer(leaderUuid);
+            ServerPlayer leader = server.getPlayerList().getPlayer(leaderUuid);
             if (leader != null) {
                 int leaderCount = playerAdvancements.getOrDefault(leaderUuid, 0);
-                tooltip.add(Formatting.GOLD + "Leader: " + Formatting.RESET + leader.getName().getString() + " - " + leaderCount);
+                tooltip.add(ChatFormatting.GOLD + "Leader: " + ChatFormatting.RESET + leader.getName().getString() + " - " + leaderCount);
             }
         }
         
         // Show team members
         for (String playerName : team.getPlayerNames()) {
-            ServerPlayerEntity teamPlayer = server.getPlayerManager().getPlayer(playerName);
+            ServerPlayer teamPlayer = server.getPlayerList().getPlayer(playerName);
             if (teamPlayer != null) {
-                UUID uuid = teamPlayer.getUuid();
+                UUID uuid = teamPlayer.getUUID();
                 if (!uuid.equals(leaderUuid)) {
                     int count = playerAdvancements.getOrDefault(uuid, 0);
-                    tooltip.add(Formatting.GRAY + playerName + " - " + count);
+                    tooltip.add(ChatFormatting.GRAY + playerName + " - " + count);
                 }
             }
         }
@@ -85,22 +85,22 @@ public class HaveMostAdvancementsGoal extends Goal implements TextureProvider, H
         // Show leader
         UUID leaderUuid = LockoutServer.lockout.mostAdvancementsPlayer;
         if (leaderUuid != null && server != null) {
-            ServerPlayerEntity leader = server.getPlayerManager().getPlayer(leaderUuid);
+            ServerPlayer leader = server.getPlayerList().getPlayer(leaderUuid);
             if (leader != null) {
                 int leaderCount = playerAdvancements.getOrDefault(leaderUuid, 0);
-                tooltip.add(Formatting.GOLD + "Leader: " + Formatting.RESET + leader.getName().getString() + " - " + leaderCount);
+                tooltip.add(ChatFormatting.GOLD + "Leader: " + ChatFormatting.RESET + leader.getName().getString() + " - " + leaderCount);
             }
         }
         
         // Show all players by team
         for (LockoutTeam team : LockoutServer.lockout.getTeams()) {
             for (String playerName : team.getPlayerNames()) {
-                ServerPlayerEntity teamPlayer = server.getPlayerManager().getPlayer(playerName);
+                ServerPlayer teamPlayer = server.getPlayerList().getPlayer(playerName);
                 if (teamPlayer != null) {
-                    UUID uuid = teamPlayer.getUuid();
+                    UUID uuid = teamPlayer.getUUID();
                     if (!uuid.equals(leaderUuid)) {
                         int count = playerAdvancements.getOrDefault(uuid, 0);
-                        tooltip.add(team.getColor() + playerName + Formatting.RESET + " - " + count);
+                        tooltip.add(team.getColor() + playerName + ChatFormatting.RESET + " - " + count);
                     }
                 }
             }

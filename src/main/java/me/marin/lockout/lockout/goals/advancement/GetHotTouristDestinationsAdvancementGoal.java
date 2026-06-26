@@ -5,13 +5,13 @@ import me.marin.lockout.lockout.interfaces.AdvancementGoal;
 import me.marin.lockout.lockout.interfaces.HasTooltipInfo;
 import me.marin.lockout.lockout.texture.CycleItemTexturesProvider;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 
 public class GetHotTouristDestinationsAdvancementGoal extends AdvancementGoal implements CycleItemTexturesProvider, HasTooltipInfo {
 
-    private static final ItemStack ITEM_STACK = Items.CRIMSON_NYLIUM.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.CRIMSON_NYLIUM.getDefaultInstance();
     private static final List<Item> ITEMS_TO_DISPLAY = List.of(Items.CRIMSON_NYLIUM, Items.WARPED_NYLIUM, Items.SOUL_SOIL, Items.NETHERRACK, Items.BASALT);
-    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.of("minecraft", "nether/explore_nether"));
+    private static final List<Identifier> ADVANCEMENTS = List.of(Identifier.fromNamespaceAndPath("minecraft", "nether/explore_nether"));
 
     public GetHotTouristDestinationsAdvancementGoal(String id, String data) {
         super(id, data);
@@ -49,20 +49,22 @@ public class GetHotTouristDestinationsAdvancementGoal extends AdvancementGoal im
     }
 
     @Override
-    public List<String> getTooltip(LockoutTeam team, PlayerEntity player) {
+    public List<String> getTooltip(LockoutTeam team, Player player) {
         List<String> tooltip = new ArrayList<>();
         
         // Get player-specific nether biomes from their advancement progress
         var netherBiomes = new LinkedHashSet<Identifier>();
         
-        if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
             // Get the advancement progress for Hot Tourist Destinations
-            var advancementEntry = LockoutServer.server.getAdvancementLoader().get(Identifier.of("minecraft", "nether/explore_nether"));
-            if (advancementEntry != null) {
-                var progress = serverPlayer.getAdvancementTracker().getProgress(advancementEntry);
-                // Get all obtained criteria (each criterion is a biome)
-                for (String criterion : progress.getObtainedCriteria()) {
-                    netherBiomes.add(Identifier.of(criterion));
+            var playerAdvancements = serverPlayer.getAdvancements();
+            var advancementHolder = LockoutServer.server.getAdvancements().getAllAdvancements().stream()
+                .filter(holder -> holder.id().equals(Identifier.fromNamespaceAndPath("minecraft", "nether/explore_nether")))
+                .findFirst().orElse(null);
+            if (advancementHolder != null) {
+                var progress = playerAdvancements.getOrStartProgress(advancementHolder);
+                for (String criterion : progress.getCompletedCriteria()) {
+                    netherBiomes.add(Identifier.parse(criterion));
                 }
             }
         }
@@ -72,7 +74,7 @@ public class GetHotTouristDestinationsAdvancementGoal extends AdvancementGoal im
         if (!netherBiomes.isEmpty()) {
             tooltip.addAll(HasTooltipInfo.commaSeparatedList(
                 netherBiomes.stream()
-                    .map(id -> Text.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
+                    .map(id -> Component.translatable("biome." + id.getNamespace() + "." + id.getPath()).getString())
                     .collect(Collectors.toList())
             ));
         }
@@ -95,7 +97,7 @@ public class GetHotTouristDestinationsAdvancementGoal extends AdvancementGoal im
                              id.getPath().contains("soul_sand"))
                 .collect(Collectors.toSet());
             
-            tooltip.add(t.getColor() + t.getDisplayName() + Formatting.RESET + ": " + netherBiomes.size() + "/5");
+            tooltip.add(t.getColor() + t.getDisplayName() + ChatFormatting.RESET + ": " + netherBiomes.size() + "/5");
         }
         tooltip.add(" ");
         return tooltip;

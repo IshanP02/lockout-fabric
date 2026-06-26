@@ -9,8 +9,8 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.marin.lockout.Lockout;
 import me.marin.lockout.type.BoardTypeIO;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +32,7 @@ public class CustomBoardTypeArgumentType implements ArgumentType<String> {
         try {
             List<String> boardTypeNames = BoardTypeIO.INSTANCE.getSavedBoardTypes();
             if (!boardTypeNames.contains(s)) {
-                throw new SimpleCommandExceptionType(Text.of("Invalid board type name.")).createWithContext(reader);
+                throw new SimpleCommandExceptionType(Component.literal("Invalid board type name.")).createWithContext(reader);
             }
         } catch (IOException e) {
             Lockout.error(e);
@@ -44,7 +44,7 @@ public class CustomBoardTypeArgumentType implements ArgumentType<String> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         try {
             List<String> boardTypeNames = BoardTypeIO.INSTANCE.getSavedBoardTypes();
-            return CommandSource.suggestMatching(boardTypeNames, builder);
+            return SharedSuggestionProvider.suggest(boardTypeNames, builder);
         } catch (IOException e) {
             Lockout.error(e);
             return Suggestions.empty();

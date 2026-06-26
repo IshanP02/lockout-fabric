@@ -3,8 +3,9 @@ package me.marin.lockout.lockout.goals.death;
 import me.marin.lockout.Constants;
 import me.marin.lockout.lockout.interfaces.DieToEntityGoal;
 import me.marin.lockout.lockout.texture.TextureProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.resources.Identifier;
 
 public class DieToWardenGoal extends DieToEntityGoal implements TextureProvider {
 
@@ -19,10 +20,10 @@ public class DieToWardenGoal extends DieToEntityGoal implements TextureProvider 
 
     @Override
     public EntityType getEntityType() {
-        return EntityType.WARDEN;
+        return EntityTypes.WARDEN;
     }
 
-    private static final Identifier TEXTURE = Identifier.of(Constants.NAMESPACE, "textures/custom/death/die_to_warden.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/death/die_to_warden.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;

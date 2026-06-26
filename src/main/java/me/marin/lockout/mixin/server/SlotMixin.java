@@ -10,24 +10,24 @@ import me.marin.lockout.lockout.goals.workstation.UseLoomGoal;
 import me.marin.lockout.lockout.goals.workstation.UseStonecutterGoal;
 import me.marin.lockout.lockout.interfaces.FurnaceSmeltTracker;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.MapIdComponent;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.map.MapState;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.screen.*;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.core.Holder;
+import net.minecraft.world.inventory.*;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,23 +39,23 @@ import java.util.Set;
 @Mixin(Slot.class)
 public class SlotMixin {
 
-    @Inject(method="onTakeItem", at = @At("HEAD"))
-    public void onTakeItem(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
-        if (player.getEntityWorld().isClient()) return;
+    @Inject(method="onTake", at = @At("HEAD"))
+    public void onTakeItem(Player player, ItemStack stack, CallbackInfo ci) {
+        if (player.level().isClientSide()) return;
         Lockout lockout = LockoutServer.lockout;
         if (!Lockout.isLockoutRunning(lockout)) return;
-        if (!lockout.isLockoutPlayer(player.getUuid())) return;
+        if (!lockout.isLockoutPlayer(player.getUUID())) return;
 
         Slot slot = (Slot) (Object) this;
 
         // Handle furnace output slot for unique smelts tracking
-        if (player instanceof ServerPlayerEntity serverPlayer) {
-            if (slot.inventory instanceof AbstractFurnaceBlockEntity furnace) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            if (slot.container instanceof AbstractFurnaceBlockEntity furnace) {
                 if (furnace instanceof FurnaceSmeltTracker tracker) {
                     Item inputItem = tracker.lockout$getLastSmelted();
                     if (inputItem != null) {
-                        lockout.uniqueSmelts.putIfAbsent(serverPlayer.getUuid(), new java.util.HashSet<>());
-                        Set<Item> smelts = lockout.uniqueSmelts.get(serverPlayer.getUuid());
+                        lockout.uniqueSmelts.putIfAbsent(serverPlayer.getUUID(), new java.util.HashSet<>());
+                        Set<Item> smelts = lockout.uniqueSmelts.get(serverPlayer.getUUID());
                         boolean addedNew = smelts.add(inputItem);
 
                         if (addedNew) {
@@ -64,31 +64,31 @@ public class SlotMixin {
 
                                 if (goal instanceof HaveMostUniqueSmeltsGoal) {
                                     // Play sound only to this specific player (client-side)
-                                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_PLING;
-                                    serverPlayer.networkHandler.sendPacket(
-                                        new PlaySoundS2CPacket(
+                                    Holder<net.minecraft.sounds.SoundEvent> soundEntry = SoundEvents.NOTE_BLOCK_PLING;
+                                    serverPlayer.connection.send(
+                                        new ClientboundSoundPacket(
                                             soundEntry,
-                                            SoundCategory.MASTER,
+                                            SoundSource.MASTER,
                                             serverPlayer.getX(),
                                             serverPlayer.getY(),
                                             serverPlayer.getZ(),
                                             2f,
                                             1.5f,
-                                            serverPlayer.getEntityWorld().random.nextLong()
+                                            serverPlayer.level().getRandom().nextLong()
                                         )
                                     );
                                     
                                     if (smelts.size() % 5 == 0) {
-                                        serverPlayer.sendMessage(Text.of(Formatting.GRAY + "" + Formatting.ITALIC + "You have smelted " + smelts.size() + " unique items."), false);
+                                        serverPlayer.sendSystemMessage(Component.literal(ChatFormatting.GRAY + "" + ChatFormatting.ITALIC + "You have smelted " + smelts.size() + " unique items."));
                                     }
-                                    serverPlayer.sendMessage(Text.of("Unique smelts: " + smelts.size()), true);
+                                    serverPlayer.sendSystemMessage(Component.literal("Unique smelts: " + smelts.size()));
 
                                     if (smelts.size() > lockout.mostUniqueSmelts) {
-                                        if (!Objects.equals(lockout.mostUniqueSmeltsPlayer, serverPlayer.getUuid())) {
-                                            lockout.updateGoalCompletion(goal, serverPlayer.getUuid());
+                                        if (!Objects.equals(lockout.mostUniqueSmeltsPlayer, serverPlayer.getUUID())) {
+                                            lockout.updateGoalCompletion(goal, serverPlayer.getUUID());
                                         }
 
-                                        lockout.mostUniqueSmeltsPlayer = serverPlayer.getUuid();
+                                        lockout.mostUniqueSmeltsPlayer = serverPlayer.getUUID();
                                         lockout.mostUniqueSmelts = smelts.size();
                                     }
                                     // Send tooltip updates to all teams whenever anyone makes progress
@@ -108,7 +108,7 @@ public class SlotMixin {
             if (goal.isCompleted()) continue;
 
             if (goal instanceof UseStonecutterGoal) {
-                if (player.currentScreenHandler instanceof StonecutterScreenHandler stonecutterScreenHandler) {
+                if (player.containerMenu instanceof StonecutterMenu stonecutterScreenHandler) {
                     if ((Object) this == stonecutterScreenHandler.slots.get(1)) {
                         lockout.completeGoal(goal, player);
                     }
@@ -116,8 +116,8 @@ public class SlotMixin {
             }
 
             if (goal instanceof UseLoomGoal) {
-                if (player.currentScreenHandler instanceof LoomScreenHandler loomScreenHandler) {
-                    if ((Object) this == loomScreenHandler.getOutputSlot()) {
+                if (player.containerMenu instanceof LoomMenu loomScreenHandler) {
+                    if ((Object) this == loomScreenHandler.slots.get(3)) {
                         lockout.completeGoal(goal, player);
                     }
                 }
@@ -127,11 +127,11 @@ public class SlotMixin {
                 // Check if the taken item is a filled map
                 if (stack.getItem() == Items.FILLED_MAP) {
                     // Get the map ID from the item
-                    MapIdComponent mapIdComponent = stack.get(DataComponentTypes.MAP_ID);
-                    if (mapIdComponent != null) {
-                        // Get the MapState from the server
-                        ServerWorld serverWorld = (ServerWorld) player.getEntityWorld();
-                        MapState mapState = serverWorld.getMapState(mapIdComponent);
+                    MapId MapId = stack.get(DataComponents.MAP_ID);
+                    if (MapId != null) {
+                        // Get the MapItemSavedData from the server
+                        ServerLevel serverWorld = (ServerLevel) player.level();
+                        MapItemSavedData mapState = serverWorld.getMapData(MapId);
                         
                         // Check if the map is locked
                         if (mapState != null && mapState.locked) {

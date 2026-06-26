@@ -1,17 +1,17 @@
 package me.marin.lockout.lockout.goals.consume;
 
 import me.marin.lockout.lockout.interfaces.ConsumeSomeOfTheFoodsGoal;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
 public class EatAllSoupsGoal extends ConsumeSomeOfTheFoodsGoal {
 
-    private static final ItemStack ITEM_STACK = Items.MUSHROOM_STEW.getDefaultStack();
+    private static final ItemStack ITEM_STACK = Items.MUSHROOM_STEW.getDefaultInstance();
     static {
         ITEM_STACK.setCount(4);
     }
@@ -42,10 +42,10 @@ public class EatAllSoupsGoal extends ConsumeSomeOfTheFoodsGoal {
     }
 
     @Override
-    public boolean renderTexture(DrawContext context, int x, int y, int tick) {
+    public boolean renderTexture(GuiGraphicsExtractor context, int x, int y, int tick) {
         // Use the cycling texture from parent, then add the overlay
         super.renderTexture(context, x, y, tick);
-        context.drawStackOverlay(MinecraftClient.getInstance().textRenderer, ITEM_STACK, x, y, "4");
+        context.itemDecorations(Minecraft.getInstance().font, ITEM_STACK, x, y, "4");
         return true;
     }
 }

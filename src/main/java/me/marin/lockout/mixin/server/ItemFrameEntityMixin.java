@@ -4,28 +4,29 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.lockout.Goal;
 import me.marin.lockout.lockout.goals.misc.ItemFrameInItemFrameGoal;
 import me.marin.lockout.server.LockoutServer;
-import net.minecraft.entity.decoration.GlowItemFrameEntity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
+import net.minecraft.world.entity.decoration.GlowItemFrame;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ItemFrameEntity.class)
+@Mixin(ItemFrame.class)
 public class ItemFrameEntityMixin {
 
-    @Inject(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/decoration/ItemFrameEntity;setHeldItemStack(Lnet/minecraft/item/ItemStack;)V"))
-    public void onAddItem(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (player.getEntityWorld().isClient()) return;
-        ItemFrameEntity itemFrame = (ItemFrameEntity) (Object) this;
-        if (itemFrame instanceof GlowItemFrameEntity) return;
+    @Inject(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ItemFrame;setItem(Lnet/minecraft/world/item/ItemStack;)V"))
+    public void onAddItem(Player player, InteractionHand hand, Vec3 hitPos, CallbackInfoReturnable<InteractionResult> cir) {
+        if (player.level().isClientSide()) return;
+        ItemFrame itemFrame = (ItemFrame) (Object) this;
+        if (itemFrame instanceof GlowItemFrame) return;
 
-        ItemStack value = player.getStackInHand(hand);
+        ItemStack value = player.getItemInHand(hand);
         if (value.isEmpty() || !value.getItem().equals(Items.ITEM_FRAME)) return;
 
         Lockout lockout = LockoutServer.lockout;
