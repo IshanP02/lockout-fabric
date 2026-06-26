@@ -207,7 +207,7 @@ public class GoalGroup {
         LOOK_AT_25_UNIQUE_MOBS, LOOK_AT_10_UNIQUE_MOBS, LOOK_AT_15_UNIQUE_MOBS, LOOK_AT_20_UNIQUE_MOBS
     ), 1);
     public static final GoalGroup ENRAGE = new GoalGroup(List.of(
-        ENRAGE_ENDERMAN, ENRAGE_ZOMBIFIED_PIGLIN
+        ENRAGE_ENDERMAN, ENRAGE_ZOMBIFIED_PIGLIN, ENRAGE_WOLF
     ), 1);
     public static final GoalGroup ENDERMAN = new GoalGroup(List.of(
         ENRAGE_ENDERMAN, LOOK_AT_ENDERMAN
