@@ -460,6 +460,7 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.OBTAIN_64_FIREFLY_BUSHES, Obtain64FireflyBushesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_64_GLOW_LICHEN, Obtain64GlowLichenGoal.class);
+        INSTANCE.register(GoalType.OBTAIN_64_NAME_TAG, Obtain64NameTagsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_FURNACE_TYPES, ObtainAllFurnaceTypesGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MINECARTS, ObtainAllMinecartsGoal.class);
         INSTANCE.register(GoalType.OBTAIN_ALL_MUSHROOMS, ObtainAllMushroomsGoal.class);

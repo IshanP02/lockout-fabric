@@ -1,3 +1,8 @@
+## Lockout v0.12.1
+- Added new Goals
+	- Obtain 64 Name Tags
+- Fixed Spyglass No. output
+- Added Sulfur & Cinnabar to bricks goal
 ## Lockout v0.12
 - Updated Mod to MC 26.2
 ## Lockout v0.11.10

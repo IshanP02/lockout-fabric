@@ -285,6 +285,7 @@ public class GoalType {
     public static final String OBTAIN_COLORED_HARNESS = "OBTAIN_COLORED_HARNESS";
     public static final String KILL_BOGGED = "KILL_BOGGED";
     public static final String OBTAIN_64_GLOW_LICHEN = "OBTAIN_64_GLOW_LICHEN";
+    public static final String OBTAIN_64_NAME_TAG = "OBTAIN_64_NAME_TAG";
     public static final String GET_INFESTED_STATUS_EFFECT = "GET_INFESTED_STATUS_EFFECT";
     public static final String OBTAIN_5_UNIQUE_PRESSURE_PLATES = "OBTAIN_5_UNIQUE_PRESSURE_PLATES";
     public static final String OBTAIN_6_UNIQUE_BRICK_TYPES = "OBTAIN_6_UNIQUE_BRICK_TYPES";

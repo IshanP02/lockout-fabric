@@ -129,7 +129,7 @@ public class UsingItemCriterionMixin {
                     int size = lockout.lookedAtMobTypes.get(team).size();
 
                     // Display count above action bar
-                    player.sendSystemMessage(Component.literal("Mobs Looked at: " + size));
+                    player.sendSystemMessage(Component.literal("Mobs Looked at: " + size), true);
                 }
 
                 int size = lockout.lookedAtMobTypes.get(team).size();
