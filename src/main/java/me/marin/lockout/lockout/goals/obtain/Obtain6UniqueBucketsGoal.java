@@ -21,7 +21,8 @@ public class Obtain6UniqueBucketsGoal extends ObtainSomeOfTheItemsGoal {
             Items.PUFFERFISH_BUCKET,
             Items.AXOLOTL_BUCKET,
             Items.POWDER_SNOW_BUCKET,
-            Items.TADPOLE_BUCKET
+            Items.TADPOLE_BUCKET,
+            Items.SULFUR_CUBE_BUCKET
     );
 
     public Obtain6UniqueBucketsGoal(String id, String data) {
