@@ -340,5 +340,8 @@ public class GoalType {
     public static final String GET_STAR_TRADER_ADVANCEMENT = "GET_STAR_TRADER_ADVANCEMENT";
     public static final String TAME_NAUTILUS = "TAME_NAUTILUS";
     public static final String NAME_SHEEP_JEB = "NAME_SHEEP_JEB";
+    public static final String NAME_RABBIT = "NAME_RABBIT";
+    public static final String NAME_IRON_GOLEM = "NAME_IRON_GOLEM";
+    public static final String NAME_VINDICATOR = "NAME_VINDICATOR";
 
 }

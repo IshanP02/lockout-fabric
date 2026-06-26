@@ -4,7 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalDataGenerator;
 import me.marin.lockout.generator.GoalRequirements;
 import me.marin.lockout.lockout.goals.attach_lead.*;
-import me.marin.lockout.lockout.goals.name.NameSheepJeb;
+import me.marin.lockout.lockout.goals.name.*;
 import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
@@ -132,7 +132,10 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
-        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJeb.class);
+        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJebGoal.class);
+        INSTANCE.register(GoalType.NAME_RABBIT, NameRabbitGoal.class);       
+        INSTANCE.register(GoalType.NAME_IRON_GOLEM, NameIronGolemGoal.class);
+        INSTANCE.register(GoalType.NAME_VINDICATOR, NameVindicatorGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
