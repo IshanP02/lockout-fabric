@@ -19,6 +19,11 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -105,7 +110,28 @@ public class UsingItemCriterionMixin {
                 // Track first contributor
                 if (newMob) {
                     lockout.firstLookedAtMobContributor.putIfAbsent(team, new HashMap<>());
-                    lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUUID());
+                    lockout.firstLookedAtMobContributor.get(team).put(entity.getType(), player.getUuid());
+                    
+                    if (player instanceof ServerPlayerEntity serverPlayer) {
+                    RegistryEntry<net.minecraft.sound.SoundEvent> soundEntry = SoundEvents.BLOCK_NOTE_BLOCK_CHIME;
+                    serverPlayer.networkHandler.sendPacket(
+                        new PlaySoundS2CPacket(
+                            soundEntry,
+                            SoundCategory.MASTER,
+                            serverPlayer.getX(),
+                            serverPlayer.getY(),
+                            serverPlayer.getZ(),
+                            2f,
+                            2f,
+                            player.getEntityWorld().random.nextLong()
+                        )
+                    );
+                }
+                
+                    int size = lockout.lookedAtMobTypes.get(team).size();
+                    
+                    // Display count above action bar
+                    player.sendMessage(Text.of("Mobs Looked at: " + size), true);
                 }
 
                 int size = lockout.lookedAtMobTypes.get(team).size();
