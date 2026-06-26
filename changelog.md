@@ -1,6 +1,8 @@
 ## Lockout v0.12.1
 - Added new Goals
 	- Obtain 64 Name Tags
+	- Enrage Wolf
+	- Name Sheep
 - Fixed Spyglass No. output
 - Added Sulfur & Cinnabar to bricks goal
 ## Lockout v0.12

@@ -4,6 +4,7 @@ import me.marin.lockout.Lockout;
 import me.marin.lockout.generator.GoalDataGenerator;
 import me.marin.lockout.generator.GoalRequirements;
 import me.marin.lockout.lockout.goals.attach_lead.*;
+import me.marin.lockout.lockout.goals.name.NameSheepJeb;
 import me.marin.lockout.lockout.goals.advancement.*;
 import me.marin.lockout.lockout.goals.advancement.unique.Get10UniqueAdvancementsGoal;
 import me.marin.lockout.lockout.goals.advancement.unique.Get20UniqueAdvancementsGoal;
@@ -131,6 +132,7 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
+        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJeb.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
@@ -607,6 +609,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.PUT_BANNER_ON_SHIELD, ObtainShieldWithBannerGoal.class);
         INSTANCE.register(GoalType.EMPTY_HUNGER_BAR, EmptyHungerBarGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ENDERMAN, AngerEndermanGoal.class);
+        INSTANCE.register(GoalType.ENRAGE_WOLF, AngerWolfGoal.class);
         INSTANCE.register(GoalType.ENRAGE_ZOMBIFIED_PIGLIN, AngerZombifiedPiglinGoal.class);
         INSTANCE.register(GoalType.EXTINGUISH_CAMPFIRE_WITH_SHOVEL, ExtinguishCampfireWithShovelGoal.class);
         INSTANCE.register(GoalType.REACH_NETHER_ROOF, ReachNetherRoofGoal.class);

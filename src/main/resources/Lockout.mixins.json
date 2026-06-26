@@ -33,6 +33,7 @@
     "server.ItemFrameEntityMixin",
     "server.ItemMixin",
     "server.LeashableMixin",
+    "server.NameTagItemMixin",
     "server.LivingEntityMixin",
     "server.PlayerAdvancementTrackerMixin",
     "server.PlayerInventoryAccessor",
