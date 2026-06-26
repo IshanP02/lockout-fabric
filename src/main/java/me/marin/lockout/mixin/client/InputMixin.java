@@ -5,6 +5,7 @@ import me.marin.lockout.client.LockoutClient;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,6 +21,7 @@ public abstract class InputMixin extends ClientInput {
 
         if (!LockoutClient.lockout.hasStarted()) {
             keyPresses = new Input(false, false, false, false, false, keyPresses.shift(), false);
+            moveVector = Vec2.ZERO;
         }
     }
 
