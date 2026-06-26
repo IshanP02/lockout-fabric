@@ -136,6 +136,7 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.NAME_RABBIT, NameRabbitGoal.class);       
         INSTANCE.register(GoalType.NAME_IRON_GOLEM, NameIronGolemGoal.class);
         INSTANCE.register(GoalType.NAME_VINDICATOR, NameVindicatorGoal.class);
+        INSTANCE.register(GoalType.USE_GOLDEN_DANDELION_ON_BABY_MOB, UseGoldenDandelionOnBabyMobGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);

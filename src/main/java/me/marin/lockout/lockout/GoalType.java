@@ -343,5 +343,6 @@ public class GoalType {
     public static final String NAME_RABBIT = "NAME_RABBIT";
     public static final String NAME_IRON_GOLEM = "NAME_IRON_GOLEM";
     public static final String NAME_VINDICATOR = "NAME_VINDICATOR";
+    public static final String USE_GOLDEN_DANDELION_ON_BABY_MOB = "USE_GOLDEN_DANDELION_ON_BABY_MOB";
 
 }

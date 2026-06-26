@@ -34,7 +34,7 @@ public class NameSheepJebGoal extends NameMobGoal implements TextureProvider {
         return null;
     }
 
-    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/name_sheep.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "textures/custom/name/name_sheep.png");
     @Override
     public Identifier getTextureIdentifier() {
         return TEXTURE;
