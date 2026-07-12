@@ -53,6 +53,7 @@ import me.marin.lockout.lockout.goals.tame_animal.TameCatGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameHorseGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameParrotGoal;
 import me.marin.lockout.lockout.goals.tame_animal.TameWolfGoal;
+import me.marin.lockout.lockout.goals.trade.*;
 import me.marin.lockout.lockout.goals.util.GoalDataConstants;
 import me.marin.lockout.lockout.goals.wear_armor.*;
 import me.marin.lockout.lockout.goals.workstation.*;
@@ -132,11 +133,6 @@ public class DefaultGoalRegister {
                         .build()
                 );
         INSTANCE.register(GoalType.TAME_WOLF, TameWolfGoal.class);
-        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJebGoal.class);
-        INSTANCE.register(GoalType.NAME_RABBIT, NameRabbitGoal.class);       
-        INSTANCE.register(GoalType.NAME_IRON_GOLEM, NameIronGolemGoal.class);
-        INSTANCE.register(GoalType.NAME_VINDICATOR, NameVindicatorGoal.class);
-        INSTANCE.register(GoalType.USE_GOLDEN_DANDELION_ON_BABY_MOB, UseGoldenDandelionOnBabyMobGoal.class);
         INSTANCE.register(GoalType.RIDE_HORSE, RideHorseGoal.class);
         INSTANCE.register(GoalType.RIDE_MINECART, RideMinecartGoal.class);
         INSTANCE.register(GoalType.RIDE_PIG, RidePigGoal.class);
@@ -226,6 +222,10 @@ public class DefaultGoalRegister {
                 );
         INSTANCE.register(GoalType.LOOK_AT_IRON_GOLEM, LookAtIronGolemGoal.class);
         INSTANCE.register(GoalType.LOOK_AT_PIGLIN_BRUTE, LookAtPiglinBruteGoal.class);
+        INSTANCE.register(GoalType.NAME_SHEEP_JEB, NameSheepJebGoal.class);
+        INSTANCE.register(GoalType.NAME_RABBIT, NameRabbitGoal.class);       
+        INSTANCE.register(GoalType.NAME_IRON_GOLEM, NameIronGolemGoal.class);
+        INSTANCE.register(GoalType.NAME_VINDICATOR, NameVindicatorGoal.class);
         INSTANCE.register(GoalType.USE_BREWING_STAND, GetLocalBreweryAdvancementGoal.class);
         INSTANCE.register(GoalType.BREW_FIRE_RESISTANCE_POTION, BrewFireResistancePotionGoal.class);
         INSTANCE.register(GoalType.BREW_HEALING_POTION, BrewHealingPotionGoal.class);
@@ -627,11 +627,19 @@ public class DefaultGoalRegister {
         INSTANCE.register(GoalType.DAMAGED_BY_8_UNIQUE_SOURCES, DamagedBy8UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_12_UNIQUE_SOURCES, DamagedBy12UniqueSourcesGoal.class);
         INSTANCE.register(GoalType.DAMAGED_BY_15_UNIQUE_SOURCES, DamagedBy15UniqueSourcesGoal.class);
+        INSTANCE.register(GoalType.TAKE_FREEZING_DAMAGE_IN_NETHER, TakeFreezingDamageInNetherGoal.class, new GoalRequirements.Builder()
+                        .biomes(List.of(GROVE, SNOWY_SLOPES))
+                        .build()
+                );
         INSTANCE.register(GoalType.TOOT_GOAT_HORN, TootGoatHornGoal.class, new GoalRequirements.Builder()
                         .biomes(List.of(FROZEN_PEAKS, JAGGED_PEAKS, SNOWY_SLOPES))
                         .build()
                 );
+        INSTANCE.register(GoalType.TRADE_WITH_3_UNIQUE_PROFESSIONS, TradeWith3UniqueVillagerProfessionsGoal.class, GoalRequirements.VILLAGE);
+        INSTANCE.register(GoalType.TRADE_WITH_5_UNIQUE_PROFESSIONS, TradeWith5UniqueVillagerProfessionsGoal.class, GoalRequirements.VILLAGE);
+        INSTANCE.register(GoalType.TRADE_WITH_7_UNIQUE_PROFESSIONS, TradeWith7UniqueVillagerProfessionsGoal.class, GoalRequirements.VILLAGE);
         INSTANCE.register(GoalType.USE_GLOW_INK, UseGlowInkGoal.class);
+        INSTANCE.register(GoalType.USE_GOLDEN_DANDELION_ON_BABY_MOB, UseGoldenDandelionOnBabyMobGoal.class);
         INSTANCE.register(GoalType.OBTAIN_WRITTEN_BOOK, ObtainWrittenBookGoal.class);
     }
 

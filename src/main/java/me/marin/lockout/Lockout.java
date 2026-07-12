@@ -11,6 +11,7 @@ import me.marin.lockout.network.UpdateTimerPayload;
 import me.marin.lockout.server.LockoutServer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.resources.ResourceKey;
@@ -47,6 +48,7 @@ public class Lockout {
     public final Map<LockoutTeam, Integer> killedArthropods = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<Item>> foodTypesEaten = new HashMap<>();
     public final Map<LockoutTeam, LinkedHashSet<Identifier>> uniqueAdvancements = new HashMap<>();
+    public final Map<LockoutTeam, LinkedHashSet<VillagerProfession>> villagerProfessionsTraded = new HashMap<>();
     public final Map<LockoutTeam, Double> damageTaken = new HashMap<>();
     public final Map<LockoutTeam, Double> damageDealt = new HashMap<>();
     public final Map<LockoutTeam, Integer> deaths = new HashMap<>();
@@ -60,6 +62,7 @@ public class Lockout {
     public final Map<UUID, Integer> playerAdvancements = new HashMap<>();
     public final Map<UUID, Set<Item>> playerFoodsEaten = new HashMap<>();
     public final Map<UUID, Set<Identifier>> playerUniqueAdvancements = new HashMap<>();
+    public final Map<UUID, Set<VillagerProfession>> playerTradedProfessions = new HashMap<>();
 
     // Per-player tracking for proportional contribution
     public final Map<UUID, Set<Identifier>> playerBiomesVisited = new HashMap<>();
@@ -81,6 +84,7 @@ public class Lockout {
     public final Map<LockoutTeam, Map<EntityType<?>, UUID>> firstHostileKillContributor = new HashMap<>();
     public final Map<LockoutTeam, Map<Item, UUID>> firstFoodContributor = new HashMap<>();
     public final Map<LockoutTeam, Map<ResourceKey<DamageType>, UUID>> firstDamageTypeContributor = new HashMap<>();
+    public final Map<LockoutTeam, Map<VillagerProfession, UUID>> firstTradedProfessionContributor = new HashMap<>();
 
     public final Map<UUID, Integer> distanceCrouched = new HashMap<>();
     public final Map<UUID, Integer> distanceSwam = new HashMap<>();

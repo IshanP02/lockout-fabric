@@ -38,7 +38,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import me.marin.lockout.lockout.goals.misc.Crouch100mGoal;
 import me.marin.lockout.lockout.goals.misc.Swim500mGoal;
+import me.marin.lockout.lockout.goals.misc.TakeFreezingDamageInNetherGoal;
 import me.marin.lockout.lockout.interfaces.DamagedByUniqueSourcesGoal;
+import net.minecraft.world.level.Level;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -159,6 +161,11 @@ public abstract class PlayerMixin {
             if (goal instanceof OpponentTakes100DamageGoal) {
                 if (lockout.damageTaken.get(team) >= 100) {
                     lockout.complete1v1Goal(goal, team, false, team.getDisplayName() + " took 100 damage.");
+                }
+            }
+            if (goal instanceof TakeFreezingDamageInNetherGoal) {
+                if (source.is(DamageTypes.FREEZE) && player.level().dimension().equals(Level.NETHER)) {
+                    lockout.completeGoal(goal, player);
                 }
             }
 

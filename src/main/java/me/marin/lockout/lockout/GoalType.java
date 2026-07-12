@@ -224,6 +224,7 @@ public class GoalType {
     public static final String REACH_NETHER_ROOF = "REACH_NETHER_ROOF";
     public static final String HAVE_MORE_XP_LEVELS = "HAVE_MORE_XP_LEVELS";
     public static final String FREEZE_TO_DEATH = "FREEZE_TO_DEATH";
+    public static final String TAKE_FREEZING_DAMAGE_IN_NETHER = "TAKE_FREEZING_DAMAGE_IN_NETHER";
     public static final String KILL_100_MOBS = "KILL_100_MOBS";
     public static final String DEAL_400_DAMAGE = "DEAL_400_DAMAGE";
     public static final String SPRINT_1_KM = "SPRINT_1_KM";
@@ -344,5 +345,8 @@ public class GoalType {
     public static final String NAME_IRON_GOLEM = "NAME_IRON_GOLEM";
     public static final String NAME_VINDICATOR = "NAME_VINDICATOR";
     public static final String USE_GOLDEN_DANDELION_ON_BABY_MOB = "USE_GOLDEN_DANDELION_ON_BABY_MOB";
+    public static final String TRADE_WITH_3_UNIQUE_PROFESSIONS = "TRADE_WITH_3_UNIQUE_PROFESSIONS";
+    public static final String TRADE_WITH_5_UNIQUE_PROFESSIONS = "TRADE_WITH_5_UNIQUE_PROFESSIONS";
+    public static final String TRADE_WITH_7_UNIQUE_PROFESSIONS = "TRADE_WITH_7_UNIQUE_PROFESSIONS";
 
 }
