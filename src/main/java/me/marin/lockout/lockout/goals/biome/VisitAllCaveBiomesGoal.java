@@ -16,9 +16,10 @@ import java.util.Map;
 public class VisitAllCaveBiomesGoal extends VisitAllSpecificBiomesGoal implements CycleItemTexturesProvider {
 
     private static final ItemStack ITEM_STACK = Items.SCULK.getDefaultInstance();
-    private static final List<Item> ITEMS_TO_DISPLAY = List.of(Items.MOSS_BLOCK, Items.DRIPSTONE_BLOCK, Items.SCULK);
+    private static final List<Item> ITEMS_TO_DISPLAY = List.of(Items.MOSS_BLOCK, Items.SULFUR, Items.DRIPSTONE_BLOCK, Items.SCULK);
     private static final List<Identifier> BIOMES = List.of(
             Identifier.fromNamespaceAndPath("minecraft", "lush_caves"),
+            Identifier.fromNamespaceAndPath("minecraft", "sulfur_caves"),
             Identifier.fromNamespaceAndPath("minecraft", "dripstone_caves"),
             Identifier.fromNamespaceAndPath("minecraft", "deep_dark")
     );
